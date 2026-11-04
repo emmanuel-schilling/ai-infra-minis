@@ -1,0 +1,17 @@
+# Claude Code files: kept local, never published
+CLAUDE.md
+CLAUDE.local.md
+.claude/
+
+# Build output
+/build/
+target/
+
+# Python
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+
+# macOS
+.DS_Store

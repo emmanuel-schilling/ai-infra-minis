@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Check (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        # macos-15 runners are arm64, so x86 SIMD paths are tested on Linux
+        # and Windows only.
+        os: [ubuntu-24.04, macos-15, windows-2025]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.13.6"
+          enable-cache: true
+
+      # PLATFORM: windows — Ninja builds with MSVC need the Visual Studio
+      # developer environment; Linux and macOS compilers are already on PATH.
+      - name: Set up MSVC environment
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $before = @{}
+          Get-ChildItem env: | ForEach-Object { $before[$_.Name] = $_.Value }
+          $vs = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath
+          & "$vs\Common7\Tools\Launch-VsDevShell.ps1" -Arch amd64 -HostArch amd64 -SkipAutomaticLocation
+          Get-ChildItem env: |
+            Where-Object { $before[$_.Name] -ne $_.Value } |
+            ForEach-Object { "$($_.Name)=$($_.Value)" } |
+            Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Install Ninja
+        run: uv tool install ninja==1.13.2
+
+      - name: Install Python tools
+        run: uv sync --locked
+
+      - name: Check Python
+        run: |
+          uv run ruff format --check .
+          uv run ruff check .
+          uv run pyright
+          # pytest exits 5 when it collects no tests: nothing failed.
+          uv run pytest -q || [ $? -eq 5 ]
+
+      - name: Check C++
+        run: |
+          cmake --preset dev
+          cmake --build --preset dev
+          ctest --preset dev
