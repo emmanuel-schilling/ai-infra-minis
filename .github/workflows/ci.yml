@@ -130,11 +130,6 @@ jobs:
     name: Format and lint C++
     runs-on: ubuntu-24.04
     timeout-minutes: 45
-    # clang-tidy reads the compile commands, so the build uses clang to give
-    # it flags it understands.
-    env:
-      CC: clang
-      CXX: clang++
     defaults:
       run:
         shell: bash
@@ -184,8 +179,12 @@ jobs:
           echo "VCPKG_ROOT=$RUNNER_TEMP/vcpkg" >> "$GITHUB_ENV"
           echo "VCPKG_DEFAULT_BINARY_CACHE=$RUNNER_TEMP/vcpkg-cache" >> "$GITHUB_ENV"
 
+      # clang-tidy reads the compile commands, so this repo's code is configured
+      # with clang to give it flags it understands. Only this repo's code: vcpkg
+      # builds its packages separately with the default compiler, because clang
+      # can't compile the debug build of OpenBLAS's SkylakeX assembly kernel.
       - name: Configure
-        run: cmake --preset dev
+        run: cmake --preset dev -DCMAKE_CXX_COMPILER=clang++
 
       - name: clang-format
         run: git ls-files -z '*.cpp' '*.hpp' '*.h' | xargs -0 -r clang-format --dry-run --Werror
