@@ -1,8 +1,7 @@
 #include "qmm/matmul.hpp"
 
 // PLATFORM: x86-64 with MSVC, gcc or clang — MSVC reads CPUID and XCR0
-// itself, gcc and clang use their built-ins; other CPUs report false and would
-// need their own feature checks (getauxval on Arm Linux, sysctl on Arm macOS).
+// itself, gcc and clang use their built-ins; other CPUs report false.
 #if defined(_MSC_VER) && defined(_M_X64) && !defined(__clang__)
 #include <immintrin.h>
 #include <intrin.h>
@@ -48,6 +47,53 @@ bool cpu_has_avx2_fma() {
 namespace qmm {
 
 bool cpu_has_avx2_fma() { return false; }
+
+}  // namespace qmm
+
+#endif
+
+// PLATFORM: 64-bit Arm on macOS, Linux and Windows — each operating system
+// reports the dot-product extension its own way (sysctl, the auxiliary vector,
+// IsProcessorFeaturePresent); other CPUs report false.
+#if defined(__APPLE__) && defined(__aarch64__)
+#include <sys/sysctl.h>
+
+namespace qmm {
+
+bool cpu_has_neon_dotprod() {
+  int value = 0;
+  std::size_t size = sizeof(value);
+  return sysctlbyname("hw.optional.arm.FEAT_DotProd", &value, &size, nullptr, 0) == 0 && value != 0;
+}
+
+}  // namespace qmm
+
+#elif defined(__linux__) && defined(__aarch64__)
+#include <asm/hwcap.h>
+#include <sys/auxv.h>
+
+namespace qmm {
+
+bool cpu_has_neon_dotprod() { return (getauxval(AT_HWCAP) & HWCAP_ASIMDDP) != 0; }
+
+}  // namespace qmm
+
+#elif defined(_WIN32) && defined(_M_ARM64)
+#include <windows.h>
+
+namespace qmm {
+
+bool cpu_has_neon_dotprod() {
+  return IsProcessorFeaturePresent(PF_ARM_V82_DP_INSTRUCTIONS_AVAILABLE) != 0;
+}
+
+}  // namespace qmm
+
+#else
+
+namespace qmm {
+
+bool cpu_has_neon_dotprod() { return false; }
 
 }  // namespace qmm
 

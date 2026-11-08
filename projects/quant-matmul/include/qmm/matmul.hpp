@@ -37,6 +37,13 @@ void matmul_accelerate(Shape shape, std::span<const float> a, std::span<const fl
                        std::span<float> c);
 #endif
 
+#if defined(QMM_HAVE_OPENBLAS)
+// PLATFORM: Linux and Windows — OpenBLAS (cblas_sgemm), the baseline where
+// Accelerate is absent. Built single-threaded.
+void matmul_openblas(Shape shape, std::span<const float> a, std::span<const float> w,
+                     std::span<float> c);
+#endif
+
 // Q8: symmetric int8 values in [-127, 127] with one scale per block of 32
 // consecutive values, like llama.cpp's Q8_0. A value is scale * q.
 inline constexpr std::size_t q8_block_size = 32;
@@ -67,8 +74,19 @@ void matmul_q8_avx2(Shape shape, std::span<const float> a, std::span<const Block
                     std::span<float> c);
 #endif
 
+#if defined(QMM_HAVE_NEON_DOTPROD)
+// PLATFORM: 64-bit Arm — NEON with the dot-product extension (SDOT); a stretch
+// goal. Call only when cpu_has_neon_dotprod() is true.
+void matmul_q8_neon(Shape shape, std::span<const float> a, std::span<const BlockQ8> w,
+                    std::span<float> c);
+#endif
+
 // True when this CPU and operating system support AVX2 and FMA. Always false
 // off x86-64.
 bool cpu_has_avx2_fma();
+
+// True when this CPU supports Arm's dot-product extension. Always false off
+// 64-bit Arm.
+bool cpu_has_neon_dotprod();
 
 }  // namespace qmm

@@ -8,6 +8,9 @@ CLAUDE.local.md
 /build-release/
 target/
 
+# Editor caches (clangd's index)
+.cache/
+
 # Python
 .venv/
 __pycache__/

@@ -21,6 +21,15 @@ else()
   set(qmm_x86_64 OFF)
 endif()
 
+# PLATFORM: 64-bit Arm — the NEON Q8 kernel uses the dot-product extension
+# (SDOT), so its file is built with that extension enabled; Apple's arm64
+# target already includes it. Windows on Arm is untested.
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm64|aarch64|ARM64)$")
+  set(qmm_arm64 ON)
+else()
+  set(qmm_arm64 OFF)
+endif()
+
 add_library(qmm
   src/cpu_features.cpp
   src/q8_scalar.cpp
@@ -38,13 +47,30 @@ if(qmm_x86_64)
   target_compile_definitions(qmm PUBLIC QMM_HAVE_AVX2=1)
 endif()
 
-# PLATFORM: macOS — Apple's Accelerate framework is the baseline; Linux and
-# Windows have no Accelerate and would need another BLAS, such as OpenBLAS.
+if(qmm_arm64)
+  target_sources(qmm PRIVATE src/q8_neon.cpp)
+  if(NOT APPLE AND NOT MSVC)
+    set_source_files_properties(src/q8_neon.cpp PROPERTIES COMPILE_OPTIONS "-march=armv8.2-a+dotprod")
+  endif()
+  target_compile_definitions(qmm PUBLIC QMM_HAVE_NEON_DOTPROD=1)
+endif()
+
+# PLATFORM: macOS — Apple's Accelerate framework is the baseline there.
 if(APPLE)
   find_library(ACCELERATE_FRAMEWORK Accelerate REQUIRED)
   target_sources(qmm PRIVATE src/accelerate.cpp)
   target_link_libraries(qmm PRIVATE ${ACCELERATE_FRAMEWORK})
   target_compile_definitions(qmm PUBLIC QMM_HAVE_ACCELERATE=1)
+endif()
+
+# PLATFORM: Linux and Windows — OpenBLAS is the baseline where Accelerate is
+# absent. macOS uses Accelerate alone: both define cblas_sgemm, and linking
+# OpenBLAS statically would silently replace Accelerate's.
+if(NOT APPLE)
+  find_package(OpenBLAS CONFIG REQUIRED)
+  target_sources(qmm PRIVATE src/openblas.cpp)
+  target_link_libraries(qmm PRIVATE OpenBLAS::OpenBLAS)
+  target_compile_definitions(qmm PUBLIC QMM_HAVE_OPENBLAS=1)
 endif()
 
 add_executable(qmm_tests

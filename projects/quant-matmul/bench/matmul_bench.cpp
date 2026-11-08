@@ -130,6 +130,9 @@ void register_all() {
 #if defined(QMM_HAVE_ACCELERATE)
   register_kernel("fp32", "accelerate", qmm::matmul_accelerate, bench_fp32);
 #endif
+#if defined(QMM_HAVE_OPENBLAS)
+  register_kernel("fp32", "openblas", qmm::matmul_openblas, bench_fp32);
+#endif
   if (!qmm::pending::q8_scalar && !qmm::pending::quantize) {
     register_kernel("q8", "scalar", qmm::matmul_q8_scalar, bench_q8);
   }
@@ -141,6 +144,11 @@ void register_all() {
     if (!qmm::pending::q8_avx2 && !qmm::pending::quantize) {
       register_kernel("q8", "avx2", qmm::matmul_q8_avx2, bench_q8);
     }
+  }
+#endif
+#if defined(QMM_HAVE_NEON_DOTPROD)
+  if (qmm::cpu_has_neon_dotprod() && !qmm::pending::q8_neon && !qmm::pending::quantize) {
+    register_kernel("q8", "neon", qmm::matmul_q8_neon, bench_q8);
   }
 #endif
 }

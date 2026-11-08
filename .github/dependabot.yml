@@ -1,0 +1,14 @@
+# Keeps the pinned GitHub Actions (commit SHAs, with the version in a comment)
+# and the Python tools in uv.lock current. The tool versions in ci.yml's env
+# block and the vcpkg baseline in vcpkg.json are not covered and are updated
+# by hand.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: uv
+    directory: /
+    schedule:
+      interval: weekly

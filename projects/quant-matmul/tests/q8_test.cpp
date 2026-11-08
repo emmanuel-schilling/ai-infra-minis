@@ -111,6 +111,12 @@ std::vector<Q8Case> q8_kernels() {
         {"avx2", qmm::matmul_q8_avx2, qmm::pending::q8_avx2 || qmm::pending::quantize});
   }
 #endif
+#if defined(QMM_HAVE_NEON_DOTPROD)
+  if (qmm::cpu_has_neon_dotprod()) {
+    kernels.push_back(
+        {"neon", qmm::matmul_q8_neon, qmm::pending::q8_neon || qmm::pending::quantize});
+  }
+#endif
   return kernels;
 }
 

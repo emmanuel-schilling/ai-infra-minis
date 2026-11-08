@@ -1,5 +1,9 @@
 // PLATFORM: x86-64 — compiled with AVX2 and FMA enabled (see CMakeLists.txt);
 // other CPUs would need their own peak-throughput loop.
+// The build defines QMM_HAVE_AVX2 only where it compiles this file. Elsewhere the file
+// is empty, so tools that read every file, such as clang-tidy, skip it.
+#if defined(QMM_HAVE_AVX2)
+
 #include <immintrin.h>
 
 #include <cstdint>
@@ -50,3 +54,5 @@ float peak_fma(std::int64_t iterations) {
 }
 
 }  // namespace qmm::bench
+
+#endif  // QMM_HAVE_AVX2

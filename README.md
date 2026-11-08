@@ -1,5 +1,7 @@
 # ai-infra-minis
 
+[![CI](https://github.com/emmanuel-schilling/ai-infra-minis/actions/workflows/ci.yml/badge.svg)](https://github.com/emmanuel-schilling/ai-infra-minis/actions/workflows/ci.yml)
+
 Small, measured projects on how LLM inference works and where its time goes.
 Each project builds one idea, tests it against a simple reference, and records
 its benchmarks. Projects are added here as they start.
@@ -8,7 +10,7 @@ its benchmarks. Projects are added here as they start.
 
 | Project | What it explores | Language | Status |
 |---|---|---|---|
-| [Quantized matmul](projects/quant-matmul/) | Scalar, AVX2 + FMA and 8-bit quantized matrix multiply, compared with a vendor BLAS | C++20 | Active |
+| [Quantized matmul](projects/quant-matmul/) | Scalar, AVX2 + FMA and 8-bit quantized matrix multiply, compared with a vendor BLAS (Accelerate on macOS, OpenBLAS elsewhere) | C++20 | Active |
 
 Each project folder has a `STATUS.md` (state, open questions, decisions and
 their reasons) and a `RESULTS.md` (benchmarks and conclusions).
@@ -32,8 +34,8 @@ below on all three.
 Requirements:
 - CMake 4.0 or later, Ninja and a C++20 compiler
 - [vcpkg](https://vcpkg.io/), with `VCPKG_ROOT` set to its checkout; it
-  installs GoogleTest and Google Benchmark at the versions pinned in
-  `vcpkg.json`
+  installs GoogleTest, Google Benchmark and, on Linux and Windows, OpenBLAS,
+  at the versions pinned in `vcpkg.json`
 - [uv](https://docs.astral.sh/uv/) for the Python tools
 
 ```sh

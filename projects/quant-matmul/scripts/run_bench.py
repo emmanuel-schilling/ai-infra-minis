@@ -9,8 +9,10 @@ results/<date>_<cpu>/ in this project:
 - round_<n>.json: Google Benchmark's raw output for each round
 - summary.json: the median of every benchmark across all rounds
 
-Earlier runs are never overwritten. Accelerate runs single-threaded
-(VECLIB_MAXIMUM_THREADS=1), like the kernels it is compared with.
+Earlier runs are never overwritten. The BLAS baselines run single-threaded,
+like the kernels they are compared with: Accelerate through
+VECLIB_MAXIMUM_THREADS=1, and OpenBLAS is built without threads (with
+OPENBLAS_NUM_THREADS=1 set as well).
 
 Usage, from anywhere in the repository:
     uv run python projects/quant-matmul/scripts/run_bench.py --help
@@ -223,7 +225,8 @@ def main() -> int:
         print("run_bench: WARNING: Low Power Mode is on, which lowers CPU speed", file=sys.stderr)
     started = datetime.datetime.now(datetime.UTC)
     run_dir = create_run_dir(RESULTS, started.date().isoformat(), cpu_slug(machine["cpu"]))
-    env = os.environ | {"VECLIB_MAXIMUM_THREADS": "1"}
+    single_thread = {"VECLIB_MAXIMUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1"}
+    env = os.environ | single_thread
 
     rounds: list[dict[str, Any]] = []
     outputs: list[dict[str, Any]] = []
@@ -251,7 +254,7 @@ def main() -> int:
         "finished_utc": datetime.datetime.now(datetime.UTC).isoformat(),
         "script_command": [sys.executable, *sys.argv],
         "settings": vars(args),
-        "environment": {"VECLIB_MAXIMUM_THREADS": env["VECLIB_MAXIMUM_THREADS"]},
+        "environment": single_thread,
         "machine": machine,
         "build": build_details(),
         "source": source_revision(),

@@ -50,6 +50,9 @@ std::vector<Fp32Case> fp32_kernels() {
 #if defined(QMM_HAVE_ACCELERATE)
   kernels.push_back({"accelerate", qmm::matmul_accelerate, false});
 #endif
+#if defined(QMM_HAVE_OPENBLAS)
+  kernels.push_back({"openblas", qmm::matmul_openblas, false});
+#endif
   return kernels;
 }
 

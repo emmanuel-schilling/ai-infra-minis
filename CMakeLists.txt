@@ -4,6 +4,10 @@ project(ai_infra_minis LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+# No C++20 modules here. Without this, CMake adds module-map arguments to the
+# compile commands that exist only after a build, which breaks clang-tidy runs
+# that only configure.
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 
 # MSVC reads source files in the system code page unless told otherwise.
 add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/utf-8>)

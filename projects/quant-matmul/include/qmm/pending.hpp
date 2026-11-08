@@ -13,5 +13,6 @@ inline constexpr bool avx2 = true;
 inline constexpr bool quantize = true;  // quantize_q8 and dequantize_q8
 inline constexpr bool q8_scalar = true;
 inline constexpr bool q8_avx2 = true;
+inline constexpr bool q8_neon = true;  // stretch goal
 
 }  // namespace qmm::pending

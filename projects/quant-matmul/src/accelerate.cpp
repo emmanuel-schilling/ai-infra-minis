@@ -1,6 +1,10 @@
 // PLATFORM: macOS — Apple's Accelerate framework provides the baseline BLAS;
 // Linux and Windows would need another BLAS, such as OpenBLAS, behind the same
 // function.
+// The build defines QMM_HAVE_ACCELERATE only where it compiles this file. Elsewhere the file
+// is empty, so tools that read every file, such as clang-tidy, skip it.
+#if defined(QMM_HAVE_ACCELERATE)
+
 #define ACCELERATE_NEW_LAPACK
 #include <Accelerate/Accelerate.h>
 
@@ -36,3 +40,5 @@ void matmul_accelerate(Shape shape, std::span<const float> a, std::span<const fl
 }
 
 }  // namespace qmm
+
+#endif  // QMM_HAVE_ACCELERATE

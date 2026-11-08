@@ -62,11 +62,25 @@ jobs:
           uv tool install "ninja==$NINJA_VERSION"
           uv tool dir --bin >> "$GITHUB_PATH"
 
+      # On Windows, OpenBLAS is built for the CPU of the machine that builds it,
+      # so cached packages are keyed by CPU model too: a package built on one
+      # runner's CPU is never reused on a different one.
+      - name: Identify the CPU
+        id: cpu
+        run: |
+          case "$RUNNER_OS" in
+            Linux) model=$(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2) ;;
+            macOS) model=$(sysctl -n machdep.cpu.brand_string) ;;
+            Windows) model=$(powershell -NoProfile -Command "(Get-CimInstance Win32_Processor).Name") ;;
+          esac
+          echo "CPU: $model"
+          echo "hash=$(printf '%s' "$model" | git hash-object --stdin | cut -c1-12)" >> "$GITHUB_OUTPUT"
+
       - name: Restore vcpkg packages
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/vcpkg-cache
-          key: vcpkg-${{ matrix.os }}-${{ hashFiles('vcpkg.json') }}
+          key: vcpkg-${{ matrix.os }}-${{ steps.cpu.outputs.hash }}-${{ hashFiles('vcpkg.json') }}
 
       # A blobless clone keeps the history that vcpkg's versioning reads,
       # fetching file contents only when needed.
@@ -141,11 +155,25 @@ jobs:
           uv tool install "clang-tidy==$CLANG_TIDY_VERSION"
           uv tool dir --bin >> "$GITHUB_PATH"
 
+      # On Windows, OpenBLAS is built for the CPU of the machine that builds it,
+      # so cached packages are keyed by CPU model too: a package built on one
+      # runner's CPU is never reused on a different one.
+      - name: Identify the CPU
+        id: cpu
+        run: |
+          case "$RUNNER_OS" in
+            Linux) model=$(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2) ;;
+            macOS) model=$(sysctl -n machdep.cpu.brand_string) ;;
+            Windows) model=$(powershell -NoProfile -Command "(Get-CimInstance Win32_Processor).Name") ;;
+          esac
+          echo "CPU: $model"
+          echo "hash=$(printf '%s' "$model" | git hash-object --stdin | cut -c1-12)" >> "$GITHUB_OUTPUT"
+
       - name: Restore vcpkg packages
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/vcpkg-cache
-          key: vcpkg-lint-${{ hashFiles('vcpkg.json') }}
+          key: vcpkg-lint-${{ steps.cpu.outputs.hash }}-${{ hashFiles('vcpkg.json') }}
 
       - name: Set up vcpkg
         run: |
