@@ -5,6 +5,7 @@ CLAUDE.local.md
 
 # Build output
 /build/
+/build-release/
 target/
 
 # Python

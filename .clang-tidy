@@ -1,0 +1,10 @@
+Checks: >
+  -*,
+  bugprone-*,
+  -bugprone-easily-swappable-parameters,
+  performance-*,
+  portability-*,
+  -portability-avoid-pragma-once,
+  -portability-simd-intrinsics
+WarningsAsErrors: '*'
+HeaderFilterRegex: 'projects/'

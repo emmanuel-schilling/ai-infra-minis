@@ -29,8 +29,12 @@ their reasons) and a `RESULTS.md` (benchmarks and conclusions).
 The code builds and is tested on Linux, macOS and Windows. CI runs the steps
 below on all three.
 
-Requirements: CMake 3.25 or later, Ninja and a C++20 compiler;
-[uv](https://docs.astral.sh/uv/) for the Python tools.
+Requirements:
+- CMake 4.0 or later, Ninja and a C++20 compiler
+- [vcpkg](https://vcpkg.io/), with `VCPKG_ROOT` set to its checkout; it
+  installs GoogleTest and Google Benchmark at the versions pinned in
+  `vcpkg.json`
+- [uv](https://docs.astral.sh/uv/) for the Python tools
 
 ```sh
 # C++: debug build with AddressSanitizer and UndefinedBehaviorSanitizer
@@ -45,6 +49,17 @@ uv run ruff check .
 uv run pyright
 uv run pytest
 ```
+
+## Running the benchmarks
+
+```sh
+uv run python projects/quant-matmul/scripts/run_bench.py
+```
+
+This builds the `release` preset, runs the benchmarks for several rounds with
+cooldowns between them, and writes the raw output, the machine and build
+details, and the medians to a new dated folder under
+`projects/quant-matmul/results/`.
 
 ## License
 

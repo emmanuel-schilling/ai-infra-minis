@@ -1,9 +1,12 @@
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 4.0)
 project(ai_infra_minis LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+
+# MSVC reads source files in the system code page unless told otherwise.
+add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/utf-8>)
 
 option(AIM_SANITIZERS "Build with AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
 if(AIM_SANITIZERS)
@@ -21,4 +24,4 @@ endif()
 
 enable_testing()
 
-# Each C++ project is added here with add_subdirectory once it has code.
+add_subdirectory(projects/quant-matmul)
