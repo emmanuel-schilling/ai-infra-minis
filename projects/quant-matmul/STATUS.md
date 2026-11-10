@@ -3,24 +3,28 @@
 ## Current state
 Active. The scaffolding is in place: the build, the kernel interface, the
 tests, the benchmarks (including the roofline) and `scripts/run_bench.py`.
-Every kernel you write is still a stub behind a pending switch in
-`include/qmm/pending.hpp`, so its tests pass without checking anything. The
+The scalar fp32 kernel, `matmul_scalar`, is done: a plain triple loop, the
+reference every other version is tested against. Its pending switch is off,
+so its tests now check it against the double-precision reference. The other
+kernels you write are still stubs behind pending switches in
+`include/qmm/pending.hpp`, so their tests pass without checking anything. The
 BLAS baselines are done, and their tests run for real: Accelerate on macOS,
 OpenBLAS on Linux and Windows. The NEON Q8 kernel (a stretch goal) is a stub
 too, built and tested on Arm only.
 
-`run_bench.py` was smoke-tested on the roofline benchmarks only. No results
-were kept: Low Power Mode was on, and the run wasn't set up as a benchmark.
+No benchmark results exist yet, for the scalar kernel or anything else.
+`run_bench.py` was smoke-tested on the roofline benchmarks only, and no
+results were kept: Low Power Mode was on, and the run wasn't set up as a
+benchmark.
 
 ## Next step
-Write the scalar kernel: set `pending::scalar` to false (its tests fail), then
-write `matmul_scalar` in `src/scalar.cpp` until they pass. After that, in
-order: the AVX2 kernel, `quantize_q8` and `dequantize_q8`, the scalar Q8
-kernel, then the AVX2 Q8 kernel. The NEON Q8 kernel comes last, if at all; it
-can be tested only by CI's Arm runners.
-
-Before the first real benchmark run, turn Low Power Mode off; `run_bench.py`
-warns while it's on.
+Record a first baseline with `run_bench.py`: the roofline, the scalar kernel
+and Accelerate. Turn Low Power Mode off first; `run_bench.py` warns while it's
+on. Then write the AVX2 kernel: set `pending::avx2` to false (its tests fail),
+then write `matmul_avx2` in `src/avx2.cpp` until they pass. After that, in
+order: `quantize_q8` and `dequantize_q8`, the scalar Q8 kernel, then the AVX2
+Q8 kernel. The NEON Q8 kernel comes last, if at all; it can be tested only by
+CI's Arm runners.
 
 ## Open questions
 - How to store each block's scale: fp32, or fp16 as in llama.cpp's Q8_0
@@ -107,3 +111,7 @@ Record each as: date, decision, reason.
 - 2026-11-08: CMake's C++20 module scanning is off. Reason: it put
   module-map arguments into the compile commands that exist only after a
   build, which broke CI's clang-tidy job, which only configures.
+- 2026-11-10: Kernels check their documented size preconditions with `assert`
+  on entry, not inside their loops. Reason: the dev build, which runs the
+  tests, catches a wrong size at the call, and the release build defines
+  `NDEBUG`, so the checks cost the benchmarks nothing.
