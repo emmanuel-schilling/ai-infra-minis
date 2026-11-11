@@ -5,8 +5,14 @@ Active. The scaffolding is in place: the build, the kernel interface, the
 tests, the benchmarks (including the roofline) and `scripts/run_bench.py`.
 The scalar fp32 kernel, `matmul_scalar`, is done: a plain triple loop, the
 reference every other version is tested against. Its pending switch is off,
-so its tests now check it against the double-precision reference. The other
-kernels you write are still stubs behind pending switches in
+so its tests now check it against the double-precision reference. The first
+AVX2 + FMA kernel, `matmul_avx2`, is done and tested for real too: one 8-wide
+FMA accumulator per output, a horizontal sum, and a scalar loop for the last
+k % 8 values. A quick unofficial timing (not a baseline) put its GEMV at the
+measured read bandwidth, about 15.6 GiB/s, and its GEMM at about 11–20 GFLOP/s,
+against a measured FMA peak of 135 GFLOP/s: each FMA waits for the one before
+it in the single accumulator. The other kernels you write are still stubs
+behind pending switches in
 `include/qmm/pending.hpp`, so their tests pass without checking anything. The
 BLAS baselines are done, and their tests run for real: Accelerate on macOS,
 OpenBLAS on Linux and Windows. The NEON Q8 kernel (a stretch goal) is a stub
@@ -19,15 +25,26 @@ it and slowed rounds 2 and 3 by about 2× (see its `INVALID.md` and RESULTS.md).
 speed before and after every round.
 
 ## Next step
-Record a first baseline with `run_bench.py`: the roofline, the scalar kernel
-and Accelerate. Run it after the pending macOS update is installed, so the
-baseline matches the OS used from now on, and after Spotlight and Bitdefender
-have finished their post-update work. Turn Low Power Mode off first;
-`run_bench.py` warns while it's on. Then write the AVX2 kernel: set `pending::avx2` to false (its tests fail),
-then write `matmul_avx2` in `src/avx2.cpp` until they pass. After that, in
-order: `quantize_q8` and `dequantize_q8`, the scalar Q8 kernel, then the AVX2
-Q8 kernel. The NEON Q8 kernel comes last, if at all; it can be tested only by
-CI's Arm runners.
+Record a first baseline with `run_bench.py`: the roofline, the scalar and
+AVX2 kernels, and Accelerate. Run it after the pending macOS update is
+installed, so the baseline matches the OS used from now on, and after
+Spotlight and Bitdefender have finished their post-update work. Turn Low Power
+Mode off first; `run_bench.py` warns while it's on.
+
+Then optimize the AVX2 kernel for GEMM in steps, each a separate version
+benchmarked beside the others. Today's kernel becomes v1. Claude adds the
+scaffolding for the versions; you write each one:
+1. v2: several independent accumulators, so the FMAs don't wait on each other.
+2. v3: register blocking, a tile such as 3 rows of A × 4 rows of W, so each
+   loaded vector feeds several FMAs. Its fallback for leftover rows must stay
+   fast: GEMV (m = 1) runs entirely through it.
+3. v4: cache blocking, running all of A against a block of W rows that fits in
+   L2, so W isn't read from L3 once per row of A.
+
+After each step, GEMM should get faster and GEMV should stay at the read
+bandwidth. After that, in order: `quantize_q8` and `dequantize_q8`, the scalar
+Q8 kernel, then the AVX2 Q8 kernel. The NEON Q8 kernel comes last, if at all;
+it can be tested only by CI's Arm runners.
 
 ## Open questions
 - How to store each block's scale: fp32, or fp16 as in llama.cpp's Q8_0
@@ -128,3 +145,10 @@ Record each as: date, decision, reason.
 - 2026-11-10: Invalid runs are kept and committed, with an `INVALID.md`
   giving the reason, and are never summarized. Reason: keeping them shows the
   exclusions follow a rule rather than the numbers.
+- 2026-11-10: The AVX2 kernel is optimized in steps (several accumulators,
+  register blocking, cache blocking), each kept as its own version with the
+  same signature, tested, and benchmarked in the same run as the others.
+  `matmul_avx2` stays the public interface and points at the best version. A
+  separate GEMV path is added only if a measurement shows a GEMM step slowing
+  GEMV. Reason: versions timed side by side compare fairly, where numbers from
+  different days don't, and each step's measured gain is the lesson.

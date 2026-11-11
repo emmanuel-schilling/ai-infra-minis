@@ -9,7 +9,7 @@
 namespace qmm::pending {
 
 inline constexpr bool scalar = false;
-inline constexpr bool avx2 = true;
+inline constexpr bool avx2 = false;
 inline constexpr bool quantize = true;  // quantize_q8 and dequantize_q8
 inline constexpr bool q8_scalar = true;
 inline constexpr bool q8_avx2 = true;
