@@ -1,0 +1,188 @@
+{
+  "started_utc": "2026-11-11T10:51:27.587866+00:00",
+  "finished_utc": "2026-11-11T11:06:57.523393+00:00",
+  "script_command": [
+    "/Users/emmanuelschilling/projects/ai-infra-minis/.venv/bin/python",
+    "projects/quant-matmul/scripts/run_bench.py"
+  ],
+  "settings": {
+    "rounds": 3,
+    "repetitions": 5,
+    "cooldown": 60.0,
+    "filter": "."
+  },
+  "environment": {
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1"
+  },
+  "machine": {
+    "cpu": "Intel(R) Core(TM) i9-8950HK CPU @ 2.90GHz",
+    "logical_cpus": 12,
+    "os": "macOS-15.8.2-x86_64-i386-64bit-Mach-O",
+    "python": "3.14.7",
+    "physical_cpus": 6,
+    "memory_bytes": 34359738368,
+    "low_power_mode": false
+  },
+  "build": {
+    "cache": {
+      "CMAKE_BUILD_TYPE": "Release",
+      "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+      "CMAKE_CXX_FLAGS": "",
+      "CMAKE_CXX_FLAGS_RELEASE": "-O3 -DNDEBUG"
+    },
+    "compiler": {
+      "CMAKE_CXX_COMPILER_ID": "AppleClang",
+      "CMAKE_CXX_COMPILER_VERSION": "17.0.0.17000604"
+    },
+    "compile_commands": [
+      {
+        "directory": "/Users/emmanuelschilling/projects/ai-infra-minis/build-release",
+        "command": "/usr/bin/c++ -DQMM_HAVE_ACCELERATE=1 -DQMM_HAVE_AVX2=1 -I/Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/include -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -O3 -DNDEBUG -std=c++20 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -Wall -Wextra -Wpedantic -o projects/quant-matmul/CMakeFiles/qmm.dir/src/cpu_features.cpp.o -c /Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/src/cpu_features.cpp",
+        "file": "/Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/src/cpu_features.cpp",
+        "output": "/Users/emmanuelschilling/projects/ai-infra-minis/build-release/projects/quant-matmul/CMakeFiles/qmm.dir/src/cpu_features.cpp.o"
+      },
+      {
+        "directory": "/Users/emmanuelschilling/projects/ai-infra-minis/build-release",
+        "command": "/usr/bin/c++ -DQMM_HAVE_ACCELERATE=1 -DQMM_HAVE_AVX2=1 -I/Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/include -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -O3 -DNDEBUG -std=c++20 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -Wall -Wextra -Wpedantic -o projects/quant-matmul/CMakeFiles/qmm.dir/src/q8_scalar.cpp.o -c /Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/src/q8_scalar.cpp",
+        "file": "/Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/src/q8_scalar.cpp",
+        "output": "/Users/emmanuelschilling/projects/ai-infra-minis/build-release/projects/quant-matmul/CMakeFiles/qmm.dir/src/q8_scalar.cpp.o"
+      },
+      {
+        "directory": "/Users/emmanuelschilling/projects/ai-infra-minis/build-release",
+        "command": "/usr/bin/c++ -DQMM_HAVE_ACCELERATE=1 -DQMM_HAVE_AVX2=1 -I/Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/include -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -O3 -DNDEBUG -std=c++20 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -Wall -Wextra -Wpedantic -o projects/quant-matmul/CMakeFiles/qmm.dir/src/quantize.cpp.o -c /Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/src/quantize.cpp",
+        "file": "/Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/src/quantize.cpp",
+        "output": "/Users/emmanuelschilling/projects/ai-infra-minis/build-release/projects/quant-matmul/CMakeFiles/qmm.dir/src/quantize.cpp.o"
+      },
+      {
+        "directory": "/Users/emmanuelschilling/projects/ai-infra-minis/build-release",
+        "command": "/usr/bin/c++ -DQMM_HAVE_ACCELERATE=1 -DQMM_HAVE_AVX2=1 -I/Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/include -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -O3 -DNDEBUG -std=c++20 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -Wall -Wextra -Wpedantic -o projects/quant-matmul/CMakeFiles/qmm.dir/src/scalar.cpp.o -c /Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/src/scalar.cpp",
+        "file": "/Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/src/scalar.cpp",
+        "output": "/Users/emmanuelschilling/projects/ai-infra-minis/build-release/projects/quant-matmul/CMakeFiles/qmm.dir/src/scalar.cpp.o"
+      },
+      {
+        "directory": "/Users/emmanuelschilling/projects/ai-infra-minis/build-release",
+        "command": "/usr/bin/c++ -DQMM_HAVE_ACCELERATE=1 -DQMM_HAVE_AVX2=1 -I/Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/include -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -O3 -DNDEBUG -std=c++20 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -Wall -Wextra -Wpedantic -mavx2 -mfma -o projects/quant-matmul/CMakeFiles/qmm.dir/src/avx2.cpp.o -c /Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/src/avx2.cpp",
+        "file": "/Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/src/avx2.cpp",
+        "output": "/Users/emmanuelschilling/projects/ai-infra-minis/build-release/projects/quant-matmul/CMakeFiles/qmm.dir/src/avx2.cpp.o"
+      },
+      {
+        "directory": "/Users/emmanuelschilling/projects/ai-infra-minis/build-release",
+        "command": "/usr/bin/c++ -DQMM_HAVE_ACCELERATE=1 -DQMM_HAVE_AVX2=1 -I/Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/include -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -O3 -DNDEBUG -std=c++20 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -Wall -Wextra -Wpedantic -mavx2 -mfma -o projects/quant-matmul/CMakeFiles/qmm.dir/src/q8_avx2.cpp.o -c /Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/src/q8_avx2.cpp",
+        "file": "/Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/src/q8_avx2.cpp",
+        "output": "/Users/emmanuelschilling/projects/ai-infra-minis/build-release/projects/quant-matmul/CMakeFiles/qmm.dir/src/q8_avx2.cpp.o"
+      },
+      {
+        "directory": "/Users/emmanuelschilling/projects/ai-infra-minis/build-release",
+        "command": "/usr/bin/c++ -DQMM_HAVE_ACCELERATE=1 -DQMM_HAVE_AVX2=1 -I/Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/include -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -O3 -DNDEBUG -std=c++20 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -Wall -Wextra -Wpedantic -o projects/quant-matmul/CMakeFiles/qmm.dir/src/accelerate.cpp.o -c /Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/src/accelerate.cpp",
+        "file": "/Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/src/accelerate.cpp",
+        "output": "/Users/emmanuelschilling/projects/ai-infra-minis/build-release/projects/quant-matmul/CMakeFiles/qmm.dir/src/accelerate.cpp.o"
+      },
+      {
+        "directory": "/Users/emmanuelschilling/projects/ai-infra-minis/build-release",
+        "command": "/usr/bin/c++ -DQMM_HAVE_ACCELERATE=1 -DQMM_HAVE_AVX2=1 -I/Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/support -I/Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/tests -I/Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/include -isystem /Users/emmanuelschilling/projects/ai-infra-minis/build-release/vcpkg_installed/x64-osx/include -O3 -DNDEBUG -std=c++20 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -Wall -Wextra -Wpedantic -o projects/quant-matmul/CMakeFiles/qmm_tests.dir/tests/matmul_test.cpp.o -c /Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/tests/matmul_test.cpp",
+        "file": "/Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/tests/matmul_test.cpp",
+        "output": "/Users/emmanuelschilling/projects/ai-infra-minis/build-release/projects/quant-matmul/CMakeFiles/qmm_tests.dir/tests/matmul_test.cpp.o"
+      },
+      {
+        "directory": "/Users/emmanuelschilling/projects/ai-infra-minis/build-release",
+        "command": "/usr/bin/c++ -DQMM_HAVE_ACCELERATE=1 -DQMM_HAVE_AVX2=1 -I/Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/support -I/Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/tests -I/Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/include -isystem /Users/emmanuelschilling/projects/ai-infra-minis/build-release/vcpkg_installed/x64-osx/include -O3 -DNDEBUG -std=c++20 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -Wall -Wextra -Wpedantic -o projects/quant-matmul/CMakeFiles/qmm_tests.dir/tests/q8_test.cpp.o -c /Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/tests/q8_test.cpp",
+        "file": "/Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/tests/q8_test.cpp",
+        "output": "/Users/emmanuelschilling/projects/ai-infra-minis/build-release/projects/quant-matmul/CMakeFiles/qmm_tests.dir/tests/q8_test.cpp.o"
+      },
+      {
+        "directory": "/Users/emmanuelschilling/projects/ai-infra-minis/build-release",
+        "command": "/usr/bin/c++ -DBENCHMARK_STATIC_DEFINE -DQMM_HAVE_ACCELERATE=1 -DQMM_HAVE_AVX2=1 -I/Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/support -I/Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/include -isystem /Users/emmanuelschilling/projects/ai-infra-minis/build-release/vcpkg_installed/x64-osx/include -O3 -DNDEBUG -std=c++20 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -Wall -Wextra -Wpedantic -o projects/quant-matmul/CMakeFiles/qmm_bench.dir/bench/matmul_bench.cpp.o -c /Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/bench/matmul_bench.cpp",
+        "file": "/Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/bench/matmul_bench.cpp",
+        "output": "/Users/emmanuelschilling/projects/ai-infra-minis/build-release/projects/quant-matmul/CMakeFiles/qmm_bench.dir/bench/matmul_bench.cpp.o"
+      },
+      {
+        "directory": "/Users/emmanuelschilling/projects/ai-infra-minis/build-release",
+        "command": "/usr/bin/c++ -DBENCHMARK_STATIC_DEFINE -DQMM_HAVE_ACCELERATE=1 -DQMM_HAVE_AVX2=1 -I/Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/support -I/Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/include -isystem /Users/emmanuelschilling/projects/ai-infra-minis/build-release/vcpkg_installed/x64-osx/include -O3 -DNDEBUG -std=c++20 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -Wall -Wextra -Wpedantic -o projects/quant-matmul/CMakeFiles/qmm_bench.dir/bench/roofline.cpp.o -c /Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/bench/roofline.cpp",
+        "file": "/Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/bench/roofline.cpp",
+        "output": "/Users/emmanuelschilling/projects/ai-infra-minis/build-release/projects/quant-matmul/CMakeFiles/qmm_bench.dir/bench/roofline.cpp.o"
+      },
+      {
+        "directory": "/Users/emmanuelschilling/projects/ai-infra-minis/build-release",
+        "command": "/usr/bin/c++ -DBENCHMARK_STATIC_DEFINE -DQMM_HAVE_ACCELERATE=1 -DQMM_HAVE_AVX2=1 -I/Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/support -I/Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/include -isystem /Users/emmanuelschilling/projects/ai-infra-minis/build-release/vcpkg_installed/x64-osx/include -O3 -DNDEBUG -std=c++20 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -Wall -Wextra -Wpedantic -mavx2 -mfma -o projects/quant-matmul/CMakeFiles/qmm_bench.dir/bench/roofline_avx2.cpp.o -c /Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/bench/roofline_avx2.cpp",
+        "file": "/Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/bench/roofline_avx2.cpp",
+        "output": "/Users/emmanuelschilling/projects/ai-infra-minis/build-release/projects/quant-matmul/CMakeFiles/qmm_bench.dir/bench/roofline_avx2.cpp.o"
+      }
+    ]
+  },
+  "source": {
+    "revision": "85a4f2d8636e06132bca77d16d3211bc4e903e60",
+    "uncommitted_changes": true
+  },
+  "speed_check": {
+    "benchmark": "fp32/scalar/attn_out/tokens:128",
+    "tolerance": 0.05
+  },
+  "rounds": [
+    {
+      "round": 1,
+      "command": [
+        "/Users/emmanuelschilling/projects/ai-infra-minis/build-release/projects/quant-matmul/qmm_bench",
+        "--benchmark_repetitions=5",
+        "--benchmark_enable_random_interleaving=true",
+        "--benchmark_filter=.",
+        "--benchmark_out=/Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/results/2026-11-11_i9-8950hk/round_1.json",
+        "--benchmark_out_format=json"
+      ],
+      "thermal_before": {
+        "cpu_speed_limit": 100,
+        "raw": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\n2026-11-11 02:51:27 -0800 CPU Power notify\n\tCPU_Scheduler_Limit \t= 100\n\tCPU_Available_CPUs \t= 12\n\tCPU_Speed_Limit \t= 100"
+      },
+      "thermal_after": {
+        "cpu_speed_limit": 100,
+        "raw": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\n2026-11-11 02:55:56 -0800 CPU Power notify\n\tCPU_Scheduler_Limit \t= 100\n\tCPU_Available_CPUs \t= 12\n\tCPU_Speed_Limit \t= 100"
+      },
+      "check_before_ns": 68591826.89287183,
+      "check_after_ns": 68229178.50222439
+    },
+    {
+      "round": 2,
+      "command": [
+        "/Users/emmanuelschilling/projects/ai-infra-minis/build-release/projects/quant-matmul/qmm_bench",
+        "--benchmark_repetitions=5",
+        "--benchmark_enable_random_interleaving=true",
+        "--benchmark_filter=.",
+        "--benchmark_out=/Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/results/2026-11-11_i9-8950hk/round_2.json",
+        "--benchmark_out_format=json"
+      ],
+      "thermal_before": {
+        "cpu_speed_limit": 100,
+        "raw": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\n2026-11-11 02:56:56 -0800 CPU Power notify\n\tCPU_Scheduler_Limit \t= 100\n\tCPU_Available_CPUs \t= 12\n\tCPU_Speed_Limit \t= 100"
+      },
+      "thermal_after": {
+        "cpu_speed_limit": 100,
+        "raw": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\n2026-11-11 03:01:27 -0800 CPU Power notify\n\tCPU_Scheduler_Limit \t= 100\n\tCPU_Available_CPUs \t= 12\n\tCPU_Speed_Limit \t= 100"
+      },
+      "check_before_ns": 66670180.00152893,
+      "check_after_ns": 69729163.55718754
+    },
+    {
+      "round": 3,
+      "command": [
+        "/Users/emmanuelschilling/projects/ai-infra-minis/build-release/projects/quant-matmul/qmm_bench",
+        "--benchmark_repetitions=5",
+        "--benchmark_enable_random_interleaving=true",
+        "--benchmark_filter=.",
+        "--benchmark_out=/Users/emmanuelschilling/projects/ai-infra-minis/projects/quant-matmul/results/2026-11-11_i9-8950hk/round_3.json",
+        "--benchmark_out_format=json"
+      ],
+      "thermal_before": {
+        "cpu_speed_limit": 100,
+        "raw": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\n2026-11-11 03:02:27 -0800 CPU Power notify\n\tCPU_Scheduler_Limit \t= 100\n\tCPU_Available_CPUs \t= 12\n\tCPU_Speed_Limit \t= 100"
+      },
+      "thermal_after": {
+        "cpu_speed_limit": 100,
+        "raw": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\n2026-11-11 03:06:57 -0800 CPU Power notify\n\tCPU_Scheduler_Limit \t= 100\n\tCPU_Available_CPUs \t= 12\n\tCPU_Speed_Limit \t= 100"
+      },
+      "check_before_ns": 68733193.99892353,
+      "check_after_ns": 68460163.11060844
+    }
+  ],
+  "throttled_rounds": [],
+  "slow_rounds": []
+}

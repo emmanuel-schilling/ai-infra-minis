@@ -8,15 +8,14 @@ reference every other version is tested against. Its pending switch is off,
 so its tests now check it against the double-precision reference. The first
 AVX2 + FMA kernel, `matmul_avx2`, is done and tested for real too: one 8-wide
 FMA accumulator per output, a horizontal sum, and a scalar loop for the last
-k % 8 values. A quick unofficial timing (not a baseline) put its GEMV at the
-measured read bandwidth, about 15.6 GiB/s, and its GEMM at about 11–20 GFLOP/s,
-against a measured FMA peak of 135 GFLOP/s: each FMA waits for the one before
-it in the single accumulator. That kernel is now step v1
-(`avx2_steps::v1_one_accumulator`). Step v2, `v2_accumulators`, is done and
-tested for real: 8 independent accumulators over 64 floats per pass, a tree
-reduction and one horizontal sum. Its speed isn't measured yet: a timing on
-2026-11-11 was invalid (the screen saver and Chrome were running), so v1 and
-v2 are compared in the next baseline. All fp32 kernels now accept empty sizes:
+k % 8 values. That kernel is now step v1 (`avx2_steps::v1_one_accumulator`).
+Step v2, `v2_accumulators`, is done and tested for real: 8 independent
+accumulators over 64 floats per pass, a tree reduction and one horizontal sum.
+Step v3, `v3_register_blocking`, is done and tested for real too: a 3 × 4 tile
+of outputs with 12 accumulators, each loaded W vector feeding 3 FMAs, and a
+one-accumulator fallback for leftover rows and columns. Its compiled inner
+loop keeps all 16 YMM registers in use with no spills to the stack. All fp32
+kernels now accept empty sizes:
 k = 0 sets C to zero, and the BLAS wrappers handle it themselves, because
 BLAS rejects a leading dimension below 1. The other kernels you write are
 still stubs behind pending switches in
@@ -25,22 +24,26 @@ BLAS baselines are done, and their tests run for real: Accelerate on macOS,
 OpenBLAS on Linux and Windows. The NEON Q8 kernel (a stretch goal) is a stub
 too, built and tested on Arm only.
 
-No valid benchmark results exist yet. The first baseline run
-(`results/2026-11-10_i9-8950hk/`) is invalid: the screen saver started during
-it and slowed rounds 2 and 3 by about 2× (see its `INVALID.md` and RESULTS.md).
-`run_bench.py` now keeps the Mac awake for the whole run and checks the CPU's
-speed before and after every round.
+The first valid run is `results/2026-11-11_i9-8950hk/`, summarized in
+RESULTS.md. Every AVX2 version reaches the read bandwidth for GEMV (about 16
+GiB/s). For GEMM, v2 is only 1.0–1.3× faster than v1, while v3 is 2.4–3.8×
+faster than v2: 79–82 GFLOP/s on attn_out, 75–92% of Accelerate, but 48–60% of
+it on the MLP shapes and 28% on lm_head, where W doesn't stay in cache. It ran
+on macOS 15.8.2 with v3 not yet committed; its exact source is in the run
+folder's `source.patch`. The earlier run (`results/2026-11-10_i9-8950hk/`) is
+invalid: the screen saver started during it (see its `INVALID.md`).
 
 ## Next step
-Record a first baseline with `run_bench.py`: the roofline, the scalar kernel,
-AVX2 v1 and v2, and Accelerate. Run it after the pending macOS update is
-installed, so the baseline matches the OS used from now on, and after
-Spotlight and Bitdefender have finished their post-update work. Close other
-apps, Chrome included, and start it while the screen saver isn't running:
-`caffeinate` keeps it from starting but can't stop it. Turn Low Power Mode off
-first; `run_bench.py` warns while it's on.
+1. Point `matmul_avx2` at v3, now measured as the fastest version.
+2. Write v4, cache blocking. The measurements put it where the gap is: the
+   larger W matrices, and lm_head above all, which is memory-bound even as a
+   GEMM because v3 reads its 154 MB W once per 3-row tile.
+3. After the pending macOS update, rerun the benchmarks so later comparisons
+   use the new OS. Close other apps, Chrome included, and start the run while
+   the screen saver isn't running: `caffeinate` keeps it from starting but
+   can't stop it. Turn Low Power Mode off first.
 
-Then optimize the AVX2 kernel for GEMM in steps, each a separate version
+The AVX2 kernel is optimized for GEMM in steps, each a separate version
 benchmarked beside the others. The scaffolding is in place: the versions are
 declared in `include/qmm/avx2_steps.hpp` and written in `src/avx2.cpp`, the
 first kernel is now `avx2_steps::v1_one_accumulator`, and v2 to v4 are stubs
@@ -48,10 +51,13 @@ behind `pending::avx2_v2` to `avx2_v4`. `matmul_avx2` calls v1; point it at a
 newer version only once a benchmark run shows that version is faster. You
 write each one:
 1. v2: several independent accumulators, so the FMAs don't wait on each other.
-   Done; to be measured.
+   Done and measured.
 2. v3: register blocking, a tile such as 3 rows of A × 4 rows of W, so each
-   loaded vector feeds several FMAs. Its fallback for leftover rows must stay
-   fast: GEMV (m = 1) runs entirely through it.
+   loaded vector feeds several FMAs. Done and measured. Its fallback for
+   leftover rows is v1's single accumulator; GEMV, which runs entirely
+   through it, kept v1's speed. The leftover rows may cost GEMM a few percent
+   (v3 is 4–5% faster at 1,024 tokens than at 128); a 1 × 4 tile would fix
+   that if it's worth it.
 3. v4: cache blocking, running all of A against a block of W rows that fits in
    L2, so W isn't read from L3 once per row of A.
 

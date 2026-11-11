@@ -32,7 +32,7 @@ float hsum256_ps(__m256 v) {
 // shows the newer version is faster.
 void matmul_avx2(Shape shape, std::span<const float> a, std::span<const float> w,
                  std::span<float> c) {
-  avx2_steps::v1_one_accumulator(shape, a, w, c);
+  avx2_steps::v3_register_blocking(shape, a, w, c);
 }
 
 namespace avx2_steps {
@@ -140,10 +140,150 @@ void v2_accumulators(Shape shape, std::span<const float> a, std::span<const floa
   }
 }
 
-// To write: register blocking. Name the parameters when you write the body, and
-// set pending::avx2_v3 to false.
-void v3_register_blocking(Shape /*shape*/, std::span<const float> /*a*/,
-                          std::span<const float> /*w*/, std::span<float> /*c*/) {}
+void v3_register_blocking(Shape shape, std::span<const float> a, std::span<const float> w,
+                          std::span<float> c) {
+  assert(a.size() == shape.m * shape.k);
+  assert(w.size() == shape.n * shape.k);
+  assert(c.size() == shape.m * shape.n);
+
+  // Fallback helper for fringe elements (edges of M and N)
+  auto compute_single = [&](std::size_t row, std::size_t col) {
+    const float* a_row = a.data() + row * shape.k;
+    const float* w_row = w.data() + col * shape.k;
+    __m256 vsum = _mm256_setzero_ps();
+    std::size_t p = 0;
+    for (; p + 8 <= shape.k; p += 8) {
+      vsum = _mm256_fmadd_ps(_mm256_loadu_ps(a_row + p), _mm256_loadu_ps(w_row + p), vsum);
+    }
+    float sum = hsum256_ps(vsum);
+    for (; p < shape.k; ++p) {
+      sum += a_row[p] * w_row[p];
+    }
+    c[row * shape.n + col] = sum;
+  };
+
+  std::size_t i = 0;
+  // Step i by 3 (rows of A)
+  for (; i + 3 <= shape.m; i += 3) {
+    const float* a0 = a.data() + (i + 0) * shape.k;
+    const float* a1 = a.data() + (i + 1) * shape.k;
+    const float* a2 = a.data() + (i + 2) * shape.k;
+
+    std::size_t j = 0;
+    // Step j by 4 (rows of W / columns of C)
+    for (; j + 4 <= shape.n; j += 4) {
+      const float* w0 = w.data() + (j + 0) * shape.k;
+      const float* w1 = w.data() + (j + 1) * shape.k;
+      const float* w2 = w.data() + (j + 2) * shape.k;
+      const float* w3 = w.data() + (j + 3) * shape.k;
+
+      // 12 Accumulators: exactly 12 YMM registers
+      __m256 c00 = _mm256_setzero_ps();
+      __m256 c01 = _mm256_setzero_ps();
+      __m256 c02 = _mm256_setzero_ps();
+      __m256 c03 = _mm256_setzero_ps();
+
+      __m256 c10 = _mm256_setzero_ps();
+      __m256 c11 = _mm256_setzero_ps();
+      __m256 c12 = _mm256_setzero_ps();
+      __m256 c13 = _mm256_setzero_ps();
+
+      __m256 c20 = _mm256_setzero_ps();
+      __m256 c21 = _mm256_setzero_ps();
+      __m256 c22 = _mm256_setzero_ps();
+      __m256 c23 = _mm256_setzero_ps();
+
+      std::size_t p = 0;
+      // Main loop: 12 FMAs for 7 loads (p advances by 8 floats = 256 bits)
+      for (; p + 8 <= shape.k; p += 8) {
+        // 3 loads for A (3 YMM registers)
+        __m256 va0 = _mm256_loadu_ps(a0 + p);
+        __m256 va1 = _mm256_loadu_ps(a1 + p);
+        __m256 va2 = _mm256_loadu_ps(a2 + p);
+
+        // 1 load for W reused across 3 rows of A (1 temporary YMM register)
+        __m256 vw;
+
+        vw = _mm256_loadu_ps(w0 + p);
+        c00 = _mm256_fmadd_ps(va0, vw, c00);
+        c10 = _mm256_fmadd_ps(va1, vw, c10);
+        c20 = _mm256_fmadd_ps(va2, vw, c20);
+
+        vw = _mm256_loadu_ps(w1 + p);
+        c01 = _mm256_fmadd_ps(va0, vw, c01);
+        c11 = _mm256_fmadd_ps(va1, vw, c11);
+        c21 = _mm256_fmadd_ps(va2, vw, c21);
+
+        vw = _mm256_loadu_ps(w2 + p);
+        c02 = _mm256_fmadd_ps(va0, vw, c02);
+        c12 = _mm256_fmadd_ps(va1, vw, c12);
+        c22 = _mm256_fmadd_ps(va2, vw, c22);
+
+        vw = _mm256_loadu_ps(w3 + p);
+        c03 = _mm256_fmadd_ps(va0, vw, c03);
+        c13 = _mm256_fmadd_ps(va1, vw, c13);
+        c23 = _mm256_fmadd_ps(va2, vw, c23);
+      }
+
+      // Horizontally sum each of the 12 accumulator vectors
+      float s00 = hsum256_ps(c00), s01 = hsum256_ps(c01), s02 = hsum256_ps(c02),
+            s03 = hsum256_ps(c03);
+      float s10 = hsum256_ps(c10), s11 = hsum256_ps(c11), s12 = hsum256_ps(c12),
+            s13 = hsum256_ps(c13);
+      float s20 = hsum256_ps(c20), s21 = hsum256_ps(c21), s22 = hsum256_ps(c22),
+            s23 = hsum256_ps(c23);
+
+      // Scalar remainder along K (for remaining p < shape.k)
+      for (std::size_t rem_p = p; rem_p < shape.k; ++rem_p) {
+        float a0_val = a0[rem_p], a1_val = a1[rem_p], a2_val = a2[rem_p];
+        float w0_val = w0[rem_p], w1_val = w1[rem_p], w2_val = w2[rem_p], w3_val = w3[rem_p];
+
+        s00 += a0_val * w0_val;
+        s01 += a0_val * w1_val;
+        s02 += a0_val * w2_val;
+        s03 += a0_val * w3_val;
+        s10 += a1_val * w0_val;
+        s11 += a1_val * w1_val;
+        s12 += a1_val * w2_val;
+        s13 += a1_val * w3_val;
+        s20 += a2_val * w0_val;
+        s21 += a2_val * w1_val;
+        s22 += a2_val * w2_val;
+        s23 += a2_val * w3_val;
+      }
+
+      // Write 3x4 tile to output matrix C
+      c[(i + 0) * shape.n + (j + 0)] = s00;
+      c[(i + 0) * shape.n + (j + 1)] = s01;
+      c[(i + 0) * shape.n + (j + 2)] = s02;
+      c[(i + 0) * shape.n + (j + 3)] = s03;
+
+      c[(i + 1) * shape.n + (j + 0)] = s10;
+      c[(i + 1) * shape.n + (j + 1)] = s11;
+      c[(i + 1) * shape.n + (j + 2)] = s12;
+      c[(i + 1) * shape.n + (j + 3)] = s13;
+
+      c[(i + 2) * shape.n + (j + 0)] = s20;
+      c[(i + 2) * shape.n + (j + 1)] = s21;
+      c[(i + 2) * shape.n + (j + 2)] = s22;
+      c[(i + 2) * shape.n + (j + 3)] = s23;
+    }
+
+    // Remainder columns for these 3 rows (if shape.n % 4 != 0)
+    for (; j < shape.n; ++j) {
+      compute_single(i + 0, j);
+      compute_single(i + 1, j);
+      compute_single(i + 2, j);
+    }
+  }
+
+  // Remainder rows (if shape.m % 3 != 0)
+  for (; i < shape.m; ++i) {
+    for (std::size_t j = 0; j < shape.n; ++j) {
+      compute_single(i, j);
+    }
+  }
+}
 
 // To write: cache blocking. Name the parameters when you write the body, and set
 // pending::avx2_v4 to false.

@@ -1,0 +1,342 @@
+{
+  "fp32/avx2_v2/mlp_up/tokens:1": {
+    "time_ns": 509583.0158349287,
+    "FLOP/s": 9262320989.051004,
+    "bytes_per_second": 18554792762.571575,
+    "samples": 15.0
+  },
+  "fp32/avx2_v3/mlp_down/tokens:1024": {
+    "time_ns": 90542708.29074085,
+    "FLOP/s": 53392500198.90242,
+    "bytes_per_second": 278085938.5359501,
+    "samples": 15.0
+  },
+  "fp32/avx2_v3/attn_out/tokens:1024": {
+    "time_ns": 14798530.585018322,
+    "FLOP/s": 81658656122.6911,
+    "bytes_per_second": 584795063.3786472,
+    "samples": 15.0
+  },
+  "fp32/scalar/lm_head/tokens:128": {
+    "time_ns": 4677250550.943427,
+    "FLOP/s": 2113192816.9314969,
+    "bytes_per_second": 38605839.52064965,
+    "samples": 15.0
+  },
+  "fp32/avx2_v3/lm_head/tokens:1": {
+    "time_ns": 9075940.26155913,
+    "FLOP/s": 8507044270.833024,
+    "bytes_per_second": 17036580844.454676,
+    "samples": 15.0
+  },
+  "fp32/avx2_v1/lm_head/tokens:1": {
+    "time_ns": 8910965.205032904,
+    "FLOP/s": 8667387351.28362,
+    "bytes_per_second": 17357690946.38647,
+    "samples": 15.0
+  },
+  "fp32/avx2_v2/lm_head/tokens:1": {
+    "time_ns": 8497103.914567383,
+    "FLOP/s": 9087928881.232092,
+    "bytes_per_second": 18199885902.157665,
+    "samples": 15.0
+  },
+  "fp32/avx2_v1/mlp_down/tokens:1": {
+    "time_ns": 553983.4143157533,
+    "FLOP/s": 8521679594.847547,
+    "bytes_per_second": 17071099032.126238,
+    "samples": 15.0
+  },
+  "fp32/scalar/attn_out/tokens:1024": {
+    "time_ns": 534605877.0082891,
+    "FLOP/s": 2261059161.9949713,
+    "bytes_per_second": 16192480.97782857,
+    "samples": 15.0
+  },
+  "fp32/avx2_v2/mlp_up/tokens:1024": {
+    "time_ns": 338966326.49702954,
+    "FLOP/s": 14260066663.321974,
+    "bytes_per_second": 74271180.53813528,
+    "samples": 15.0
+  },
+  "fp32/scalar/attn_out/tokens:1": {
+    "time_ns": 561485.0151818246,
+    "FLOP/s": 2101815227.3844838,
+    "bytes_per_second": 4214577409.078262,
+    "samples": 15.0
+  },
+  "fp32/accelerate/mlp_down/tokens:1": {
+    "time_ns": 476244.7251840083,
+    "FLOP/s": 9912158449.79845,
+    "bytes_per_second": 19856583040.384007,
+    "samples": 15.0
+  },
+  "fp32/avx2_v2/mlp_down/tokens:128": {
+    "time_ns": 41837123.35276034,
+    "FLOP/s": 14444256207.032158,
+    "bytes_per_second": 272710566.4088103,
+    "samples": 15.0
+  },
+  "fp32/avx2_v1/mlp_up/tokens:1024": {
+    "time_ns": 378164513.9970351,
+    "FLOP/s": 12785177503.472992,
+    "bytes_per_second": 66589466.16392183,
+    "samples": 15.0
+  },
+  "fp32/accelerate/mlp_up/tokens:1": {
+    "time_ns": 616526.865869821,
+    "FLOP/s": 7657474796.651394,
+    "bytes_per_second": 15339876269.073137,
+    "samples": 15.0
+  },
+  "fp32/avx2_v3/mlp_down/tokens:128": {
+    "time_ns": 11971957.984402955,
+    "FLOP/s": 50665124186.242294,
+    "bytes_per_second": 956568099.87046,
+    "samples": 15.0
+  },
+  "fp32/accelerate/mlp_down/tokens:1024": {
+    "time_ns": 45051626.93749298,
+    "FLOP/s": 107342128847.63577,
+    "bytes_per_second": 559073587.7481029,
+    "samples": 15.0
+  },
+  "fp32/accelerate/attn_out/tokens:128": {
+    "time_ns": 1771291.352833295,
+    "FLOP/s": 85285864923.4497,
+    "bytes_per_second": 1776788852.571869,
+    "samples": 15.0
+  },
+  "fp32/scalar/attn_out/tokens:128": {
+    "time_ns": 67215558.72883818,
+    "FLOP/s": 2247836515.506552,
+    "bytes_per_second": 46829927.4063865,
+    "samples": 15.0
+  },
+  "fp32/avx2_v1/lm_head/tokens:128": {
+    "time_ns": 1138366514.9915032,
+    "FLOP/s": 8683118155.766504,
+    "bytes_per_second": 158631556.6542207,
+    "samples": 15.0
+  },
+  "roofline/read_bandwidth": {
+    "time_ns": 30343981.302829217,
+    "bytes_per_second": 17705859460.45103,
+    "samples": 15.0
+  },
+  "fp32/avx2_v3/attn_out/tokens:1": {
+    "time_ns": 135820.4669620809,
+    "FLOP/s": 8690105559.433517,
+    "bytes_per_second": 17425472085.32242,
+    "samples": 15.0
+  },
+  "fp32/accelerate/lm_head/tokens:1": {
+    "time_ns": 10967036.76131568,
+    "FLOP/s": 7042376935.205515,
+    "bytes_per_second": 14103373648.248718,
+    "samples": 15.0
+  },
+  "fp32/avx2_v1/mlp_up/tokens:128": {
+    "time_ns": 47093289.93145997,
+    "FLOP/s": 12830178042.383184,
+    "bytes_per_second": 242236434.39395335,
+    "samples": 15.0
+  },
+  "fp32/avx2_v2/mlp_up/tokens:128": {
+    "time_ns": 42424251.56189711,
+    "FLOP/s": 14241678074.833204,
+    "bytes_per_second": 268885849.0691165,
+    "samples": 15.0
+  },
+  "fp32/avx2_v2/attn_out/tokens:1": {
+    "time_ns": 127234.01119299766,
+    "FLOP/s": 9275613764.07479,
+    "bytes_per_second": 18599538016.504135,
+    "samples": 15.0
+  },
+  "fp32/avx2_v2/mlp_down/tokens:1": {
+    "time_ns": 508985.42500770715,
+    "FLOP/s": 9271073885.79317,
+    "bytes_per_second": 18572327048.558323,
+    "samples": 15.0
+  },
+  "fp32/accelerate/mlp_up/tokens:1024": {
+    "time_ns": 48806816.57232344,
+    "FLOP/s": 99038881488.44383,
+    "bytes_per_second": 515827507.75231165,
+    "samples": 15.0
+  },
+  "fp32/accelerate/mlp_down/tokens:128": {
+    "time_ns": 7193149.74772678,
+    "FLOP/s": 84006054977.50722,
+    "bytes_per_second": 1586051819.23679,
+    "samples": 15.0
+  },
+  "fp32/scalar/mlp_down/tokens:1": {
+    "time_ns": 2330986.973066575,
+    "FLOP/s": 2025496267.9153907,
+    "bytes_per_second": 4057585948.1612353,
+    "samples": 15.0
+  },
+  "fp32/avx2_v1/attn_out/tokens:128": {
+    "time_ns": 7324753.648340497,
+    "FLOP/s": 20629211112.311752,
+    "bytes_per_second": 429775231.50649476,
+    "samples": 15.0
+  },
+  "fp32/avx2_v1/attn_out/tokens:1": {
+    "time_ns": 133545.65478727053,
+    "FLOP/s": 8839020176.606703,
+    "bytes_per_second": 17724076916.633232,
+    "samples": 15.0
+  },
+  "fp32/avx2_v3/lm_head/tokens:128": {
+    "time_ns": 456396310.5028961,
+    "FLOP/s": 21670983471.944588,
+    "bytes_per_second": 395906376.1097691,
+    "samples": 15.0
+  },
+  "fp32/accelerate/attn_out/tokens:1024": {
+    "time_ns": 11156024.581249502,
+    "FLOP/s": 108329814440.5041,
+    "bytes_per_second": 775799452.3734018,
+    "samples": 15.0
+  },
+  "fp32/scalar/mlp_up/tokens:1024": {
+    "time_ns": 2211942265.043035,
+    "FLOP/s": 2185135968.668993,
+    "bytes_per_second": 11380916.503484337,
+    "samples": 15.0
+  },
+  "fp32/avx2_v2/attn_out/tokens:128": {
+    "time_ns": 5567150.040296838,
+    "FLOP/s": 27143352981.465416,
+    "bytes_per_second": 565486520.4471962,
+    "samples": 15.0
+  },
+  "roofline/peak_fma": {
+    "time_ns": 5296969.53052542,
+    "FLOP/s": 152164492392.5168,
+    "samples": 15.0
+  },
+  "fp32/accelerate/lm_head/tokens:128": {
+    "time_ns": 127094543.2013832,
+    "FLOP/s": 77797439035.52853,
+    "bytes_per_second": 1421278466.6211085,
+    "samples": 15.0
+  },
+  "fp32/avx2_v1/mlp_down/tokens:128": {
+    "time_ns": 49598144.23301186,
+    "FLOP/s": 12184740457.269247,
+    "bytes_per_second": 230050438.32083866,
+    "samples": 15.0
+  },
+  "fp32/avx2_v2/lm_head/tokens:128": {
+    "time_ns": 1095480354.0371358,
+    "FLOP/s": 9022245100.778505,
+    "bytes_per_second": 164827053.9658538,
+    "samples": 15.0
+  },
+  "fp32/avx2_v3/mlp_down/tokens:1": {
+    "time_ns": 555122.8036776405,
+    "FLOP/s": 8500850714.057726,
+    "bytes_per_second": 17029373468.200275,
+    "samples": 15.0
+  },
+  "fp32/avx2_v1/attn_out/tokens:1024": {
+    "time_ns": 59043430.91727545,
+    "FLOP/s": 20468224367.265533,
+    "bytes_per_second": 146582335.96349013,
+    "samples": 15.0
+  },
+  "fp32/scalar/mlp_up/tokens:1": {
+    "time_ns": 2278382.326443938,
+    "FLOP/s": 2072016015.588619,
+    "bytes_per_second": 4150776874.9779825,
+    "samples": 15.0
+  },
+  "fp32/scalar/lm_head/tokens:1": {
+    "time_ns": 37003824.63437946,
+    "FLOP/s": 2086665217.4161565,
+    "bytes_per_second": 4178847498.6202073,
+    "samples": 15.0
+  },
+  "fp32/avx2_v3/attn_out/tokens:128": {
+    "time_ns": 1918449.7196565045,
+    "FLOP/s": 78742349020.05646,
+    "bytes_per_second": 1640465604.5845096,
+    "samples": 15.0
+  },
+  "fp32/avx2_v3/mlp_up/tokens:1": {
+    "time_ns": 545517.4344514066,
+    "FLOP/s": 8653235924.196636,
+    "bytes_per_second": 17334639934.08402,
+    "samples": 15.0
+  },
+  "fp32/scalar/mlp_up/tokens:128": {
+    "time_ns": 281822930.49758303,
+    "FLOP/s": 2143649849.3362682,
+    "bytes_per_second": 40472555.74918736,
+    "samples": 15.0
+  },
+  "fp32/avx2_v3/mlp_up/tokens:128": {
+    "time_ns": 13390096.129754696,
+    "FLOP/s": 45137805151.937805,
+    "bytes_per_second": 852211164.9779924,
+    "samples": 15.0
+  },
+  "fp32/scalar/mlp_down/tokens:1024": {
+    "time_ns": 2260703575.972002,
+    "FLOP/s": 2137658967.385884,
+    "bytes_per_second": 11133640.455134813,
+    "samples": 15.0
+  },
+  "fp32/avx2_v1/mlp_down/tokens:1024": {
+    "time_ns": 402058637.002483,
+    "FLOP/s": 12022578441.73989,
+    "bytes_per_second": 62617596.0507286,
+    "samples": 15.0
+  },
+  "fp32/avx2_v1/mlp_up/tokens:1": {
+    "time_ns": 535008.1405086792,
+    "FLOP/s": 8823298352.256062,
+    "bytes_per_second": 17675318378.835873,
+    "samples": 15.0
+  },
+  "fp32/avx2_v2/mlp_down/tokens:1024": {
+    "time_ns": 339914307.0273567,
+    "FLOP/s": 14220343860.134495,
+    "bytes_per_second": 74064290.93820049,
+    "samples": 15.0
+  },
+  "fp32/accelerate/mlp_up/tokens:128": {
+    "time_ns": 7221135.429747563,
+    "FLOP/s": 83657072512.07397,
+    "bytes_per_second": 1579462957.5847301,
+    "samples": 15.0
+  },
+  "fp32/avx2_v3/mlp_up/tokens:1024": {
+    "time_ns": 102623602.57495728,
+    "FLOP/s": 47099579531.94061,
+    "bytes_per_second": 245310310.0621907,
+    "samples": 15.0
+  },
+  "fp32/scalar/mlp_down/tokens:128": {
+    "time_ns": 284072707.494488,
+    "FLOP/s": 2126738027.454792,
+    "bytes_per_second": 40153257.02876886,
+    "samples": 15.0
+  },
+  "fp32/avx2_v2/attn_out/tokens:1024": {
+    "time_ns": 44127595.648580395,
+    "FLOP/s": 27383994687.305077,
+    "bytes_per_second": 196109336.95335665,
+    "samples": 15.0
+  },
+  "fp32/accelerate/attn_out/tokens:1": {
+    "time_ns": 141334.72738030652,
+    "FLOP/s": 8349410483.66828,
+    "bytes_per_second": 16742307480.272331,
+    "samples": 15.0
+  }
+}
