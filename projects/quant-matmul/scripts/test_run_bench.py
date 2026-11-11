@@ -1,12 +1,19 @@
+import os
+import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
 import pytest
 from run_bench import (
+    check_time_ns,
     cpu_slug,
     create_run_dir,
     parse_cpu_speed_limit,
     parse_low_power_mode,
+    slow_rounds,
+    source_revision,
+    stay_awake,
     summarize,
     throttled_rounds,
 )
@@ -101,3 +108,67 @@ def test_summarize_takes_medians_across_rounds_and_skips_aggregates() -> None:
     assert summary["bandwidth"] == {"time_ns": 5e5, "bytes_per_second": 4e9, "samples": 1.0}
     assert "broken" not in summary
     assert "no_avx2" not in summary
+
+
+def test_check_time_ns_takes_the_median_of_the_named_benchmark() -> None:
+    output: dict[str, Any] = {
+        "benchmarks": [row("check", 2.0), row("check", 1.0), row("check", 3.0), row("other", 9.0)]
+    }
+    assert check_time_ns(output, "check") == 2e6
+    assert check_time_ns(output, "missing") is None
+
+
+def checks(*times: tuple[float | None, float | None]) -> list[dict[str, Any]]:
+    return [
+        {"round": n, "check_before_ns": before, "check_after_ns": after}
+        for n, (before, after) in enumerate(times, start=1)
+    ]
+
+
+def test_slow_rounds_compares_every_check_with_the_first() -> None:
+    assert slow_rounds(checks((100.0, 104.0), (96.0, 100.0)), 0.05) == []
+    assert slow_rounds(checks((100.0, 101.0), (100.0, 130.0)), 0.05) == [2]
+    # Slow from start to finish of later rounds, as when a screen saver starts
+    # between rounds: each round agrees with itself but not with the first.
+    assert slow_rounds(checks((100.0, 100.0), (190.0, 190.0), (190.0, 190.0)), 0.05) == [2, 3]
+    assert slow_rounds(checks((100.0, 100.0), (70.0, 100.0)), 0.05) == [2]
+
+
+def test_slow_rounds_skips_checks_that_did_not_run() -> None:
+    assert slow_rounds(checks((None, None), (None, None)), 0.05) == []
+    assert slow_rounds(checks((None, 100.0), (100.0, 200.0)), 0.05) == [2]
+
+
+def git(repo: Path, *args: str) -> None:
+    subprocess.run(["git", "-C", str(repo), *args], check=True, capture_output=True)
+
+
+def test_source_revision_ignores_benchmark_results(tmp_path: Path) -> None:
+    git(tmp_path, "init")
+    (tmp_path / "kernel.cpp").write_text("one\n")
+    git(tmp_path, "add", "kernel.cpp")
+    identity = ["-c", "user.name=test", "-c", "user.email=test@example.invalid"]
+    git(tmp_path, *identity, "-c", "commit.gpgsign=false", "commit", "-m", "start")
+    results = tmp_path / "project" / "results"
+    (results / "2026-11-10_cpu").mkdir(parents=True)
+    (results / "2026-11-10_cpu" / "round_1.json").write_text("{}")
+
+    clean = source_revision(tmp_path, results)
+    assert clean["uncommitted_changes"] is False
+    assert len(clean["revision"]) >= 40
+
+    (tmp_path / "kernel.cpp").write_text("two\n")
+    assert source_revision(tmp_path, results)["uncommitted_changes"] is True
+
+
+def caffeinate_children() -> int:
+    found = subprocess.run(["pgrep", "-P", str(os.getpid()), "caffeinate"], capture_output=True)
+    return len(found.stdout.split())
+
+
+@pytest.mark.skipif(sys.platform != "darwin", reason="caffeinate is macOS only")
+def test_stay_awake_holds_caffeinate_for_the_whole_block() -> None:
+    assert caffeinate_children() == 0
+    with stay_awake():
+        assert caffeinate_children() == 1
+    assert caffeinate_children() == 0

@@ -5,9 +5,15 @@ cooldown between them, and writes everything to a new folder
 results/<date>_<cpu>/ in this project:
 
 - metadata.json: hardware, OS, compiler, flags, the source revision, the
-  command, and the thermal state before and after each round
+  command, and the thermal state and speed check before and after each round
 - round_<n>.json: Google Benchmark's raw output for each round
+- round_<n>_check_{before,after}.json: the speed check's raw output
 - summary.json: the median of every benchmark across all rounds
+
+The speed check times one short benchmark before and after every round. A
+check more than 5% slower or faster than the first one marks that round as
+unreliable: something else changed the CPU's speed, such as a screen saver or
+a background task, even when the operating system reports no throttling.
 
 Earlier runs are never overwritten. The BLAS baselines run single-threaded,
 like the kernels they are compared with: Accelerate through
@@ -19,6 +25,7 @@ Usage, from anywhere in the repository:
 """
 
 import argparse
+import contextlib
 import datetime
 import itertools
 import json
@@ -30,6 +37,7 @@ import statistics
 import subprocess
 import sys
 import time
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
@@ -40,6 +48,11 @@ RESULTS = PROJECT / "results"
 
 NS_PER_UNIT = {"ns": 1.0, "us": 1e3, "ms": 1e6, "s": 1e9}
 IGNORED_CPU_WORDS = {"intel", "core", "cpu", "processor"}
+
+# The speed check: short, built on every platform, and bound by the latency of
+# fp32 additions, so its time follows the CPU's clock speed.
+SPEED_CHECK = "fp32/scalar/attn_out/tokens:128"
+SPEED_CHECK_TOLERANCE = 0.05
 
 
 def cpu_slug(model: str) -> str:
@@ -98,6 +111,25 @@ def summarize(rounds: list[dict[str, Any]]) -> dict[str, dict[str, float]]:
         | {"samples": float(len(entry["time_ns"]))}
         for name, entry in samples.items()
     }
+
+
+def check_time_ns(output: dict[str, Any], name: str) -> float | None:
+    """The median time of benchmark `name` in one Google Benchmark output, if it ran."""
+    return summarize([output]).get(name, {}).get("time_ns")
+
+
+def slow_rounds(rounds: list[dict[str, Any]], tolerance: float) -> list[int]:
+    """Rounds whose speed check before or after differs from the run's first by more than tolerance.
+
+    Comparing with the first check, not only within a round, also catches a
+    slowdown that lasts through several whole rounds.
+    """
+    times = [(r["round"], t) for r in rounds for t in (r["check_before_ns"], r["check_after_ns"])]
+    known = [(n, t) for n, t in times if t is not None]
+    if not known:
+        return []
+    reference = known[0][1]
+    return sorted({n for n, t in known if abs(t / reference - 1.0) > tolerance})
 
 
 def output_of(command: list[str]) -> str:
@@ -169,14 +201,38 @@ def build_details() -> dict[str, Any]:
     return {"cache": settings, "compiler": compiler, "compile_commands": ours}
 
 
-def source_revision() -> dict[str, Any]:
-    head = output_of(["git", "-C", str(REPO), "rev-parse", "HEAD"])
-    dirty = output_of(["git", "-C", str(REPO), "status", "--porcelain"]) != ""
-    return {"revision": head, "uncommitted_changes": dirty}
+def source_revision(repo: Path, results: Path) -> dict[str, Any]:
+    """The checked-out revision, and whether anything outside `results` differs from it.
+
+    Benchmark results are left out, so earlier runs that aren't committed yet
+    don't mark the source as changed.
+    """
+    head = output_of(["git", "-C", str(repo), "rev-parse", "HEAD"])
+    excluded = f":(exclude){results.relative_to(repo).as_posix()}"
+    status = output_of(["git", "-C", str(repo), "status", "--porcelain", "--", ".", excluded])
+    return {"revision": head, "uncommitted_changes": status != ""}
+
+
+@contextlib.contextmanager
+def stay_awake() -> Iterator[None]:
+    """Keep the display and system awake for the whole block, cooldowns included."""
+    # PLATFORM: macOS — caffeinate keeps the display and system awake, so
+    # neither the screen saver nor sleep starts during the run; -w ends it if
+    # this script dies. Linux could use systemd-inhibit, and Windows
+    # SetThreadExecutionState.
+    if sys.platform != "darwin":
+        yield
+        return
+    awake = subprocess.Popen(["caffeinate", "-d", "-i", "-w", str(os.getpid())])
+    try:
+        yield
+    finally:
+        awake.terminate()
+        awake.wait()
 
 
 def bench_command(exe: Path, out: Path, repetitions: int, bench_filter: str) -> list[str]:
-    command = [
+    return [
         str(exe),
         f"--benchmark_repetitions={repetitions}",
         "--benchmark_enable_random_interleaving=true",
@@ -184,12 +240,13 @@ def bench_command(exe: Path, out: Path, repetitions: int, bench_filter: str) -> 
         f"--benchmark_out={out}",
         "--benchmark_out_format=json",
     ]
-    # PLATFORM: macOS — caffeinate keeps the display and system awake, so
-    # neither the screen saver nor sleep interrupts the run; Linux could use
-    # systemd-inhibit, and Windows SetThreadExecutionState.
-    if sys.platform == "darwin":
-        return ["caffeinate", "-d", "-i", *command]
-    return command
+
+
+def speed_check(exe: Path, out: Path, env: dict[str, str]) -> float | None:
+    """Run the speed check, keep its raw output in `out`, and return its median time."""
+    command = bench_command(exe, out, 3, f"^{re.escape(SPEED_CHECK)}$")
+    subprocess.run(command, check=True, env=env, stdout=subprocess.DEVNULL)
+    return check_time_ns(json.loads(out.read_text()), SPEED_CHECK)
 
 
 def throttled_rounds(rounds: list[dict[str, Any]]) -> list[int]:
@@ -223,6 +280,7 @@ def main() -> int:
     machine = machine_details()
     if machine.get("low_power_mode"):
         print("run_bench: WARNING: Low Power Mode is on, which lowers CPU speed", file=sys.stderr)
+    source = source_revision(REPO, RESULTS)
     started = datetime.datetime.now(datetime.UTC)
     run_dir = create_run_dir(RESULTS, started.date().isoformat(), cpu_slug(machine["cpu"]))
     single_thread = {"VECLIB_MAXIMUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1"}
@@ -230,25 +288,31 @@ def main() -> int:
 
     rounds: list[dict[str, Any]] = []
     outputs: list[dict[str, Any]] = []
-    for n in range(1, args.rounds + 1):
-        out = run_dir / f"round_{n}.json"
-        command = bench_command(exe, out, args.repetitions, args.filter)
-        before = thermal_state()
-        print(f"run_bench: round {n} of {args.rounds}: {shlex.join(command)}", flush=True)
-        subprocess.run(command, check=True, env=env)
-        rounds.append(
-            {
-                "round": n,
-                "command": command,
-                "thermal_before": before,
-                "thermal_after": thermal_state(),
-            }
-        )
-        outputs.append(json.loads(out.read_text()))
-        if n < args.rounds:
-            time.sleep(args.cooldown)
+    with stay_awake():
+        for n in range(1, args.rounds + 1):
+            out = run_dir / f"round_{n}.json"
+            command = bench_command(exe, out, args.repetitions, args.filter)
+            before = thermal_state()
+            check_before = speed_check(exe, run_dir / f"round_{n}_check_before.json", env)
+            print(f"run_bench: round {n} of {args.rounds}: {shlex.join(command)}", flush=True)
+            subprocess.run(command, check=True, env=env)
+            check_after = speed_check(exe, run_dir / f"round_{n}_check_after.json", env)
+            rounds.append(
+                {
+                    "round": n,
+                    "command": command,
+                    "thermal_before": before,
+                    "thermal_after": thermal_state(),
+                    "check_before_ns": check_before,
+                    "check_after_ns": check_after,
+                }
+            )
+            outputs.append(json.loads(out.read_text()))
+            if n < args.rounds:
+                time.sleep(args.cooldown)
 
     throttled = throttled_rounds(rounds)
+    slow = slow_rounds(rounds, SPEED_CHECK_TOLERANCE)
     metadata = {
         "started_utc": started.isoformat(),
         "finished_utc": datetime.datetime.now(datetime.UTC).isoformat(),
@@ -257,9 +321,11 @@ def main() -> int:
         "environment": single_thread,
         "machine": machine,
         "build": build_details(),
-        "source": source_revision(),
+        "source": source,
+        "speed_check": {"benchmark": SPEED_CHECK, "tolerance": SPEED_CHECK_TOLERANCE},
         "rounds": rounds,
         "throttled_rounds": throttled,
+        "slow_rounds": slow,
     }
     (run_dir / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
     summary = summarize(outputs)
@@ -268,6 +334,11 @@ def main() -> int:
     print(f"\nrun_bench: results in {run_dir}")
     if throttled:
         print(f"run_bench: WARNING: the CPU speed was limited in rounds {throttled}")
+    if slow:
+        change = f"{SPEED_CHECK_TOLERANCE:.0%}"
+        print(f"run_bench: WARNING: the speed check changed by more than {change} in rounds {slow}")
+    elif all(r["check_before_ns"] is None for r in rounds):
+        print(f"run_bench: WARNING: the speed check {SPEED_CHECK} didn't run")
     print(f"{'benchmark':<52} {'median ms':>10} {'GFLOP/s':>9} {'GB/s':>8}")
     for name, values in summary.items():
         gflops = values.get("FLOP/s", 0.0) / 1e9

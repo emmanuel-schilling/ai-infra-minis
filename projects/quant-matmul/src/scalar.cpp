@@ -1,12 +1,12 @@
+// The reference kernel: a plain triple loop, deliberately unoptimized, that
+// every other kernel is tested against. It accumulates in fp32 along k in
+// order; the tests allow for that rounding (see tests/reference.hpp).
 #include <cassert>
 
 #include "qmm/matmul.hpp"
 
 namespace qmm {
 
-// The reference kernel: a plain triple loop, deliberately unoptimized, that
-// every other kernel is tested against. It accumulates in fp32 along k in
-// order; the tests allow for that rounding (see tests/reference.hpp).
 void matmul_scalar(Shape shape, std::span<const float> a, std::span<const float> w,
                    std::span<float> c) {
   assert(a.size() == shape.m * shape.k);

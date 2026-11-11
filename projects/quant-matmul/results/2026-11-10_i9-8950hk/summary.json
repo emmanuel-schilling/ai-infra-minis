@@ -1,0 +1,144 @@
+{
+  "fp32/accelerate/mlp_up/tokens:128": {
+    "time_ns": 13789187.379879877,
+    "FLOP/s": 43937433327.80429,
+    "bytes_per_second": 829547894.8608884,
+    "samples": 15.0
+  },
+  "fp32/scalar/attn_out/tokens:128": {
+    "time_ns": 122253478.99948247,
+    "FLOP/s": 1240165831.8765574,
+    "bytes_per_second": 25836788.164094947,
+    "samples": 15.0
+  },
+  "fp32/scalar/mlp_up/tokens:128": {
+    "time_ns": 638100248.9943057,
+    "FLOP/s": 951781776.2355384,
+    "bytes_per_second": 17969838.223197013,
+    "samples": 15.0
+  },
+  "fp32/scalar/lm_head/tokens:1": {
+    "time_ns": 83235686.77749589,
+    "FLOP/s": 930624099.0161372,
+    "bytes_per_second": 1863708732.8962145,
+    "samples": 15.0
+  },
+  "fp32/scalar/mlp_up/tokens:1024": {
+    "time_ns": 5122322579.001775,
+    "FLOP/s": 947220711.5802598,
+    "bytes_per_second": 4933441.206147186,
+    "samples": 15.0
+  },
+  "fp32/scalar/lm_head/tokens:128": {
+    "time_ns": 10542621038.01011,
+    "FLOP/s": 941166364.7692409,
+    "bytes_per_second": 17194132.664748866,
+    "samples": 15.0
+  },
+  "fp32/scalar/attn_out/tokens:1": {
+    "time_ns": 1255175.3056402623,
+    "FLOP/s": 945649797.8202937,
+    "bytes_per_second": 1896224855.0042348,
+    "samples": 15.0
+  },
+  "fp32/accelerate/mlp_up/tokens:1": {
+    "time_ns": 1567541.6802054148,
+    "FLOP/s": 3021884432.0396023,
+    "bytes_per_second": 6053605727.464749,
+    "samples": 15.0
+  },
+  "fp32/scalar/mlp_down/tokens:1": {
+    "time_ns": 4995268.655348052,
+    "FLOP/s": 948710691.0481838,
+    "bytes_per_second": 1900509633.04379,
+    "samples": 15.0
+  },
+  "roofline/read_bandwidth": {
+    "time_ns": 81204844.83273079,
+    "bytes_per_second": 6644798343.145638,
+    "samples": 15.0
+  },
+  "fp32/accelerate/attn_out/tokens:1": {
+    "time_ns": 375189.3797936186,
+    "FLOP/s": 3161077189.623144,
+    "bytes_per_second": 6338618322.942242,
+    "samples": 15.0
+  },
+  "fp32/scalar/mlp_down/tokens:128": {
+    "time_ns": 651745434.9959735,
+    "FLOP/s": 930314601.6533663,
+    "bytes_per_second": 17564533.494757567,
+    "samples": 15.0
+  },
+  "fp32/accelerate/mlp_down/tokens:1024": {
+    "time_ns": 93127804.5027284,
+    "FLOP/s": 52110741276.38883,
+    "bytes_per_second": 271410110.8145251,
+    "samples": 15.0
+  },
+  "fp32/scalar/mlp_up/tokens:1": {
+    "time_ns": 4974024.189043951,
+    "FLOP/s": 953677192.8596214,
+    "bytes_per_second": 1910458803.6647494,
+    "samples": 15.0
+  },
+  "fp32/accelerate/attn_out/tokens:128": {
+    "time_ns": 3148016.1284113624,
+    "FLOP/s": 48251591253.50171,
+    "bytes_per_second": 1005241484.4479524,
+    "samples": 15.0
+  },
+  "fp32/scalar/attn_out/tokens:1024": {
+    "time_ns": 982963004.0039774,
+    "FLOP/s": 1233617563.7075672,
+    "bytes_per_second": 8834500.781759921,
+    "samples": 15.0
+  },
+  "fp32/accelerate/mlp_up/tokens:1024": {
+    "time_ns": 94867047.57104495,
+    "FLOP/s": 51096498715.14348,
+    "bytes_per_second": 266127597.4747056,
+    "samples": 15.0
+  },
+  "fp32/accelerate/lm_head/tokens:128": {
+    "time_ns": 238808544.33324808,
+    "FLOP/s": 41611383894.93118,
+    "bytes_per_second": 760196796.055991,
+    "samples": 15.0
+  },
+  "fp32/accelerate/mlp_down/tokens:1": {
+    "time_ns": 1577541.5943113458,
+    "FLOP/s": 3000702805.072944,
+    "bytes_per_second": 6011173522.922819,
+    "samples": 15.0
+  },
+  "fp32/scalar/mlp_down/tokens:1024": {
+    "time_ns": 5169226442.987565,
+    "FLOP/s": 938576029.923553,
+    "bytes_per_second": 4888416.822518505,
+    "samples": 15.0
+  },
+  "fp32/accelerate/mlp_down/tokens:128": {
+    "time_ns": 12806904.660724936,
+    "FLOP/s": 47316687799.29056,
+    "bytes_per_second": 893348923.2938973,
+    "samples": 15.0
+  },
+  "fp32/accelerate/attn_out/tokens:1024": {
+    "time_ns": 23750008.749110356,
+    "FLOP/s": 51147341540.61113,
+    "bytes_per_second": 366289555.3038558,
+    "samples": 15.0
+  },
+  "fp32/accelerate/lm_head/tokens:1": {
+    "time_ns": 27431173.759978265,
+    "FLOP/s": 2824509628.8664227,
+    "bytes_per_second": 5656487154.193625,
+    "samples": 15.0
+  },
+  "roofline/peak_fma": {
+    "time_ns": 6662837.523825666,
+    "FLOP/s": 121379443524.94513,
+    "samples": 15.0
+  }
+}
