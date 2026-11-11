@@ -10,6 +10,7 @@
 #include <cstddef>
 #include <span>
 
+#include "qmm/avx2_steps.hpp"
 #include "qmm/matmul.hpp"
 
 namespace qmm {
@@ -27,8 +28,17 @@ float hsum256_ps(__m256 v) {
 }
 }  // namespace
 
+// Points at the fastest finished version. Change it only after a benchmark run
+// shows the newer version is faster.
 void matmul_avx2(Shape shape, std::span<const float> a, std::span<const float> w,
                  std::span<float> c) {
+  avx2_steps::v1_one_accumulator(shape, a, w, c);
+}
+
+namespace avx2_steps {
+
+void v1_one_accumulator(Shape shape, std::span<const float> a, std::span<const float> w,
+                        std::span<float> c) {
   assert(a.size() == shape.m * shape.k);
   assert(w.size() == shape.n * shape.k);
   assert(c.size() == shape.m * shape.n);
@@ -56,6 +66,23 @@ void matmul_avx2(Shape shape, std::span<const float> a, std::span<const float> w
     }
   }
 }
+
+// To write: several independent accumulators. Name the parameters when you
+// write the body, and set pending::avx2_v2 to false.
+void v2_accumulators(Shape /*shape*/, std::span<const float> /*a*/, std::span<const float> /*w*/,
+                     std::span<float> /*c*/) {}
+
+// To write: register blocking. Name the parameters when you write the body, and
+// set pending::avx2_v3 to false.
+void v3_register_blocking(Shape /*shape*/, std::span<const float> /*a*/,
+                          std::span<const float> /*w*/, std::span<float> /*c*/) {}
+
+// To write: cache blocking. Name the parameters when you write the body, and set
+// pending::avx2_v4 to false.
+void v4_cache_blocking(Shape /*shape*/, std::span<const float> /*a*/, std::span<const float> /*w*/,
+                       std::span<float> /*c*/) {}
+
+}  // namespace avx2_steps
 
 }  // namespace qmm
 

@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 
+#include "qmm/avx2_steps.hpp"
 #include "qmm/matmul.hpp"
 #include "qmm/pending.hpp"
 #include "random_floats.hpp"
@@ -138,8 +139,20 @@ void register_all() {
   }
 #if defined(QMM_HAVE_AVX2)
   if (qmm::cpu_has_avx2_fma()) {
+    // The optimization steps, side by side. matmul_avx2 only calls one of
+    // them, so timing it too would time the same code twice.
+    namespace steps = qmm::avx2_steps;
     if (!qmm::pending::avx2) {
-      register_kernel("fp32", "avx2", qmm::matmul_avx2, bench_fp32);
+      register_kernel("fp32", "avx2_v1", steps::v1_one_accumulator, bench_fp32);
+    }
+    if (!qmm::pending::avx2_v2) {
+      register_kernel("fp32", "avx2_v2", steps::v2_accumulators, bench_fp32);
+    }
+    if (!qmm::pending::avx2_v3) {
+      register_kernel("fp32", "avx2_v3", steps::v3_register_blocking, bench_fp32);
+    }
+    if (!qmm::pending::avx2_v4) {
+      register_kernel("fp32", "avx2_v4", steps::v4_cache_blocking, bench_fp32);
     }
     if (!qmm::pending::q8_avx2 && !qmm::pending::quantize) {
       register_kernel("q8", "avx2", qmm::matmul_q8_avx2, bench_q8);

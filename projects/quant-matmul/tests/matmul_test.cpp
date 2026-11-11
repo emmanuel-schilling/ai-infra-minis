@@ -11,6 +11,7 @@
 #include <tuple>
 #include <vector>
 
+#include "qmm/avx2_steps.hpp"
 #include "qmm/pending.hpp"
 #include "random_floats.hpp"
 #include "reference.hpp"
@@ -44,7 +45,13 @@ std::vector<Fp32Case> fp32_kernels() {
   std::vector<Fp32Case> kernels{{"scalar", qmm::matmul_scalar, qmm::pending::scalar}};
 #if defined(QMM_HAVE_AVX2)
   if (qmm::cpu_has_avx2_fma()) {
-    kernels.push_back({"avx2", qmm::matmul_avx2, qmm::pending::avx2});
+    namespace steps = qmm::avx2_steps;
+    namespace pending = qmm::pending;
+    kernels.push_back({"avx2", qmm::matmul_avx2, pending::avx2});
+    kernels.push_back({"avx2_v1", steps::v1_one_accumulator, pending::avx2});
+    kernels.push_back({"avx2_v2", steps::v2_accumulators, pending::avx2_v2});
+    kernels.push_back({"avx2_v3", steps::v3_register_blocking, pending::avx2_v3});
+    kernels.push_back({"avx2_v4", steps::v4_cache_blocking, pending::avx2_v4});
   }
 #endif
 #if defined(QMM_HAVE_ACCELERATE)
@@ -57,10 +64,13 @@ std::vector<Fp32Case> fp32_kernels() {
 }
 
 // Odd sizes that catch tail handling, then GPT-2's weight shapes with a few
-// tokens (the benchmarks use the full token counts).
+// tokens (the benchmarks use the full token counts). {7, 131, 72} exercises the
+// blocked AVX2 versions' edges together: leftover rows of A after 3-row tiles,
+// more than two 64-row blocks of W with leftover rows not a multiple of 4, and
+// a k that 8 accumulators of 8 floats don't divide.
 std::vector<Shape> shapes() {
-  return {{1, 1, 1},   {1, 7, 9},     {3, 5, 7},      {7, 9, 33},     {33, 7, 1},
-          {2, 33, 64}, {4, 768, 768}, {4, 3072, 768}, {4, 768, 3072}, {1, 50257, 768}};
+  return {{1, 1, 1},    {1, 7, 9},     {3, 5, 7},      {7, 9, 33},     {33, 7, 1},     {2, 33, 64},
+          {7, 131, 72}, {4, 768, 768}, {4, 3072, 768}, {4, 768, 3072}, {1, 50257, 768}};
 }
 
 std::string shape_name(const Shape& s) {

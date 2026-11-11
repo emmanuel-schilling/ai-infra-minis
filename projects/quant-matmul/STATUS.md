@@ -32,8 +32,12 @@ Spotlight and Bitdefender have finished their post-update work. Turn Low Power
 Mode off first; `run_bench.py` warns while it's on.
 
 Then optimize the AVX2 kernel for GEMM in steps, each a separate version
-benchmarked beside the others. Today's kernel becomes v1. Claude adds the
-scaffolding for the versions; you write each one:
+benchmarked beside the others. The scaffolding is in place: the versions are
+declared in `include/qmm/avx2_steps.hpp` and written in `src/avx2.cpp`, the
+first kernel is now `avx2_steps::v1_one_accumulator`, and v2 to v4 are stubs
+behind `pending::avx2_v2` to `avx2_v4`. `matmul_avx2` calls v1; point it at a
+newer version only once a benchmark run shows that version is faster. You
+write each one:
 1. v2: several independent accumulators, so the FMAs don't wait on each other.
 2. v3: register blocking, a tile such as 3 rows of A × 4 rows of W, so each
    loaded vector feeds several FMAs. Its fallback for leftover rows must stay
