@@ -67,10 +67,13 @@ std::vector<Fp32Case> fp32_kernels() {
 // tokens (the benchmarks use the full token counts). {7, 131, 72} exercises the
 // blocked AVX2 versions' edges together: leftover rows of A after 3-row tiles,
 // more than two 64-row blocks of W with leftover rows not a multiple of 4, and
-// a k that 8 accumulators of 8 floats don't divide.
+// a k that 8 accumulators of 8 floats don't divide. The first three are empty:
+// with k = 0 every output is an empty sum, exactly 0, and with m = 0 or n = 0
+// there is no output to write.
 std::vector<Shape> shapes() {
-  return {{1, 1, 1},    {1, 7, 9},     {3, 5, 7},      {7, 9, 33},     {33, 7, 1},     {2, 33, 64},
-          {7, 131, 72}, {4, 768, 768}, {4, 3072, 768}, {4, 768, 3072}, {1, 50257, 768}};
+  return {{3, 5, 0},     {0, 5, 7},      {3, 0, 7},      {1, 1, 1},      {1, 7, 9},
+          {3, 5, 7},     {7, 9, 33},     {33, 7, 1},     {2, 33, 64},    {7, 131, 72},
+          {4, 768, 768}, {4, 3072, 768}, {4, 768, 3072}, {1, 50257, 768}};
 }
 
 std::string shape_name(const Shape& s) {

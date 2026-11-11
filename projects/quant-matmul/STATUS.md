@@ -11,8 +11,15 @@ FMA accumulator per output, a horizontal sum, and a scalar loop for the last
 k % 8 values. A quick unofficial timing (not a baseline) put its GEMV at the
 measured read bandwidth, about 15.6 GiB/s, and its GEMM at about 11–20 GFLOP/s,
 against a measured FMA peak of 135 GFLOP/s: each FMA waits for the one before
-it in the single accumulator. The other kernels you write are still stubs
-behind pending switches in
+it in the single accumulator. That kernel is now step v1
+(`avx2_steps::v1_one_accumulator`). Step v2, `v2_accumulators`, is done and
+tested for real: 8 independent accumulators over 64 floats per pass, a tree
+reduction and one horizontal sum. Its speed isn't measured yet: a timing on
+2026-11-11 was invalid (the screen saver and Chrome were running), so v1 and
+v2 are compared in the next baseline. All fp32 kernels now accept empty sizes:
+k = 0 sets C to zero, and the BLAS wrappers handle it themselves, because
+BLAS rejects a leading dimension below 1. The other kernels you write are
+still stubs behind pending switches in
 `include/qmm/pending.hpp`, so their tests pass without checking anything. The
 BLAS baselines are done, and their tests run for real: Accelerate on macOS,
 OpenBLAS on Linux and Windows. The NEON Q8 kernel (a stretch goal) is a stub
@@ -25,11 +32,13 @@ it and slowed rounds 2 and 3 by about 2× (see its `INVALID.md` and RESULTS.md).
 speed before and after every round.
 
 ## Next step
-Record a first baseline with `run_bench.py`: the roofline, the scalar and
-AVX2 kernels, and Accelerate. Run it after the pending macOS update is
+Record a first baseline with `run_bench.py`: the roofline, the scalar kernel,
+AVX2 v1 and v2, and Accelerate. Run it after the pending macOS update is
 installed, so the baseline matches the OS used from now on, and after
-Spotlight and Bitdefender have finished their post-update work. Turn Low Power
-Mode off first; `run_bench.py` warns while it's on.
+Spotlight and Bitdefender have finished their post-update work. Close other
+apps, Chrome included, and start it while the screen saver isn't running:
+`caffeinate` keeps it from starting but can't stop it. Turn Low Power Mode off
+first; `run_bench.py` warns while it's on.
 
 Then optimize the AVX2 kernel for GEMM in steps, each a separate version
 benchmarked beside the others. The scaffolding is in place: the versions are
@@ -39,6 +48,7 @@ behind `pending::avx2_v2` to `avx2_v4`. `matmul_avx2` calls v1; point it at a
 newer version only once a benchmark run shows that version is faster. You
 write each one:
 1. v2: several independent accumulators, so the FMAs don't wait on each other.
+   Done; to be measured.
 2. v3: register blocking, a tile such as 3 rows of A × 4 rows of W, so each
    loaded vector feeds several FMAs. Its fallback for leftover rows must stay
    fast: GEMV (m = 1) runs entirely through it.
@@ -156,3 +166,8 @@ Record each as: date, decision, reason.
   separate GEMV path is added only if a measurement shows a GEMM step slowing
   GEMV. Reason: versions timed side by side compare fairly, where numbers from
   different days don't, and each step's measured gain is the lesson.
+- 2026-11-11: Every size may be 0. With k = 0 each output is an empty sum and C
+  is set to zero; with m = 0 or n = 0 nothing is written. Kernels must not index
+  an empty span (use `data()` plus an offset). Reason: it matches BLAS and
+  PyTorch, and costs the loops nothing. The tests found that Accelerate ends
+  the process on a leading dimension of 0, so the BLAS wrappers return early.

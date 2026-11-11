@@ -67,10 +67,78 @@ void v1_one_accumulator(Shape shape, std::span<const float> a, std::span<const f
   }
 }
 
-// To write: several independent accumulators. Name the parameters when you
-// write the body, and set pending::avx2_v2 to false.
-void v2_accumulators(Shape /*shape*/, std::span<const float> /*a*/, std::span<const float> /*w*/,
-                     std::span<float> /*c*/) {}
+void v2_accumulators(Shape shape, std::span<const float> a, std::span<const float> w,
+                     std::span<float> c) {
+  assert(a.size() == shape.m * shape.k);
+  assert(w.size() == shape.n * shape.k);
+  assert(c.size() == shape.m * shape.n);
+
+  for (std::size_t i = 0; i < shape.m; ++i) {
+    const float* a_row = a.data() + i * shape.k;
+
+    for (std::size_t j = 0; j < shape.n; ++j) {
+      const float* w_row = w.data() + j * shape.k;
+
+      // 8 independent vector accumulators (each holds 8 partial sums)
+      __m256 vsum0 = _mm256_setzero_ps();
+      __m256 vsum1 = _mm256_setzero_ps();
+      __m256 vsum2 = _mm256_setzero_ps();
+      __m256 vsum3 = _mm256_setzero_ps();
+      __m256 vsum4 = _mm256_setzero_ps();
+      __m256 vsum5 = _mm256_setzero_ps();
+      __m256 vsum6 = _mm256_setzero_ps();
+      __m256 vsum7 = _mm256_setzero_ps();
+
+      std::size_t p = 0;
+
+      // Main loop: process 64 elements (8 vectors) per iteration
+      for (; p + 64 <= shape.k; p += 64) {
+        vsum0 =
+            _mm256_fmadd_ps(_mm256_loadu_ps(a_row + p + 0), _mm256_loadu_ps(w_row + p + 0), vsum0);
+        vsum1 =
+            _mm256_fmadd_ps(_mm256_loadu_ps(a_row + p + 8), _mm256_loadu_ps(w_row + p + 8), vsum1);
+        vsum2 = _mm256_fmadd_ps(_mm256_loadu_ps(a_row + p + 16), _mm256_loadu_ps(w_row + p + 16),
+                                vsum2);
+        vsum3 = _mm256_fmadd_ps(_mm256_loadu_ps(a_row + p + 24), _mm256_loadu_ps(w_row + p + 24),
+                                vsum3);
+        vsum4 = _mm256_fmadd_ps(_mm256_loadu_ps(a_row + p + 32), _mm256_loadu_ps(w_row + p + 32),
+                                vsum4);
+        vsum5 = _mm256_fmadd_ps(_mm256_loadu_ps(a_row + p + 40), _mm256_loadu_ps(w_row + p + 40),
+                                vsum5);
+        vsum6 = _mm256_fmadd_ps(_mm256_loadu_ps(a_row + p + 48), _mm256_loadu_ps(w_row + p + 48),
+                                vsum6);
+        vsum7 = _mm256_fmadd_ps(_mm256_loadu_ps(a_row + p + 56), _mm256_loadu_ps(w_row + p + 56),
+                                vsum7);
+      }
+
+      // Vector remainder loop: process 8 elements at a time into vsum0
+      for (; p + 8 <= shape.k; p += 8) {
+        vsum0 = _mm256_fmadd_ps(_mm256_loadu_ps(a_row + p), _mm256_loadu_ps(w_row + p), vsum0);
+      }
+
+      // Tree reduction of the 8 accumulators into a single __m256
+      vsum0 = _mm256_add_ps(vsum0, vsum1);
+      vsum2 = _mm256_add_ps(vsum2, vsum3);
+      vsum4 = _mm256_add_ps(vsum4, vsum5);
+      vsum6 = _mm256_add_ps(vsum6, vsum7);
+
+      vsum0 = _mm256_add_ps(vsum0, vsum2);
+      vsum4 = _mm256_add_ps(vsum4, vsum6);
+
+      vsum0 = _mm256_add_ps(vsum0, vsum4);
+
+      // Horizontal sum down to a single scalar float
+      float sum = hsum256_ps(vsum0);
+
+      // Scalar remainder loop: leftover 0 to 7 elements
+      for (; p < shape.k; ++p) {
+        sum += a_row[p] * w_row[p];
+      }
+
+      c[i * shape.n + j] = sum;
+    }
+  }
+}
 
 // To write: register blocking. Name the parameters when you write the body, and
 // set pending::avx2_v3 to false.

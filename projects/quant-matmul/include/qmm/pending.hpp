@@ -9,8 +9,8 @@
 namespace qmm::pending {
 
 inline constexpr bool scalar = false;
-inline constexpr bool avx2 = false;    // matmul_avx2 and step v1
-inline constexpr bool avx2_v2 = true;  // see qmm/avx2_steps.hpp
+inline constexpr bool avx2 = false;     // matmul_avx2 and step v1
+inline constexpr bool avx2_v2 = false;  // see qmm/avx2_steps.hpp
 inline constexpr bool avx2_v3 = true;
 inline constexpr bool avx2_v4 = true;
 inline constexpr bool quantize = true;  // quantize_q8 and dequantize_q8

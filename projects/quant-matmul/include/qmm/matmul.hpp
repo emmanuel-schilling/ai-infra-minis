@@ -21,7 +21,8 @@ struct Shape {
 };
 
 // fp32 kernels. Preconditions: a.size() == m * k, w.size() == n * k and
-// c.size() == m * n. They overwrite c.
+// c.size() == m * n. They overwrite c. Any size may be 0: with k = 0 every
+// output is an empty sum, so c is set to zero.
 void matmul_scalar(Shape shape, std::span<const float> a, std::span<const float> w,
                    std::span<float> c);
 
