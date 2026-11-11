@@ -122,8 +122,8 @@ std::vector<Q8Case> q8_kernels() {
 
 // k is a multiple of 32 throughout.
 std::vector<Shape> q8_shapes() {
-  return {{1, 1, 32},     {3, 7, 64},     {5, 9, 96},     {4, 768, 768},
-          {4, 3072, 768}, {4, 768, 3072}, {1, 50257, 768}};
+  return {{1, 1, 32},    {3, 7, 64},     {5, 9, 96},     {4, 2304, 768},
+          {4, 768, 768}, {4, 3072, 768}, {4, 768, 3072}, {1, 50257, 768}};
 }
 
 std::string shape_name(const Shape& s) {

@@ -14,8 +14,9 @@ accumulators over 64 floats per pass, a tree reduction and one horizontal sum.
 Step v3, `v3_register_blocking`, is done and tested for real too: a 3 × 4 tile
 of outputs with 12 accumulators, each loaded W vector feeding 3 FMAs, and a
 one-accumulator fallback for leftover rows and columns. Its compiled inner
-loop keeps all 16 YMM registers in use with no spills to the stack. All fp32
-kernels now accept empty sizes:
+loop keeps all 16 YMM registers in use with no spills to the stack. Step v4,
+`v4_cache_blocking`, is done and tested for real but not yet measured, so
+`matmul_avx2` still calls v3. All fp32 kernels now accept empty sizes:
 k = 0 sets C to zero, and the BLAS wrappers handle it themselves, because
 BLAS rejects a leading dimension below 1. The other kernels you write are
 still stubs behind pending switches in
@@ -34,47 +35,45 @@ folder's `source.patch`. The earlier run (`results/2026-11-10_i9-8950hk/`) is
 invalid: the screen saver started during it (see its `INVALID.md`).
 
 ## Next step
-1. Point `matmul_avx2` at v3, now measured as the fastest version.
-2. Write v4, cache blocking. The measurements put it where the gap is: the
-   larger W matrices, and lm_head above all, which is memory-bound even as a
-   GEMM because v3 reads its 154 MB W once per 3-row tile.
-3. After the pending macOS update, rerun the benchmarks so later comparisons
-   use the new OS. Close other apps, Chrome included, and start the run while
-   the screen saver isn't running: `caffeinate` keeps it from starting but
-   can't stop it. Turn Low Power Mode off first.
+The code continues while the benchmarks wait. In order:
+1. `quantize_q8` and `dequantize_q8` in `src/quantize.cpp`
+   (`pending::quantize`), with an fp32 scale per block. An all-zero block is
+   valid input and must not divide by zero.
+2. The scalar Q8 kernel, `matmul_q8_scalar` in `src/q8_scalar.cpp`
+   (`pending::q8_scalar`), the reference for the other Q8 kernels.
+3. The AVX2 Q8 kernel, `matmul_q8_avx2` in `src/q8_avx2.cpp`
+   (`pending::q8_avx2`), using `_mm256_maddubs_epi16` with the
+   `_mm256_sign_epi8` trick.
 
-The AVX2 kernel is optimized for GEMM in steps, each a separate version
-benchmarked beside the others. The scaffolding is in place: the versions are
-declared in `include/qmm/avx2_steps.hpp` and written in `src/avx2.cpp`, the
-first kernel is now `avx2_steps::v1_one_accumulator`, and v2 to v4 are stubs
-behind `pending::avx2_v2` to `avx2_v4`. `matmul_avx2` calls v1; point it at a
-newer version only once a benchmark run shows that version is faster. You
-write each one:
-1. v2: several independent accumulators, so the FMAs don't wait on each other.
-   Done and measured.
-2. v3: register blocking, a tile such as 3 rows of A × 4 rows of W, so each
-   loaded vector feeds several FMAs. Done and measured. Its fallback for
-   leftover rows is v1's single accumulator; GEMV, which runs entirely
-   through it, kept v1's speed. The leftover rows may cost GEMM a few percent
-   (v3 is 4–5% faster at 1,024 tokens than at 128); a 1 × 4 tile would fix
-   that if it's worth it.
-3. v4: cache blocking, running all of A against a block of W rows that fits in
-   L2, so W isn't read from L3 once per row of A.
+Postponed, to be done together later:
+- Install the pending macOS update.
+- Run `run_bench.py` on the new OS: v4 against v3 (point `matmul_avx2` at v4
+  only if it's faster), and the Q8 kernels written by then. Close other apps,
+  Chrome included, and start the run while the screen saver isn't running:
+  `caffeinate` keeps it from starting but can't stop it. Turn Low Power Mode
+  off first.
 
-After each step, GEMM should get faster and GEMV should stay at the read
-bandwidth. After that, in order: `quantize_q8` and `dequantize_q8`, the scalar
-Q8 kernel, then the AVX2 Q8 kernel. The NEON Q8 kernel comes last, if at all;
-it can be tested only by CI's Arm runners.
+Optional work, after the required kernels:
+- fp16 block scales, as in llama.cpp's Q8_0, converted with F16C's
+  `_mm256_cvtph_ps`. A block shrinks from 36 to 34 bytes, about 6% less to
+  read for memory-bound GEMV, and the format then matches llama.cpp's
+  exactly. It needs the quantization test's scale tolerance widened for
+  fp16's rounding, and a benchmark against the fp32 version.
+- A 1 × 4 tile for the leftover rows in v3 and v4, if a measurement shows the
+  current single-accumulator fallback costs enough (it may cost GEMM a few
+  percent at 128 tokens).
+- The NEON Q8 kernel (stretch goal), `src/q8_neon.cpp`, tested only by CI's
+  Arm runners.
+- Multithreading with `std::thread` (stretch goal), once all versions are
+  compared single-threaded.
+
+The AVX2 fp32 kernel was optimized in steps, each a separate version declared
+in `include/qmm/avx2_steps.hpp` and written in `src/avx2.cpp`: v1 one
+accumulator, v2 several accumulators, v3 register blocking (a 3 × 4 tile), v4
+cache blocking. `matmul_avx2` calls the fastest measured version.
 
 ## Open questions
-- How to store each block's scale: fp32, or fp16 as in llama.cpp's Q8_0
-  (converted with F16C's `_mm256_cvtph_ps`). fp16 makes a block 34 bytes
-  instead of 36, about 6% less memory traffic for memory-bound GEMV, and
-  matches llama.cpp exactly; fp32 is simpler and adds no rounding to the scale.
-  Decide before writing `quantize_q8`; the quantization test's scale tolerance
-  assumes fp32.
-- Whether to add GPT-2's attention input projection (768 to 2,304: query, key
-  and value together) to the benchmarked shapes.
+None.
 
 ## Decisions
 Record each as: date, decision, reason.
@@ -177,3 +176,17 @@ Record each as: date, decision, reason.
   an empty span (use `data()` plus an offset). Reason: it matches BLAS and
   PyTorch, and costs the loops nothing. The tests found that Accelerate ends
   the process on a leading dimension of 0, so the BLAS wrappers return early.
+- 2026-11-11: Q8 block scales are fp32; fp16 is optional later work. Reason:
+  fp32 is simpler, adds no rounding to the scale, and is what the quantization
+  test's tolerance assumes. fp16 would save about 6% of GEMV's memory traffic
+  and match llama.cpp's format exactly, which is worth measuring once the fp32
+  kernels work.
+- 2026-11-11: The macOS update and the next benchmark run are postponed, and
+  the Q8 code continues meanwhile. Reason: the code doesn't depend on the
+  measurements, and one later run can measure v4 and the Q8 kernels together.
+- 2026-11-11: GPT-2's attention input projection, `attn_qkv` (n = 2,304,
+  k = 768: query, key and value together), joins the benchmarked shapes, and
+  the fp32 and Q8 tests run it with 4 tokens. Reason: it's the last of
+  GPT-2's per-layer matrices, so the five shapes now cover a whole layer. Its
+  7.1 MB W sits between attn_out's 2.4 MB and mlp_up's 9.4 MB, which helps
+  show where W stops fitting in cache.

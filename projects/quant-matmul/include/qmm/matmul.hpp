@@ -50,7 +50,7 @@ void matmul_openblas(Shape shape, std::span<const float> a, std::span<const floa
 inline constexpr std::size_t q8_block_size = 32;
 
 struct BlockQ8 {
-  float scale;  // Open question: fp32 or fp16 (see STATUS.md).
+  float scale;  // fp32; fp16, as in llama.cpp's Q8_0, is optional later work.
   std::array<std::int8_t, q8_block_size> q;
 };
 

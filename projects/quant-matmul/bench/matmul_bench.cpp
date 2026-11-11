@@ -33,13 +33,12 @@ struct WeightShape {
   std::size_t k;
 };
 
-// GPT-2 (124M): attention output projection, MLP up and down projections, and
-// the output layer over the 50,257-token vocabulary.
+// GPT-2 (124M): attention input projection (query, key and value together),
+// attention output projection, MLP up and down projections, and the output
+// layer over the 50,257-token vocabulary.
 constexpr WeightShape weight_shapes[] = {
-    {"attn_out", 768, 768},
-    {"mlp_up", 3072, 768},
-    {"mlp_down", 768, 3072},
-    {"lm_head", 50257, 768},
+    {"attn_qkv", 2304, 768}, {"attn_out", 768, 768},  {"mlp_up", 3072, 768},
+    {"mlp_down", 768, 3072}, {"lm_head", 50257, 768},
 };
 
 constexpr std::size_t token_counts[] = {1, 128, 1024};
