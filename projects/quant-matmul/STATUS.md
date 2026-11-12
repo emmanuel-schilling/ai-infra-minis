@@ -18,7 +18,11 @@ loop keeps all 16 YMM registers in use with no spills to the stack. Step v4,
 `v4_cache_blocking`, is done and tested for real but not yet measured, so
 `matmul_avx2` still calls v3. All fp32 kernels now accept empty sizes:
 k = 0 sets C to zero, and the BLAS wrappers handle it themselves, because
-BLAS rejects a leading dimension below 1. The other kernels you write are
+BLAS rejects a leading dimension below 1. `quantize_q8` and `dequantize_q8`
+are done and tested for real: amax / 127 as each block's fp32 scale, each
+value divided by the scale, rounded to nearest with `std::nearbyint` and
+clamped to ±127, and a zero scale, including one that underflows from a tiny
+nonzero amax, giving an all-zero block. The other kernels you write are
 still stubs behind pending switches in
 `include/qmm/pending.hpp`, so their tests pass without checking anything. The
 BLAS baselines are done, and their tests run for real: Accelerate on macOS,
@@ -36,12 +40,9 @@ invalid: the screen saver started during it (see its `INVALID.md`).
 
 ## Next step
 The code continues while the benchmarks wait. In order:
-1. `quantize_q8` and `dequantize_q8` in `src/quantize.cpp`
-   (`pending::quantize`), with an fp32 scale per block. An all-zero block is
-   valid input and must not divide by zero.
-2. The scalar Q8 kernel, `matmul_q8_scalar` in `src/q8_scalar.cpp`
+1. The scalar Q8 kernel, `matmul_q8_scalar` in `src/q8_scalar.cpp`
    (`pending::q8_scalar`), the reference for the other Q8 kernels.
-3. The AVX2 Q8 kernel, `matmul_q8_avx2` in `src/q8_avx2.cpp`
+2. The AVX2 Q8 kernel, `matmul_q8_avx2` in `src/q8_avx2.cpp`
    (`pending::q8_avx2`), using `_mm256_maddubs_epi16` with the
    `_mm256_sign_epi8` trick.
 
@@ -190,3 +191,12 @@ Record each as: date, decision, reason.
   GPT-2's per-layer matrices, so the five shapes now cover a whole layer. Its
   7.1 MB W sits between attn_out's 2.4 MB and mlp_up's 9.4 MB, which helps
   show where W stops fitting in cache.
+- 2026-11-11: `quantize_q8` divides each value by the scale rather than
+  multiplying by 127 / amax, tests the scale (not amax) for zero, rounds with
+  `std::nearbyint`, and clamps to ±127. Reason: 127 / amax overflows to
+  infinity for amax below about 3.7e-37, a normal float; amax / 127 rounds to
+  zero for amax below about 9e-44, so a test on amax still divides by zero;
+  and adding 0.5 before truncating rounds 0.49999997 up to 1. Each case made
+  an infinity or NaN that the int8 cast turns into undefined behaviour, and
+  each now has a test. A subnormal scale keeps few bits, so such a block may
+  peak below 127; the clamp keeps it in range.

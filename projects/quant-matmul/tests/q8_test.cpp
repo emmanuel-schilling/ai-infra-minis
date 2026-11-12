@@ -74,6 +74,48 @@ TEST(QuantizeQ8, ZeroBlockHasZeroScale) {
   }
 }
 
+// 127 / amax overflows to infinity below about 3.7e-37, a normal float, so a
+// quantizer that multiplies by that reciprocal fails here.
+TEST(QuantizeQ8, TinyBlockStillReaches127) {
+  QMM_PASS_WHILE_PENDING(qmm::pending::quantize);
+  std::vector<float> x(q8_block_size, 0.0F);
+  x[0] = 1e-37F;
+  x[1] = -0.5e-37F;
+  const auto blocks = quantize(x);
+  EXPECT_GT(blocks[0].scale, 0.0F);
+  EXPECT_EQ(blocks[0].q[0], 127);
+  EXPECT_NEAR(blocks[0].q[1], -64, 1);
+  for (std::size_t i = 2; i < q8_block_size; ++i) {
+    EXPECT_EQ(blocks[0].q[i], 0) << "at " << i;
+  }
+}
+
+// Below about 9e-44, amax / 127 rounds to a zero scale although amax is not
+// zero; the block must then quantize like a zero block, not divide by zero.
+TEST(QuantizeQ8, ScaleThatUnderflowsGivesZeroBlock) {
+  QMM_PASS_WHILE_PENDING(qmm::pending::quantize);
+  std::vector<float> x(q8_block_size, 0.0F);
+  x[0] = 1e-44F;
+  x[1] = -1e-44F;
+  const auto blocks = quantize(x);
+  EXPECT_EQ(blocks[0].scale, 0.0F);
+  for (const std::int8_t q : blocks[0].q) {
+    EXPECT_EQ(q, 0);
+  }
+}
+
+// The largest float below 0.5 must round to 0. Adding 0.5 and truncating
+// gives 1, because 0.49999997F + 0.5F rounds to 1.0F.
+TEST(QuantizeQ8, JustBelowHalfRoundsDown) {
+  QMM_PASS_WHILE_PENDING(qmm::pending::quantize);
+  std::vector<float> x(q8_block_size, 0.0F);
+  x[0] = 127.0F;  // scale 1
+  x[1] = std::nextafter(0.5F, 0.0F);
+  const auto blocks = quantize(x);
+  EXPECT_EQ(blocks[0].scale, 1.0F);
+  EXPECT_EQ(blocks[0].q[1], 0);
+}
+
 TEST(QuantizeQ8, DequantizeMultipliesByScale) {
   QMM_PASS_WHILE_PENDING(qmm::pending::quantize);
   BlockQ8 block{};
