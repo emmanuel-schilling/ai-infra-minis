@@ -4,12 +4,53 @@ Each benchmark run records the hardware, compiler flags and exact command, and
 keeps its raw output in a dated folder under `results/` in this project. Never
 overwrite an earlier run; add a new one and summarize it here.
 
-A round is excluded when its speed check, timed before and after the round,
-differs by more than 5% from the run's first check (`slow_rounds` in
-`metadata.json`). Excluded runs are kept, with an `INVALID.md` that gives the
-reason, and are never summarized.
+A round is excluded when its results differ from round 1's by more than 5%:
+the median, over all benchmarks, of the ratio of each benchmark's time in that
+round to its time in round 1 (`time_vs_round_1` and `slow_rounds` in
+`metadata.json`). Runs up to 2026-11-12 used an earlier rule, comparing a
+short speed check before and after each round with the run's first check, and
+keep the verdicts that rule gave; the check is still recorded as a diagnostic.
+A run with an excluded round is invalid. Invalid runs are
+kept, with an `INVALID.md` that gives the reason, and are never summarized.
 
 ## Benchmarks
+
+### fp32: scalar, AVX2 v1 to v4, Accelerate (2026-11-12)
+Run `results/2026-11-12_i9-8950hk_2/`: 3 rounds × 5 repetitions, all valid (no
+throttling; speed checks 66.0–68.9 ms, within 4.2% of the first). Over all
+benchmarks, the median time in rounds 2 and 3 is within 1% of round 1's.
+
+- Hardware: as on 2026-11-11 below.
+- Software: macOS 15.8.3 (updated since the last run), Apple clang 17.0.0,
+  Release (`-O3 -DNDEBUG -std=c++20`; the AVX2 file adds `-mavx2 -mfma`).
+- Source: commit `f454d55`, no uncommitted changes. `matmul_avx2` still calls
+  v3; v4 is benchmarked as its own step.
+- Command: `uv run python projects/quant-matmul/scripts/run_bench.py`.
+- Measured ceilings: peak FMA 154 GFLOP/s, read bandwidth 16.7 GiB/s.
+
+GEMM (prefill), GFLOP/s, median over 15 repetitions:
+
+| Shape (n × k), tokens | scalar | v1 | v2 | v3 | v4 | Accelerate |
+|---|---|---|---|---|---|---|
+| attn_qkv 2,304 × 768, 128 | 2.3 | 19.8 | 25.0 | 74.7 | 106.2 | 86.6 |
+| attn_qkv 2,304 × 768, 1,024 | 2.3 | 19.8 | 25.2 | 80.0 | 113.1 | 108.0 |
+| attn_out 768 × 768, 128 | 2.3 | 21.7 | 29.2 | 80.9 | 107.1 | 87.0 |
+| attn_out 768 × 768, 1,024 | 2.3 | 21.3 | 29.2 | 84.8 | 113.1 | 110.1 |
+| mlp_up 3,072 × 768, 128 | 2.2 | 14.2 | 15.7 | 48.5 | 104.8 | 87.1 |
+| mlp_up 3,072 × 768, 1,024 | 2.3 | 14.2 | 15.7 | 51.7 | 112.3 | 105.7 |
+| mlp_down 768 × 3,072, 128 | 2.2 | 14.3 | 15.7 | 55.7 | 72.5 | 87.4 |
+| mlp_down 768 × 3,072, 1,024 | 2.2 | 14.3 | 15.7 | 57.6 | 73.5 | 111.1 |
+| lm_head 50,257 × 768, 128 | 2.2 | 8.7 | 9.1 | 20.8 | 99.4 | 80.4 |
+
+GEMV (decode, 1 token), GiB/s of weights read:
+
+| Shape | scalar | v1 | v2 | v3 | v4 | Accelerate |
+|---|---|---|---|---|---|---|
+| attn_qkv | 4.0 | 16.5 | 17.4 | 16.2 | 16.6 | 14.6 |
+| attn_out | 4.0 | 16.7 | 17.5 | 16.3 | 16.6 | 15.4 |
+| mlp_up | 4.0 | 16.6 | 17.4 | 16.2 | 16.6 | 14.4 |
+| mlp_down | 3.9 | 16.0 | 17.3 | 16.1 | 16.1 | 18.7 |
+| lm_head | 3.9 | 16.2 | 16.9 | 15.8 | 16.2 | 13.3 |
 
 ### fp32: scalar, AVX2 v1 to v3, Accelerate (2026-11-11)
 Run `results/2026-11-11_i9-8950hk/`: 3 rounds × 5 repetitions, all valid (no
@@ -48,6 +89,23 @@ GEMV (decode, 1 token), GiB/s of weights read:
 
 ## Conclusions
 
+From the 2026-11-12 run (one machine; macOS changed since the 2026-11-11 run,
+so numbers across the two runs aren't compared closely):
+
+- **Cache blocking (v4) is the fastest AVX2 version on every GEMM shape**:
+  1.3–1.4× over v3 on the attention shapes, 2.2× on mlp_up and 4.8× on
+  lm_head, where v3 had been memory-bound. Apart from mlp_down, it reaches
+  99–113 GFLOP/s, 64–73% of the FMA peak.
+- **v4 beats single-threaded Accelerate on four of the five shapes**: by 20–24%
+  at 128 tokens and 3–6% at 1,024 (lm_head runs only at 128 tokens).
+- **mlp_down (k = 3,072) is v4's weak spot**, at 72.5–73.5 GFLOP/s: 1.3× over
+  v3, but 66–83% of Accelerate. v4 keeps 64 full rows of W per block, which
+  is 192 KB at k = 768 and fits the 256 KB L2, but 768 KB at k = 3,072, which
+  doesn't. That fits the numbers, but nothing has measured it yet; blocking
+  along k as well, or sizing the block from k, would test it.
+- **v4 didn't slow GEMV.** Every AVX2 version still reads weights at the
+  bandwidth (15.8–17.5 GiB/s), and v4 is 0–3% faster than v3.
+
 From the 2026-11-11 run (one machine, one run; to be confirmed by later runs):
 
 - **GEMV is memory-bound, and every AVX2 version reaches the bandwidth.** v1
@@ -73,6 +131,29 @@ From the 2026-11-11 run (one machine, one run; to be confirmed by later runs):
   estimate, though other effects differ between the two sizes too.
 
 ## Measurement notes
+
+### GEMM runs with W warm in cache
+Each GEMM repetition calls the kernel many times on the same W, so when W
+fits in the 12 MB L3 (attn_qkv, attn_out and mlp_up), every call after the
+first finds it cached. In a full forward pass, each layer's W would come from
+memory. GEMV cycles through enough copies of W to avoid this; GEMM doesn't.
+Reading W from memory once would add at most about 9% to a call at 128
+tokens and about 1% at 1,024, an upper bound that assumes no overlap with
+the arithmetic; it hasn't been measured. This makes the absolute GEMM numbers
+optimistic more than it affects the comparisons: every kernel runs under the
+same conditions, and the gaps between them (20–24% for v4 against Accelerate
+at 128 tokens, 3–6% at 1,024) are larger than that bound. A kernel that hides
+memory latency less well, such as v3, would likely lose a little more with W
+cold.
+
+### A speed check flagged faster rounds (2026-11-12)
+The first run that morning, `results/2026-11-12_i9-8950hk/`, is invalid. Its
+first speed check took 71.1 ms and the later ones 64.6–66.3 ms, so rounds 2 and
+3 were flagged for being 7–9% faster. The rounds' own results agreed within 1%,
+and the check run back to back agrees within 1.5%, so the spread most likely
+reflects the CPU's clock speed in the seconds each check ran. The run was
+excluded by the rule anyway and rerun as `results/2026-11-12_i9-8950hk_2/`.
+The run folder's `INVALID.md` has the numbers.
 
 ### The screen saver halved the CPU's speed (2026-11-10)
 The first baseline run, `results/2026-11-10_i9-8950hk/`, is invalid. The Drift

@@ -15,8 +15,8 @@ Step v3, `v3_register_blocking`, is done and tested for real too: a 3 × 4 tile
 of outputs with 12 accumulators, each loaded W vector feeding 3 FMAs, and a
 one-accumulator fallback for leftover rows and columns. Its compiled inner
 loop keeps all 16 YMM registers in use with no spills to the stack. Step v4,
-`v4_cache_blocking`, is done and tested for real but not yet measured, so
-`matmul_avx2` still calls v3. All fp32 kernels now accept empty sizes:
+`v4_cache_blocking`, is done, tested for real and measured: it's the fastest
+version, but `matmul_avx2` still calls v3 until you switch it. All fp32 kernels now accept empty sizes:
 k = 0 sets C to zero, and the BLAS wrappers handle it themselves, because
 BLAS rejects a leading dimension below 1. `quantize_q8` and `dequantize_q8`
 are done and tested for real: amax / 127 as each block's fp32 scale, each
@@ -29,8 +29,17 @@ BLAS baselines are done, and their tests run for real: Accelerate on macOS,
 OpenBLAS on Linux and Windows. The NEON Q8 kernel (a stretch goal) is a stub
 too, built and tested on Arm only.
 
-The first valid run is `results/2026-11-11_i9-8950hk/`, summarized in
-RESULTS.md. Every AVX2 version reaches the read bandwidth for GEMV (about 16
+The latest valid run is `results/2026-11-12_i9-8950hk_2/`, on macOS 15.8.3
+from commit `f454d55`, summarized in RESULTS.md. v4 is 1.3–4.8× faster than
+v3 on every GEMM shape and beats single-threaded Accelerate on four of the
+five (by 20–24% at 128 tokens, 3–6% at 1,024). mlp_down (k = 3,072) is the
+exception, at 66–83% of Accelerate: v4's 64-row block of W is 768 KB at that
+k, too big for the 256 KB L2 (a hypothesis, not yet measured). GEMV is
+unchanged at the bandwidth. The run before it that morning,
+`results/2026-11-12_i9-8950hk/`, is invalid: the speed check flagged rounds
+that were faster than its first check (see its `INVALID.md`).
+
+The first valid run is `results/2026-11-11_i9-8950hk/`. Every AVX2 version reaches the read bandwidth for GEMV (about 16
 GiB/s). For GEMM, v2 is only 1.0–1.3× faster than v1, while v3 is 2.4–3.8×
 faster than v2: 79–82 GFLOP/s on attn_out, 75–92% of Accelerate, but 48–60% of
 it on the MLP shapes and 28% on lm_head, where W doesn't stay in cache. It ran
@@ -39,22 +48,21 @@ folder's `source.patch`. The earlier run (`results/2026-11-10_i9-8950hk/`) is
 invalid: the screen saver started during it (see its `INVALID.md`).
 
 ## Next step
-The code continues while the benchmarks wait. In order:
-1. The scalar Q8 kernel, `matmul_q8_scalar` in `src/q8_scalar.cpp`
+In order:
+1. Point `matmul_avx2` at `v4_cache_blocking` in `src/avx2.cpp`, now that the
+   2026-11-12 run measured it as the fastest version.
+2. The scalar Q8 kernel, `matmul_q8_scalar` in `src/q8_scalar.cpp`
    (`pending::q8_scalar`), the reference for the other Q8 kernels.
-2. The AVX2 Q8 kernel, `matmul_q8_avx2` in `src/q8_avx2.cpp`
+3. The AVX2 Q8 kernel, `matmul_q8_avx2` in `src/q8_avx2.cpp`
    (`pending::q8_avx2`), using `_mm256_maddubs_epi16` with the
    `_mm256_sign_epi8` trick.
-
-Postponed, to be done together later:
-- Install the pending macOS update.
-- Run `run_bench.py` on the new OS: v4 against v3 (point `matmul_avx2` at v4
-  only if it's faster), and the Q8 kernels written by then. Close other apps,
-  Chrome included, and start the run while the screen saver isn't running:
-  `caffeinate` keeps it from starting but can't stop it. Turn Low Power Mode
-  off first.
+4. A benchmark run for the Q8 kernels. Close other apps, Chrome included,
+   turn Low Power Mode off, and start the run while the screen saver isn't
+   running: `caffeinate` keeps it from starting but can't stop it.
 
 Optional work, after the required kernels:
+- Blocking v4 along k as well, or sizing its block of W from k, to test
+  whether L2 explains the mlp_down gap.
 - fp16 block scales, as in llama.cpp's Q8_0, converted with F16C's
   `_mm256_cvtph_ps`. A block shrinks from 36 to 34 bytes, about 6% less to
   read for memory-bound GEMV, and the format then matches llama.cpp's
@@ -200,3 +208,14 @@ Record each as: date, decision, reason.
   an infinity or NaN that the int8 cast turns into undefined behaviour, and
   each now has a test. A subnormal scale keeps few bits, so such a block may
   peak below 127; the clamp keeps it in range.
+- 2026-11-12: `run_bench.py` excludes a round when its results differ from
+  round 1's by more than 5%: the median, over all benchmarks, of each
+  benchmark's time in that round divided by its time in round 1. The speed
+  check before and after each round stays, recorded as a diagnostic only.
+  Earlier runs keep the verdicts of the rule they ran under. Reason: the check
+  lasts a few seconds and followed the clock speed of that moment, varying by
+  10% within a run while the rounds agreed within 1%, so it flagged the first
+  2026-11-12 run. Back to back it agrees within 1.5%. The new rule passes that
+  run (0.991 and 0.996) and the valid one after it (1.009 and 1.002), and
+  flags the screen saver run (2.28 and 2.26). Like the old rule, it can't see
+  a slowdown that lasts the whole run.

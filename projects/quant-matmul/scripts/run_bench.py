@@ -5,15 +5,21 @@ cooldown between them, and writes everything to a new folder
 results/<date>_<cpu>/ in this project:
 
 - metadata.json: hardware, OS, compiler, flags, the source revision, the
-  command, and the thermal state and speed check before and after each round
+  command, the thermal state and speed check before and after each round, and
+  each round's time relative to round 1
 - round_<n>.json: Google Benchmark's raw output for each round
 - round_<n>_check_{before,after}.json: the speed check's raw output
 - summary.json: the median of every benchmark across all rounds
 
-The speed check times one short benchmark before and after every round. A
-check more than 5% slower or faster than the first one marks that round as
-unreliable: something else changed the CPU's speed, such as a screen saver or
-a background task, even when the operating system reports no throttling.
+Each round is compared with round 1 through its own results: the median, over
+all benchmarks, of the ratio of their times. A round more than 5% slower or
+faster than round 1 is listed in slow_rounds: something else changed the
+CPU's speed, such as a screen saver or a background task, even when the
+operating system reports no throttling.
+
+The speed check times one short benchmark before and after every round. It is
+recorded as a diagnostic, for instance of what happened during a cooldown, but
+doesn't exclude rounds: it follows the clock speed of the few seconds it runs.
 
 Earlier runs are never overwritten. The BLAS baselines run single-threaded,
 like the kernels they are compared with: Accelerate through
@@ -53,6 +59,9 @@ IGNORED_CPU_WORDS = {"intel", "core", "cpu", "processor"}
 # fp32 additions, so its time follows the CPU's clock speed.
 SPEED_CHECK = "fp32/scalar/attn_out/tokens:128"
 SPEED_CHECK_TOLERANCE = 0.05
+
+# A round whose results differ from round 1's by more than this is excluded.
+ROUND_TOLERANCE = 0.05
 
 
 def cpu_slug(model: str) -> str:
@@ -118,11 +127,47 @@ def check_time_ns(output: dict[str, Any], name: str) -> float | None:
     return summarize([output]).get(name, {}).get("time_ns")
 
 
-def slow_rounds(rounds: list[dict[str, Any]], tolerance: float) -> list[int]:
+def round_speeds(outputs: list[dict[str, Any]]) -> list[float | None]:
+    """Each round's time relative to round 1: the median over benchmarks of the time ratio.
+
+    Only benchmarks measured in both rounds count. None for a round that
+    shares no benchmark with round 1.
+    """
+    if not outputs:
+        return []
+    medians = [summarize([output]) for output in outputs]
+    first = medians[0]
+    speeds: list[float | None] = []
+    for current in medians:
+        ratios = [
+            current[name]["time_ns"] / first[name]["time_ns"]
+            for name in current
+            if name in first and first[name]["time_ns"] > 0
+        ]
+        speeds.append(statistics.median(ratios) if ratios else None)
+    return speeds
+
+
+def slow_rounds(speeds: list[float | None], tolerance: float) -> list[int]:
+    """Rounds whose results differ from round 1's by more than tolerance.
+
+    Every round runs every benchmark for minutes, so a change that lasts
+    through a round, such as a screen saver that starts between rounds, moves
+    the median of all the ratios, while a brief one doesn't.
+    """
+    return [
+        n
+        for n, speed in enumerate(speeds, start=1)
+        if speed is not None and abs(speed - 1.0) > tolerance
+    ]
+
+
+def check_changed_rounds(rounds: list[dict[str, Any]], tolerance: float) -> list[int]:
     """Rounds whose speed check before or after differs from the run's first by more than tolerance.
 
-    Comparing with the first check, not only within a round, also catches a
-    slowdown that lasts through several whole rounds.
+    A diagnostic only: a check lasts a few seconds and follows the CPU's clock
+    speed at that moment, which changes with what ran just before it, so it
+    can differ from the first while the rounds' results agree.
     """
     times = [(r["round"], t) for r in rounds for t in (r["check_before_ns"], r["check_after_ns"])]
     known = [(n, t) for n, t in times if t is not None]
@@ -312,7 +357,11 @@ def main() -> int:
                 time.sleep(args.cooldown)
 
     throttled = throttled_rounds(rounds)
-    slow = slow_rounds(rounds, SPEED_CHECK_TOLERANCE)
+    speeds = round_speeds(outputs)
+    for entry, speed in zip(rounds, speeds, strict=True):
+        entry["time_vs_round_1"] = speed
+    slow = slow_rounds(speeds, ROUND_TOLERANCE)
+    check_changed = check_changed_rounds(rounds, SPEED_CHECK_TOLERANCE)
     metadata = {
         "started_utc": started.isoformat(),
         "finished_utc": datetime.datetime.now(datetime.UTC).isoformat(),
@@ -322,7 +371,12 @@ def main() -> int:
         "machine": machine,
         "build": build_details(),
         "source": source,
-        "speed_check": {"benchmark": SPEED_CHECK, "tolerance": SPEED_CHECK_TOLERANCE},
+        "speed_check": {
+            "benchmark": SPEED_CHECK,
+            "tolerance": SPEED_CHECK_TOLERANCE,
+            "changed_rounds": check_changed,
+        },
+        "round_tolerance": ROUND_TOLERANCE,
         "rounds": rounds,
         "throttled_rounds": throttled,
         "slow_rounds": slow,
@@ -335,9 +389,13 @@ def main() -> int:
     if throttled:
         print(f"run_bench: WARNING: the CPU speed was limited in rounds {throttled}")
     if slow:
+        change = f"{ROUND_TOLERANCE:.0%}"
+        print(f"run_bench: WARNING: rounds {slow} differ from round 1 by more than {change}")
+    print(f"run_bench: time relative to round 1, per round: {speeds}")
+    if check_changed:
         change = f"{SPEED_CHECK_TOLERANCE:.0%}"
-        print(f"run_bench: WARNING: the speed check changed by more than {change} in rounds {slow}")
-    elif all(r["check_before_ns"] is None for r in rounds):
+        print(f"run_bench: note: the speed check changed by more than {change} in {check_changed}")
+    if all(r["check_before_ns"] is None for r in rounds):
         print(f"run_bench: WARNING: the speed check {SPEED_CHECK} didn't run")
     print(f"{'benchmark':<52} {'median ms':>10} {'GFLOP/s':>9} {'GB/s':>8}")
     for name, values in summary.items():

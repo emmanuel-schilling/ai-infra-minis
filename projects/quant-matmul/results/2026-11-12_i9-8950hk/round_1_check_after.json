@@ -1,0 +1,158 @@
+{
+  "context": {
+    "date": "2026-11-12T01:40:58-08:00",
+    "host_name": "embp-2.local",
+    "executable": "/Users/emmanuelschilling/projects/ai-infra-minis/build-release/projects/quant-matmul/qmm_bench",
+    "num_cpus": 12,
+    "mhz_per_cpu": 2900,
+    "cpu_scaling_enabled": false,
+    "caches": [
+      {
+        "type": "Data",
+        "level": 1,
+        "size": 32768,
+        "num_sharing": 0
+      },
+      {
+        "type": "Instruction",
+        "level": 1,
+        "size": 32768,
+        "num_sharing": 0
+      },
+      {
+        "type": "Unified",
+        "level": 2,
+        "size": 262144,
+        "num_sharing": 2
+      },
+      {
+        "type": "Unified",
+        "level": 3,
+        "size": 12582912,
+        "num_sharing": 0
+      }
+    ],
+    "load_avg": [2.01025,1.8833,2.0835],
+    "library_version": "v1.9.5",
+    "library_build_type": "release",
+    "json_schema_version": 1
+  },
+  "benchmarks": [
+    {
+      "name": "fp32/scalar/attn_out/tokens:128",
+      "family_index": 0,
+      "per_family_instance_index": 0,
+      "run_name": "fp32/scalar/attn_out/tokens:128",
+      "run_type": "iteration",
+      "repetitions": 3,
+      "repetition_index": 0,
+      "threads": 1,
+      "iterations": 10,
+      "real_time": 6.6336087699983182e+01,
+      "cpu_time": 6.6328499999999991e+01,
+      "time_unit": "ms",
+      "FLOP/s": 2.2764715619982367e+09,
+      "bytes_per_second": 4.7426490874963261e+07
+    },
+    {
+      "name": "fp32/scalar/attn_out/tokens:128",
+      "family_index": 0,
+      "per_family_instance_index": 0,
+      "run_name": "fp32/scalar/attn_out/tokens:128",
+      "run_type": "iteration",
+      "repetitions": 3,
+      "repetition_index": 1,
+      "threads": 1,
+      "iterations": 10,
+      "real_time": 7.3466071500024555e+01,
+      "cpu_time": 6.9534300000000002e+01,
+      "time_unit": "ms",
+      "FLOP/s": 2.1715174237750287e+09,
+      "bytes_per_second": 4.5239946328646436e+07
+    },
+    {
+      "name": "fp32/scalar/attn_out/tokens:128",
+      "family_index": 0,
+      "per_family_instance_index": 0,
+      "run_name": "fp32/scalar/attn_out/tokens:128",
+      "run_type": "iteration",
+      "repetitions": 3,
+      "repetition_index": 2,
+      "threads": 1,
+      "iterations": 10,
+      "real_time": 6.9848434300001827e+01,
+      "cpu_time": 6.9805200000000013e+01,
+      "time_unit": "ms",
+      "FLOP/s": 2.1630901995839849e+09,
+      "bytes_per_second": 4.5064379157999679e+07
+    },
+    {
+      "name": "fp32/scalar/attn_out/tokens:128_mean",
+      "family_index": 0,
+      "per_family_instance_index": 0,
+      "run_name": "fp32/scalar/attn_out/tokens:128",
+      "run_type": "aggregate",
+      "repetitions": 3,
+      "threads": 1,
+      "aggregate_name": "mean",
+      "aggregate_unit": "time",
+      "iterations": 3,
+      "real_time": 6.9883531166669854e+01,
+      "cpu_time": 6.8555999999999997e+01,
+      "time_unit": "ms",
+      "FLOP/s": 2.2036930617857499e+09,
+      "bytes_per_second": 4.5910272120536461e+07
+    },
+    {
+      "name": "fp32/scalar/attn_out/tokens:128_median",
+      "family_index": 0,
+      "per_family_instance_index": 0,
+      "run_name": "fp32/scalar/attn_out/tokens:128",
+      "run_type": "aggregate",
+      "repetitions": 3,
+      "threads": 1,
+      "aggregate_name": "median",
+      "aggregate_unit": "time",
+      "iterations": 3,
+      "real_time": 6.9848434300001827e+01,
+      "cpu_time": 6.9534300000000002e+01,
+      "time_unit": "ms",
+      "FLOP/s": 2.1715174237750287e+09,
+      "bytes_per_second": 4.5239946328646436e+07
+    },
+    {
+      "name": "fp32/scalar/attn_out/tokens:128_stddev",
+      "family_index": 0,
+      "per_family_instance_index": 0,
+      "run_name": "fp32/scalar/attn_out/tokens:128",
+      "run_type": "aggregate",
+      "repetitions": 3,
+      "threads": 1,
+      "aggregate_name": "stddev",
+      "aggregate_unit": "time",
+      "iterations": 3,
+      "real_time": 3.5651214691437336e+00,
+      "cpu_time": 1.9338210594571625e+00,
+      "time_unit": "ms",
+      "FLOP/s": 6.3168719290287718e+07,
+      "bytes_per_second": 1.3160149852143591e+06
+    },
+    {
+      "name": "fp32/scalar/attn_out/tokens:128_cv",
+      "family_index": 0,
+      "per_family_instance_index": 0,
+      "run_name": "fp32/scalar/attn_out/tokens:128",
+      "run_type": "aggregate",
+      "repetitions": 3,
+      "threads": 1,
+      "aggregate_name": "cv",
+      "aggregate_unit": "percentage",
+      "iterations": 3,
+      "real_time": 5.1015187836473803e-02,
+      "cpu_time": 2.8207903895460101e-02,
+      "time_unit": "ms",
+      "FLOP/s": 2.8664935414870942e-02,
+      "bytes_per_second": 2.8664935414871626e-02
+    }
+  ]
+}

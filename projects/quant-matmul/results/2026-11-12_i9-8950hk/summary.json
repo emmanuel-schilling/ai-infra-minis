@@ -1,0 +1,516 @@
+{
+  "fp32/avx2_v2/mlp_down/tokens:128": {
+    "time_ns": 35951212.94737462,
+    "FLOP/s": 16802026009.165663,
+    "bytes_per_second": 317225751.47513294,
+    "samples": 15.0
+  },
+  "fp32/scalar/attn_qkv/tokens:128": {
+    "time_ns": 197070358.00001904,
+    "FLOP/s": 2298680279.9104857,
+    "bytes_per_second": 43898408.123290524,
+    "samples": 15.0
+  },
+  "fp32/avx2_v1/mlp_down/tokens:1": {
+    "time_ns": 545512.6842105128,
+    "FLOP/s": 8651068194.012892,
+    "bytes_per_second": 17330297417.30317,
+    "samples": 15.0
+  },
+  "fp32/avx2_v2/attn_qkv/tokens:1": {
+    "time_ns": 377052.7351206201,
+    "FLOP/s": 9387960548.587473,
+    "bytes_per_second": 18808518182.413097,
+    "samples": 15.0
+  },
+  "fp32/avx2_v1/attn_qkv/tokens:1": {
+    "time_ns": 396695.03525463433,
+    "FLOP/s": 8922706187.108799,
+    "bytes_per_second": 17876393992.922836,
+    "samples": 15.0
+  },
+  "fp32/avx2_v2/mlp_up/tokens:1024": {
+    "time_ns": 280882629.49995625,
+    "FLOP/s": 17205440291.70442,
+    "bytes_per_second": 89611668.18596052,
+    "samples": 15.0
+  },
+  "fp32/avx2_v4/mlp_down/tokens:1024": {
+    "time_ns": 64911067.45455578,
+    "FLOP/s": 74454474797.64934,
+    "bytes_per_second": 387783722.90442365,
+    "samples": 15.0
+  },
+  "fp32/avx2_v1/mlp_down/tokens:1024": {
+    "time_ns": 308342342.50005466,
+    "FLOP/s": 15671555136.07673,
+    "bytes_per_second": 81622683.00039963,
+    "samples": 15.0
+  },
+  "fp32/scalar/mlp_up/tokens:1": {
+    "time_ns": 2208539.1437910693,
+    "FLOP/s": 2136815769.8455484,
+    "bytes_per_second": 4280587320.191896,
+    "samples": 15.0
+  },
+  "fp32/avx2_v1/attn_out/tokens:1": {
+    "time_ns": 131629.73761914216,
+    "FLOP/s": 8963554535.669386,
+    "bytes_per_second": 17973794251.21205,
+    "samples": 15.0
+  },
+  "fp32/accelerate/mlp_up/tokens:1": {
+    "time_ns": 611863.0778546912,
+    "FLOP/s": 7712723178.924346,
+    "bytes_per_second": 15450552878.61342,
+    "samples": 15.0
+  },
+  "fp32/accelerate/mlp_down/tokens:1": {
+    "time_ns": 471167.7276995311,
+    "FLOP/s": 10015546547.085217,
+    "bytes_per_second": 20063695784.753395,
+    "samples": 15.0
+  },
+  "fp32/scalar/attn_out/tokens:1": {
+    "time_ns": 546127.2501917472,
+    "FLOP/s": 2160050792.937029,
+    "bytes_per_second": 4331351850.420605,
+    "samples": 15.0
+  },
+  "fp32/accelerate/mlp_up/tokens:128": {
+    "time_ns": 6891226.925235289,
+    "FLOP/s": 87683894365.51608,
+    "bytes_per_second": 1655490193.0989366,
+    "samples": 15.0
+  },
+  "fp32/scalar/attn_out/tokens:1024": {
+    "time_ns": 519870065.00030476,
+    "FLOP/s": 2324031544.782663,
+    "bytes_per_second": 16643455.073313342,
+    "samples": 15.0
+  },
+  "fp32/accelerate/attn_out/tokens:128": {
+    "time_ns": 1731455.0681257173,
+    "FLOP/s": 87215672088.1146,
+    "bytes_per_second": 1816993168.5023873,
+    "samples": 15.0
+  },
+  "fp32/avx2_v2/attn_out/tokens:1": {
+    "time_ns": 125844.40579204497,
+    "FLOP/s": 9374187887.400042,
+    "bytes_per_second": 18797199670.04696,
+    "samples": 15.0
+  },
+  "fp32/avx2_v4/mlp_down/tokens:128": {
+    "time_ns": 8286366.234569645,
+    "FLOP/s": 72891923207.9203,
+    "bytes_per_second": 1376214695.9828703,
+    "samples": 15.0
+  },
+  "fp32/avx2_v1/attn_out/tokens:128": {
+    "time_ns": 7170265.231577918,
+    "FLOP/s": 21063348810.165535,
+    "bytes_per_second": 438819766.8784486,
+    "samples": 15.0
+  },
+  "fp32/scalar/mlp_down/tokens:128": {
+    "time_ns": 270367084.5000943,
+    "FLOP/s": 2234466978.540729,
+    "bytes_per_second": 42187202.068802826,
+    "samples": 15.0
+  },
+  "fp32/scalar/mlp_up/tokens:128": {
+    "time_ns": 262519165.99994728,
+    "FLOP/s": 2300844659.2139955,
+    "bytes_per_second": 43440426.508597575,
+    "samples": 15.0
+  },
+  "fp32/avx2_v1/lm_head/tokens:1": {
+    "time_ns": 8787814.679012457,
+    "FLOP/s": 8786380426.168407,
+    "bytes_per_second": 17595991709.33835,
+    "samples": 15.0
+  },
+  "fp32/accelerate/attn_out/tokens:1024": {
+    "time_ns": 10911175.746030726,
+    "FLOP/s": 110717660477.16988,
+    "bytes_per_second": 792899912.2713989,
+    "samples": 15.0
+  },
+  "fp32/avx2_v3/mlp_up/tokens:1024": {
+    "time_ns": 79173317.75001912,
+    "FLOP/s": 61031561497.79877,
+    "bytes_per_second": 317872716.1343686,
+    "samples": 15.0
+  },
+  "fp32/avx2_v3/attn_qkv/tokens:128": {
+    "time_ns": 5825242.513160925,
+    "FLOP/s": 77763352853.88591,
+    "bytes_per_second": 1485064030.1957378,
+    "samples": 15.0
+  },
+  "fp32/scalar/attn_qkv/tokens:1024": {
+    "time_ns": 1573018444.000354,
+    "FLOP/s": 2303884283.1558285,
+    "bytes_per_second": 12499372.19594091,
+    "samples": 15.0
+  },
+  "fp32/scalar/attn_out/tokens:128": {
+    "time_ns": 64859612.90908645,
+    "FLOP/s": 2328424530.4443536,
+    "bytes_per_second": 48508844.38425736,
+    "samples": 15.0
+  },
+  "fp32/avx2_v3/mlp_up/tokens:128": {
+    "time_ns": 9968593.62069323,
+    "FLOP/s": 60607176855.283516,
+    "bytes_per_second": 1144276125.5229309,
+    "samples": 15.0
+  },
+  "fp32/avx2_v2/attn_qkv/tokens:128": {
+    "time_ns": 17838673.054054223,
+    "FLOP/s": 25398529445.459816,
+    "bytes_per_second": 485041360.9376007,
+    "samples": 15.0
+  },
+  "fp32/avx2_v4/lm_head/tokens:1": {
+    "time_ns": 8835651.6962046,
+    "FLOP/s": 8737267302.219868,
+    "bytes_per_second": 17497635608.20205,
+    "samples": 15.0
+  },
+  "fp32/avx2_v2/mlp_down/tokens:1024": {
+    "time_ns": 271177616.99992114,
+    "FLOP/s": 17819381714.60749,
+    "bytes_per_second": 92809279.76358068,
+    "samples": 15.0
+  },
+  "fp32/avx2_v3/mlp_down/tokens:1024": {
+    "time_ns": 68439511.66668679,
+    "FLOP/s": 70608105837.76993,
+    "bytes_per_second": 367750551.2383851,
+    "samples": 15.0
+  },
+  "fp32/avx2_v4/mlp_down/tokens:1": {
+    "time_ns": 546083.1402960311,
+    "FLOP/s": 8643676940.45188,
+    "bytes_per_second": 17315490850.110962,
+    "samples": 15.0
+  },
+  "fp32/scalar/attn_qkv/tokens:1": {
+    "time_ns": 1648966.10869623,
+    "FLOP/s": 2146200102.833183,
+    "bytes_per_second": 4299852289.356759,
+    "samples": 15.0
+  },
+  "fp32/avx2_v2/mlp_up/tokens:1": {
+    "time_ns": 504442.9700001274,
+    "FLOP/s": 9356252416.596413,
+    "bytes_per_second": 18742961384.028103,
+    "samples": 15.0
+  },
+  "fp32/accelerate/attn_qkv/tokens:1024": {
+    "time_ns": 32783322.318168346,
+    "FLOP/s": 110540478558.91241,
+    "bytes_per_second": 599720478.2927105,
+    "samples": 15.0
+  },
+  "fp32/avx2_v1/mlp_up/tokens:1": {
+    "time_ns": 527560.1344984742,
+    "FLOP/s": 8944927510.511898,
+    "bytes_per_second": 17918972623.597076,
+    "samples": 15.0
+  },
+  "fp32/avx2_v2/lm_head/tokens:1": {
+    "time_ns": 8595536.843372485,
+    "FLOP/s": 8982677792.732199,
+    "bytes_per_second": 17989105445.267,
+    "samples": 15.0
+  },
+  "fp32/accelerate/mlp_down/tokens:1024": {
+    "time_ns": 43077444.43750039,
+    "FLOP/s": 112173005911.21317,
+    "bytes_per_second": 584234405.7875686,
+    "samples": 15.0
+  },
+  "roofline/read_bandwidth": {
+    "time_ns": 29828106.541666936,
+    "bytes_per_second": 17999770741.10535,
+    "samples": 15.0
+  },
+  "fp32/avx2_v4/attn_out/tokens:128": {
+    "time_ns": 1403291.9158515662,
+    "FLOP/s": 107612215475.82597,
+    "bytes_per_second": 2241921155.7463746,
+    "samples": 15.0
+  },
+  "fp32/accelerate/attn_qkv/tokens:1": {
+    "time_ns": 450874.7863519486,
+    "FLOP/s": 7850590367.753008,
+    "bytes_per_second": 15728439729.838491,
+    "samples": 15.0
+  },
+  "fp32/avx2_v3/attn_out/tokens:128": {
+    "time_ns": 1793996.6685231326,
+    "FLOP/s": 84176176479.4539,
+    "bytes_per_second": 1753670343.3219564,
+    "samples": 15.0
+  },
+  "fp32/accelerate/lm_head/tokens:1": {
+    "time_ns": 10804830.074625015,
+    "FLOP/s": 7146190715.289296,
+    "bytes_per_second": 14311275688.118155,
+    "samples": 15.0
+  },
+  "fp32/avx2_v1/mlp_up/tokens:128": {
+    "time_ns": 40945607.764703766,
+    "FLOP/s": 14752210020.574345,
+    "bytes_per_second": 278524798.56553125,
+    "samples": 15.0
+  },
+  "fp32/avx2_v4/attn_out/tokens:1024": {
+    "time_ns": 10692602.815386355,
+    "FLOP/s": 112975609688.7154,
+    "bytes_per_second": 809070121.4686649,
+    "samples": 15.0
+  },
+  "fp32/avx2_v1/mlp_up/tokens:1024": {
+    "time_ns": 321168256.4999592,
+    "FLOP/s": 15044792474.861729,
+    "bytes_per_second": 78358294.13990484,
+    "samples": 15.0
+  },
+  "fp32/avx2_v1/attn_qkv/tokens:1024": {
+    "time_ns": 176916068.0000823,
+    "FLOP/s": 20484856475.429142,
+    "bytes_per_second": 111137459.1765904,
+    "samples": 15.0
+  },
+  "fp32/avx2_v2/mlp_down/tokens:1": {
+    "time_ns": 506233.7661764318,
+    "FLOP/s": 9321230632.470512,
+    "bytes_per_second": 18672803812.572765,
+    "samples": 15.0
+  },
+  "fp32/avx2_v2/lm_head/tokens:128": {
+    "time_ns": 1091540469.0003924,
+    "FLOP/s": 9053327386.308153,
+    "bytes_per_second": 165394895.06273723,
+    "samples": 15.0
+  },
+  "fp32/avx2_v3/attn_out/tokens:1": {
+    "time_ns": 135029.99640627237,
+    "FLOP/s": 8736860282.776762,
+    "bytes_per_second": 17519225046.19299,
+    "samples": 15.0
+  },
+  "fp32/accelerate/mlp_down/tokens:128": {
+    "time_ns": 6896529.999998858,
+    "FLOP/s": 87578147650.48022,
+    "bytes_per_second": 1653493673.0884938,
+    "samples": 15.0
+  },
+  "fp32/accelerate/attn_out/tokens:1": {
+    "time_ns": 142981.35362320385,
+    "FLOP/s": 8251182191.104951,
+    "bytes_per_second": 16545339289.455238,
+    "samples": 15.0
+  },
+  "fp32/avx2_v3/attn_qkv/tokens:1024": {
+    "time_ns": 45183886.14285738,
+    "FLOP/s": 80209670799.86314,
+    "bytes_per_second": 435165314.66939646,
+    "samples": 15.0
+  },
+  "fp32/accelerate/lm_head/tokens:128": {
+    "time_ns": 120944528.40001395,
+    "FLOP/s": 81716752808.5443,
+    "bytes_per_second": 1492880261.4690716,
+    "samples": 15.0
+  },
+  "fp32/avx2_v2/attn_out/tokens:128": {
+    "time_ns": 5182342.14000131,
+    "FLOP/s": 29140714608.283924,
+    "bytes_per_second": 607098221.005915,
+    "samples": 15.0
+  },
+  "fp32/scalar/lm_head/tokens:1": {
+    "time_ns": 36224386.99999532,
+    "FLOP/s": 2131153438.0771122,
+    "bytes_per_second": 4267941565.112245,
+    "samples": 15.0
+  },
+  "fp32/accelerate/mlp_up/tokens:1024": {
+    "time_ns": 45380982.40000181,
+    "FLOP/s": 106478188164.77713,
+    "bytes_per_second": 554573896.6915476,
+    "samples": 15.0
+  },
+  "roofline/peak_fma": {
+    "time_ns": 5136625.7608685335,
+    "FLOP/s": 156785350800.9122,
+    "samples": 15.0
+  },
+  "fp32/avx2_v1/attn_qkv/tokens:128": {
+    "time_ns": 22676998.70000494,
+    "FLOP/s": 19976546190.87864,
+    "bytes_per_second": 381496541.8396962,
+    "samples": 15.0
+  },
+  "fp32/avx2_v4/attn_qkv/tokens:1": {
+    "time_ns": 395448.2094241268,
+    "FLOP/s": 8949295547.892492,
+    "bytes_per_second": 17929665038.65961,
+    "samples": 15.0
+  },
+  "fp32/avx2_v3/mlp_up/tokens:1": {
+    "time_ns": 538475.9100690237,
+    "FLOP/s": 8763593084.358517,
+    "bytes_per_second": 17555713489.95518,
+    "samples": 15.0
+  },
+  "fp32/scalar/lm_head/tokens:128": {
+    "time_ns": 4559096564.99989,
+    "FLOP/s": 2167588482.9381194,
+    "bytes_per_second": 39599591.88231055,
+    "samples": 15.0
+  },
+  "fp32/avx2_v4/attn_qkv/tokens:1024": {
+    "time_ns": 32027862.869575117,
+    "FLOP/s": 113161644271.2656,
+    "bytes_per_second": 613941212.4092101,
+    "samples": 15.0
+  },
+  "fp32/avx2_v4/mlp_up/tokens:128": {
+    "time_ns": 5807662.193547003,
+    "FLOP/s": 104007471723.89645,
+    "bytes_per_second": 1963682734.3704407,
+    "samples": 15.0
+  },
+  "fp32/avx2_v4/attn_qkv/tokens:128": {
+    "time_ns": 4207354.342857538,
+    "FLOP/s": 107678608627.61546,
+    "bytes_per_second": 2056362317.5412674,
+    "samples": 15.0
+  },
+  "fp32/scalar/mlp_down/tokens:1": {
+    "time_ns": 2270323.434781417,
+    "FLOP/s": 2078445220.64507,
+    "bytes_per_second": 4163656213.4927607,
+    "samples": 15.0
+  },
+  "fp32/avx2_v2/mlp_up/tokens:128": {
+    "time_ns": 35342151.36363111,
+    "FLOP/s": 17090256853.759617,
+    "bytes_per_second": 322667609.8691594,
+    "samples": 15.0
+  },
+  "fp32/avx2_v3/lm_head/tokens:1": {
+    "time_ns": 9070523.776310774,
+    "FLOP/s": 8511072097.766814,
+    "bytes_per_second": 17044647147.74409,
+    "samples": 15.0
+  },
+  "fp32/avx2_v1/mlp_down/tokens:128": {
+    "time_ns": 37923864.312489286,
+    "FLOP/s": 15926109238.573072,
+    "bytes_per_second": 300688260.3636843,
+    "samples": 15.0
+  },
+  "fp32/scalar/mlp_up/tokens:1024": {
+    "time_ns": 2100405493.9999151,
+    "FLOP/s": 2300739483.9542875,
+    "bytes_per_second": 11983018.145595247,
+    "samples": 15.0
+  },
+  "fp32/avx2_v3/attn_qkv/tokens:1": {
+    "time_ns": 404889.69782487553,
+    "FLOP/s": 8741978303.867798,
+    "bytes_per_second": 17514310699.06847,
+    "samples": 15.0
+  },
+  "fp32/accelerate/attn_qkv/tokens:128": {
+    "time_ns": 5141566.194027685,
+    "FLOP/s": 88123203400.65807,
+    "bytes_per_second": 1682908398.276456,
+    "samples": 15.0
+  },
+  "fp32/avx2_v4/mlp_up/tokens:1024": {
+    "time_ns": 43196516.64283291,
+    "FLOP/s": 111872708303.90826,
+    "bytes_per_second": 582670355.7495222,
+    "samples": 15.0
+  },
+  "fp32/avx2_v4/lm_head/tokens:128": {
+    "time_ns": 98941527.8571479,
+    "FLOP/s": 99892690136.44719,
+    "bytes_per_second": 1824935771.9725184,
+    "samples": 15.0
+  },
+  "fp32/avx2_v1/lm_head/tokens:128": {
+    "time_ns": 1127561596.9998398,
+    "FLOP/s": 8763642686.283367,
+    "bytes_per_second": 160102656.25180674,
+    "samples": 15.0
+  },
+  "fp32/avx2_v4/attn_out/tokens:1": {
+    "time_ns": 131149.25455896967,
+    "FLOP/s": 8994967687.559706,
+    "bytes_per_second": 18036784165.158783,
+    "samples": 15.0
+  },
+  "fp32/avx2_v3/mlp_down/tokens:1": {
+    "time_ns": 546363.3869700773,
+    "FLOP/s": 8638731912.007154,
+    "bytes_per_second": 17305584696.12371,
+    "samples": 15.0
+  },
+  "fp32/scalar/mlp_down/tokens:1024": {
+    "time_ns": 2151997738.999853,
+    "FLOP/s": 2245427185.9142985,
+    "bytes_per_second": 11694933.259970305,
+    "samples": 15.0
+  },
+  "fp32/avx2_v4/mlp_up/tokens:1": {
+    "time_ns": 533023.3305908301,
+    "FLOP/s": 8854197665.736708,
+    "bytes_per_second": 17737217589.4999,
+    "samples": 15.0
+  },
+  "fp32/avx2_v3/lm_head/tokens:128": {
+    "time_ns": 468895339.5000226,
+    "FLOP/s": 21075918984.782448,
+    "bytes_per_second": 385035165.53600913,
+    "samples": 15.0
+  },
+  "fp32/avx2_v2/attn_qkv/tokens:1024": {
+    "time_ns": 140029285.60003057,
+    "FLOP/s": 25881445981.38538,
+    "bytes_per_second": 140415831.06220368,
+    "samples": 15.0
+  },
+  "fp32/avx2_v3/attn_out/tokens:1024": {
+    "time_ns": 14005817.000006573,
+    "FLOP/s": 86258179948.5867,
+    "bytes_per_second": 617734361.6109725,
+    "samples": 15.0
+  },
+  "fp32/avx2_v1/attn_out/tokens:1024": {
+    "time_ns": 55975768.77779728,
+    "FLOP/s": 21582225370.28623,
+    "bytes_per_second": 154560207.7299144,
+    "samples": 15.0
+  },
+  "fp32/avx2_v2/attn_out/tokens:1024": {
+    "time_ns": 40282103.3888914,
+    "FLOP/s": 29990968112.84034,
+    "bytes_per_second": 214779068.51643473,
+    "samples": 15.0
+  },
+  "fp32/avx2_v3/mlp_down/tokens:128": {
+    "time_ns": 9272364.283951003,
+    "FLOP/s": 65140616590.35198,
+    "bytes_per_second": 1229868412.1876352,
+    "samples": 15.0
+  }
+}

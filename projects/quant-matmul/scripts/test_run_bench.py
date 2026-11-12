@@ -6,11 +6,13 @@ from typing import Any
 
 import pytest
 from run_bench import (
+    check_changed_rounds,
     check_time_ns,
     cpu_slug,
     create_run_dir,
     parse_cpu_speed_limit,
     parse_low_power_mode,
+    round_speeds,
     slow_rounds,
     source_revision,
     stay_awake,
@@ -125,18 +127,53 @@ def checks(*times: tuple[float | None, float | None]) -> list[dict[str, Any]]:
     ]
 
 
-def test_slow_rounds_compares_every_check_with_the_first() -> None:
-    assert slow_rounds(checks((100.0, 104.0), (96.0, 100.0)), 0.05) == []
-    assert slow_rounds(checks((100.0, 101.0), (100.0, 130.0)), 0.05) == [2]
-    # Slow from start to finish of later rounds, as when a screen saver starts
-    # between rounds: each round agrees with itself but not with the first.
-    assert slow_rounds(checks((100.0, 100.0), (190.0, 190.0), (190.0, 190.0)), 0.05) == [2, 3]
-    assert slow_rounds(checks((100.0, 100.0), (70.0, 100.0)), 0.05) == [2]
+def test_check_changed_rounds_compares_every_check_with_the_first() -> None:
+    assert check_changed_rounds(checks((100.0, 104.0), (96.0, 100.0)), 0.05) == []
+    assert check_changed_rounds(checks((100.0, 101.0), (100.0, 130.0)), 0.05) == [2]
+    assert check_changed_rounds(checks((100.0, 100.0), (190.0, 190.0), (190.0, 190.0)), 0.05) == [
+        2,
+        3,
+    ]
+    assert check_changed_rounds(checks((100.0, 100.0), (70.0, 100.0)), 0.05) == [2]
 
 
-def test_slow_rounds_skips_checks_that_did_not_run() -> None:
-    assert slow_rounds(checks((None, None), (None, None)), 0.05) == []
-    assert slow_rounds(checks((None, 100.0), (100.0, 200.0)), 0.05) == [2]
+def test_check_changed_rounds_skips_checks_that_did_not_run() -> None:
+    assert check_changed_rounds(checks((None, None), (None, None)), 0.05) == []
+    assert check_changed_rounds(checks((None, 100.0), (100.0, 200.0)), 0.05) == [2]
+
+
+def round_output(**times_ms: float) -> dict[str, Any]:
+    return {"benchmarks": [row(name, t) for name, t in times_ms.items()]}
+
+
+def test_round_speeds_take_the_median_ratio_to_round_1() -> None:
+    speeds = round_speeds(
+        [
+            round_output(a=10.0, b=20.0, c=40.0),
+            # One benchmark much slower and one slightly faster: the median
+            # follows the typical benchmark, not the outlier.
+            round_output(a=10.0, b=60.0, c=39.0),
+            round_output(a=20.0, b=40.0, c=80.0),
+        ]
+    )
+    assert speeds == [1.0, 1.0, 2.0]
+
+
+def test_round_speeds_use_only_benchmarks_in_both_rounds() -> None:
+    speeds = round_speeds(
+        [round_output(a=10.0), round_output(a=11.0, new=99.0), round_output(b=1.0)]
+    )
+    assert speeds == [1.0, pytest.approx(1.1), None]
+    assert round_speeds([]) == []
+
+
+def test_slow_rounds_flags_rounds_beyond_the_tolerance_either_way() -> None:
+    # The invalid 2026-11-12 run's rounds: its speed check flagged 2 and 3.
+    assert slow_rounds([1.0, 0.991, 0.996], 0.05) == []
+    # The screen saver run: rounds 2 and 3 about twice as slow.
+    assert slow_rounds([1.0, 1.9, 2.1], 0.05) == [2, 3]
+    assert slow_rounds([1.0, 0.94, 1.04], 0.05) == [2]
+    assert slow_rounds([1.0, None], 0.05) == []
 
 
 def git(repo: Path, *args: str) -> None:
