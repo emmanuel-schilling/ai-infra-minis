@@ -13,6 +13,7 @@
 
 #include "qmm/matmul.hpp"
 #include "qmm/pending.hpp"
+#include "qmm/q8_avx2_steps.hpp"
 #include "random_floats.hpp"
 #include "reference.hpp"
 #include "tdd.hpp"
@@ -149,8 +150,13 @@ std::vector<Q8Case> q8_kernels() {
       {"scalar", qmm::matmul_q8_scalar, qmm::pending::q8_scalar || qmm::pending::quantize}};
 #if defined(QMM_HAVE_AVX2)
   if (qmm::cpu_has_avx2_fma()) {
+    namespace steps = qmm::q8_avx2_steps;
+    namespace pending = qmm::pending;
+    kernels.push_back({"avx2", qmm::matmul_q8_avx2, pending::q8_avx2 || pending::quantize});
     kernels.push_back(
-        {"avx2", qmm::matmul_q8_avx2, qmm::pending::q8_avx2 || qmm::pending::quantize});
+        {"avx2_v1", steps::v1_one_accumulator, pending::q8_avx2 || pending::quantize});
+    kernels.push_back(
+        {"avx2_v2", steps::v2_register_blocking, pending::q8_avx2_v2 || pending::quantize});
   }
 #endif
 #if defined(QMM_HAVE_NEON_DOTPROD)
@@ -162,9 +168,11 @@ std::vector<Q8Case> q8_kernels() {
   return kernels;
 }
 
-// k is a multiple of 32 throughout.
+// k is a multiple of 32 throughout. {7, 131, 96} exercises a tiled kernel's
+// edges together: a leftover row of A after 2-row tiles, more than two 64-row
+// blocks of W with leftover rows not a multiple of 4, and several blocks of k.
 std::vector<Shape> q8_shapes() {
-  return {{1, 1, 32},    {3, 7, 64},     {5, 9, 96},     {4, 2304, 768},
+  return {{1, 1, 32},    {3, 7, 64},     {5, 9, 96},     {7, 131, 96},   {4, 2304, 768},
           {4, 768, 768}, {4, 3072, 768}, {4, 768, 3072}, {1, 50257, 768}};
 }
 
@@ -173,8 +181,11 @@ std::string shape_name(const Shape& s) {
 }
 
 // The exact result of the Q8 computation: sum over blocks of
-// scale_a * scale_w * (integer dot product), in double, plus the sum of the
-// magnitudes of those terms for the error bound.
+// scale_a * scale_w * (integer dot product), in double. For the error bound,
+// abs_sum is the sum over blocks of scale_a * scale_w * sum |qa * qw|: the
+// magnitudes of the individual products, not of each block's total, since a
+// kernel may scale partial dot products (such as AVX2's 8 lanes) separately,
+// and those can be larger than their sum.
 qmm::test::Reference q8_reference(Shape shape, const std::vector<BlockQ8>& a,
                                   const std::vector<BlockQ8>& w) {
   const std::size_t blocks_per_row = shape.k / q8_block_size;
@@ -188,13 +199,16 @@ qmm::test::Reference q8_reference(Shape shape, const std::vector<BlockQ8>& a,
         const BlockQ8& ab = a[(i * blocks_per_row) + b];
         const BlockQ8& wb = w[(j * blocks_per_row) + b];
         std::int32_t dot = 0;
+        std::int32_t abs_dot = 0;
         for (std::size_t p = 0; p < q8_block_size; ++p) {
-          dot += static_cast<std::int32_t>(ab.q[p]) * static_cast<std::int32_t>(wb.q[p]);
+          const std::int32_t product =
+              static_cast<std::int32_t>(ab.q[p]) * static_cast<std::int32_t>(wb.q[p]);
+          dot += product;
+          abs_dot += std::abs(product);
         }
-        const double term = static_cast<double>(ab.scale) * static_cast<double>(wb.scale) *
-                            static_cast<double>(dot);
-        sum += term;
-        abs_sum += std::abs(term);
+        const double scale = static_cast<double>(ab.scale) * static_cast<double>(wb.scale);
+        sum += scale * static_cast<double>(dot);
+        abs_sum += std::abs(scale) * static_cast<double>(abs_dot);
       }
       ref.c[(i * shape.n) + j] = sum;
       ref.abs_sum[(i * shape.n) + j] = abs_sum;
@@ -213,9 +227,11 @@ std::vector<float> run(const Q8Case& kernel_case, Shape shape, const std::vector
 class Q8Kernels : public testing::TestWithParam<std::tuple<Q8Case, Shape>> {};
 
 // Given the same quantized inputs, a kernel's only error is fp32 rounding in
-// scaling and summing the blocks: one multiply for scale_a * scale_w, one for
-// the integer dot product (exact in fp32, since |dot| <= 32 * 127^2 < 2^24),
-// and k / 32 additions.
+// scaling and summing. Integer partial sums are exact, and exact in fp32 too,
+// since |dot| <= 32 * 127^2 < 2^24. Each fp32 term then takes one multiply for
+// scale_a * scale_w and one for the partial sum, and there are at most k terms,
+// so at most k - 1 additions: gamma(k + 1) times abs_sum, in any summation
+// order, as for the fp32 kernels.
 TEST_P(Q8Kernels, MatchesExactQ8Result) {
   const auto& [kernel_case, shape] = GetParam();
   QMM_PASS_WHILE_PENDING(kernel_case.pending);
@@ -225,7 +241,7 @@ TEST_P(Q8Kernels, MatchesExactQ8Result) {
   const auto c = run(kernel_case, shape, a, w);
 
   const auto ref = q8_reference(shape, quantize(a), w);
-  const double g = qmm::test::gamma((shape.k / q8_block_size) + 2);
+  const double g = qmm::test::gamma(shape.k + 1);
   std::size_t failures = 0;
   for (std::size_t i = 0; i < c.size(); ++i) {
     const double error = std::abs(static_cast<double>(c[i]) - ref.c[i]);

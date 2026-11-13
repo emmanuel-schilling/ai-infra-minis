@@ -15,6 +15,7 @@
 #include "qmm/avx2_steps.hpp"
 #include "qmm/matmul.hpp"
 #include "qmm/pending.hpp"
+#include "qmm/q8_avx2_steps.hpp"
 #include "random_floats.hpp"
 
 namespace {
@@ -153,8 +154,13 @@ void register_all() {
     if (!qmm::pending::avx2_v4) {
       register_kernel("fp32", "avx2_v4", steps::v4_cache_blocking, bench_fp32);
     }
+    // The same for the Q8 steps, which also depend on quantize_q8.
+    namespace q8_steps = qmm::q8_avx2_steps;
     if (!qmm::pending::q8_avx2 && !qmm::pending::quantize) {
-      register_kernel("q8", "avx2", qmm::matmul_q8_avx2, bench_q8);
+      register_kernel("q8", "avx2_v1", q8_steps::v1_one_accumulator, bench_q8);
+    }
+    if (!qmm::pending::q8_avx2_v2 && !qmm::pending::quantize) {
+      register_kernel("q8", "avx2_v2", q8_steps::v2_register_blocking, bench_q8);
     }
   }
 #endif

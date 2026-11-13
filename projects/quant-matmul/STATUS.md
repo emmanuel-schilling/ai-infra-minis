@@ -31,7 +31,10 @@ results are summed across blocks in fp32. The AVX2 Q8 kernel,
 quantized once up front, and each block pair's dot product uses
 `_mm256_maddubs_epi16` with the `_mm256_sign_epi8` trick, is widened to int32
 with `_mm256_madd_epi16`, converted to fp32 and scaled into one 8-lane
-accumulator per output. Neither Q8 kernel is benchmarked yet. The AVX2 files
+accumulator per output. That version is now step v1,
+`q8_avx2_steps::v1_one_accumulator` (declared in `include/qmm/q8_avx2_steps.hpp`),
+and `matmul_q8_avx2` calls it; step v2 is a stub. Neither Q8 kernel is
+benchmarked yet. The AVX2 files
 share `hsum256_ps` through the internal header `src/hsum_avx2.hpp`. The
 other kernels you write are still stubs behind pending switches in
 `include/qmm/pending.hpp`, so their tests pass without checking anything. The
@@ -59,12 +62,12 @@ invalid: the screen saver started during it (see its `INVALID.md`).
 
 ## Next step
 In order:
-1. A tiled AVX2 Q8 kernel, following v4's structure: blocks of W outermost, a
-   2 × 4 register tile (3 × 4 would spill with the Q8 step's temporaries), and
-   single-output fallbacks for leftover rows and columns. Proposed, not yet
-   decided: keep both as steps, as for fp32 (`q8_avx2_steps::v1_one_accumulator`
-   for the current code, `v2_register_blocking` for the tile), with
-   `matmul_q8_avx2` calling the fastest measured one.
+1. Step v2 of the AVX2 Q8 kernel, `q8_avx2_steps::v2_register_blocking` in
+   `src/q8_avx2.cpp` (`pending::q8_avx2_v2`), following v4's structure:
+   blocks of W outermost, a 2 × 4 register tile (3 × 4 would spill with the Q8
+   step's temporaries), and single-output fallbacks for leftover rows and
+   columns. `matmul_q8_avx2` keeps calling v1 until a benchmark shows v2 is
+   faster. The test shape {7, 131, 96} covers v2's edges.
 2. A benchmark run for the Q8 kernels. Close other apps, Chrome included,
    turn Low Power Mode off, and start the run while the screen saver isn't
    running: `caffeinate` keeps it from starting but can't stop it.
@@ -250,3 +253,19 @@ Record each as: date, decision, reason.
   run (0.991 and 0.996) and the valid one after it (1.009 and 1.002), and
   flags the screen saver run (2.28 and 2.26). Like the old rule, it can't see
   a slowdown that lasts the whole run.
+- 2026-11-13: The AVX2 Q8 kernel is optimized in steps, like the fp32 one:
+  `q8_avx2_steps::v1_one_accumulator` and `v2_register_blocking`, each tested
+  and benchmarked, with `matmul_q8_avx2` calling the fastest measured one.
+  Reason: the same as for fp32 (2026-11-10): versions timed side by side
+  compare fairly, and each step's measured gain is the lesson.
+- 2026-11-13: The Q8 exactness test's bound is now γ(k + 1) times the sum of
+  scale_a · scale_w · |qa · qw| over every product, replacing γ(k/32 + 2)
+  times the sum of |scale_a · scale_w · dot| per block. Reason: the old bound
+  assumed each block's dot product is formed exactly before any fp32
+  rounding, which holds for the scalar kernel but not for AVX2 v1, which
+  scales 8 partial dot products per block separately, nor for NEON's 4-lane
+  SDOT. Partial sums can exceed their total, so v1 missed the old bound by
+  7% on the new {7, 131, 96} shape. The new bound holds in any summation
+  order, as the fp32 test's does. Checked that it still catches a real bug:
+  with block 0's scales used for every block, v1 fails on all 8 shapes with
+  more than one block.
