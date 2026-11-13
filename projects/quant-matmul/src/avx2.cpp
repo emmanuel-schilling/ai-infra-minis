@@ -7,8 +7,6 @@
 #include <immintrin.h>
 
 #include <cassert>
-#include <cstddef>
-#include <span>
 
 #include "qmm/avx2_steps.hpp"
 #include "qmm/matmul.hpp"
@@ -32,7 +30,7 @@ float hsum256_ps(__m256 v) {
 // shows the newer version is faster.
 void matmul_avx2(Shape shape, std::span<const float> a, std::span<const float> w,
                  std::span<float> c) {
-  avx2_steps::v3_register_blocking(shape, a, w, c);
+  avx2_steps::v4_cache_blocking(shape, a, w, c);
 }
 
 namespace avx2_steps {

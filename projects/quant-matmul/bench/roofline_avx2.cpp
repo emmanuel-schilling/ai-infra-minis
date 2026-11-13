@@ -6,8 +6,6 @@
 
 #include <immintrin.h>
 
-#include <cstdint>
-
 #include "roofline.hpp"
 
 namespace qmm::bench {

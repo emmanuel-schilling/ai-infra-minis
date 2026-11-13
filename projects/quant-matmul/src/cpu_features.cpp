@@ -1,3 +1,7 @@
+// Run-time CPU feature detection: whether this CPU and operating system can run
+// the AVX2 + FMA kernels and the NEON dot-product kernel. The kernels are only
+// called when these return true, so one binary runs on any CPU of its
+// architecture. Each platform's check sits in its own preprocessor branch.
 #include "qmm/matmul.hpp"
 
 // PLATFORM: x86-64 with MSVC, gcc or clang — MSVC reads CPUID and XCR0

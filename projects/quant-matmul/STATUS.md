@@ -15,15 +15,19 @@ Step v3, `v3_register_blocking`, is done and tested for real too: a 3 × 4 tile
 of outputs with 12 accumulators, each loaded W vector feeding 3 FMAs, and a
 one-accumulator fallback for leftover rows and columns. Its compiled inner
 loop keeps all 16 YMM registers in use with no spills to the stack. Step v4,
-`v4_cache_blocking`, is done, tested for real and measured: it's the fastest
-version, but `matmul_avx2` still calls v3 until you switch it. All fp32 kernels now accept empty sizes:
+`v4_cache_blocking`, is done, tested for real and measured as the fastest
+version, so `matmul_avx2` now calls it. All fp32 kernels accept empty sizes:
 k = 0 sets C to zero, and the BLAS wrappers handle it themselves, because
 BLAS rejects a leading dimension below 1. `quantize_q8` and `dequantize_q8`
 are done and tested for real: amax / 127 as each block's fp32 scale, each
 value divided by the scale, rounded to nearest with `std::nearbyint` and
 clamped to ±127, and a zero scale, including one that underflows from a tiny
-nonzero amax, giving an all-zero block. The other kernels you write are
-still stubs behind pending switches in
+nonzero amax, giving an all-zero block. The scalar Q8 kernel,
+`matmul_q8_scalar`, is done and tested for real, the reference for the other
+Q8 kernels: each row of A is quantized once into a reused buffer of k / 32
+blocks, each block pair's dot product is exact in int32, and the scaled
+results are summed across blocks in fp32. It isn't benchmarked yet. The
+other kernels you write are still stubs behind pending switches in
 `include/qmm/pending.hpp`, so their tests pass without checking anything. The
 BLAS baselines are done, and their tests run for real: Accelerate on macOS,
 OpenBLAS on Linux and Windows. The NEON Q8 kernel (a stretch goal) is a stub
@@ -39,8 +43,8 @@ unchanged at the bandwidth. The run before it that morning,
 `results/2026-11-12_i9-8950hk/`, is invalid: the speed check flagged rounds
 that were faster than its first check (see its `INVALID.md`).
 
-The first valid run is `results/2026-11-11_i9-8950hk/`. Every AVX2 version reaches the read bandwidth for GEMV (about 16
-GiB/s). For GEMM, v2 is only 1.0–1.3× faster than v1, while v3 is 2.4–3.8×
+The first valid run is `results/2026-11-11_i9-8950hk/`. Every AVX2 version
+reaches the read bandwidth for GEMV (about 16 GiB/s). For GEMM, v2 is only 1.0–1.3× faster than v1, while v3 is 2.4–3.8×
 faster than v2: 79–82 GFLOP/s on attn_out, 75–92% of Accelerate, but 48–60% of
 it on the MLP shapes and 28% on lm_head, where W doesn't stay in cache. It ran
 on macOS 15.8.2 with v3 not yet committed; its exact source is in the run
@@ -49,20 +53,37 @@ invalid: the screen saver started during it (see its `INVALID.md`).
 
 ## Next step
 In order:
-1. Point `matmul_avx2` at `v4_cache_blocking` in `src/avx2.cpp`, now that the
-   2026-11-12 run measured it as the fastest version.
-2. The scalar Q8 kernel, `matmul_q8_scalar` in `src/q8_scalar.cpp`
-   (`pending::q8_scalar`), the reference for the other Q8 kernels.
-3. The AVX2 Q8 kernel, `matmul_q8_avx2` in `src/q8_avx2.cpp`
+1. The AVX2 Q8 kernel, `matmul_q8_avx2` in `src/q8_avx2.cpp`
    (`pending::q8_avx2`), using `_mm256_maddubs_epi16` with the
    `_mm256_sign_epi8` trick.
-4. A benchmark run for the Q8 kernels. Close other apps, Chrome included,
+2. A benchmark run for the Q8 kernels. Close other apps, Chrome included,
    turn Low Power Mode off, and start the run while the screen saver isn't
    running: `caffeinate` keeps it from starting but can't stop it.
 
 Optional work, after the required kernels:
-- Blocking v4 along k as well, or sizing its block of W from k, to test
-  whether L2 explains the mlp_down gap.
+- v5, cache blocking that adapts to k, to test whether L2 explains the
+  mlp_down gap. v4 keeps 64 full rows of W per block: 192 KB at k = 768,
+  which fits the 256 KB L2, but 768 KB at k = 3,072, which doesn't. Three
+  rows of A grow from 9 KB to 36 KB, past the 32 KB L1. Two fixes, simpler
+  first:
+  1. Size the block of W from k: rows = 192 KB ÷ (k × 4 bytes), rounded down
+     to a multiple of 4 for the 3 × 4 tile (64 rows at k = 768, 16 at
+     k = 3,072). W then stays in L2 at any k; A still doesn't fit L1.
+  2. Block along k as well, as BLAS libraries do (GotoBLAS, BLIS): split k
+     into chunks of a few hundred values and run the blocks and tiles over
+     one chunk at a time. A 64 × 256 block of W is 64 KB and 3 rows of A
+     over 256 values are 3 KB. The cost: C holds partial sums, written by the
+     first chunk and added to by the rest (k / chunk passes over C), and each
+     tile does its horizontal sums once per chunk, so chunks must stay long.
+     Whether small k should skip chunking is for the benchmark to decide.
+
+  Write it as v5 next to v4, with the same signature, tests and benchmark. If
+  the hypothesis holds, mlp_down improves clearly while the k = 768 shapes and
+  GEMV stay about the same. Optionally, count L2 misses for v4 and v5 on
+  mlp_down with Instruments (`xctrace`). Take block and chunk sizes from the
+  cache sizes and confirm 2 or 3 values by measurement, rather than tuning
+  for the best number. This is unrelated to fp16 scales, which change the Q8
+  format, not the fp32 kernel.
 - fp16 block scales, as in llama.cpp's Q8_0, converted with F16C's
   `_mm256_cvtph_ps`. A block shrinks from 36 to 34 bytes, about 6% less to
   read for memory-bound GEMV, and the format then matches llama.cpp's
@@ -79,7 +100,8 @@ Optional work, after the required kernels:
 The AVX2 fp32 kernel was optimized in steps, each a separate version declared
 in `include/qmm/avx2_steps.hpp` and written in `src/avx2.cpp`: v1 one
 accumulator, v2 several accumulators, v3 register blocking (a 3 × 4 tile), v4
-cache blocking. `matmul_avx2` calls the fastest measured version.
+cache blocking. `matmul_avx2` calls the fastest measured version, v4 since
+the 2026-11-12 run.
 
 ## Open questions
 None.

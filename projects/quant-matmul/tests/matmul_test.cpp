@@ -4,9 +4,7 @@
 #include <gtest/gtest.h>
 
 #include <cmath>
-#include <cstddef>
 #include <ostream>
-#include <span>
 #include <string>
 #include <tuple>
 #include <vector>

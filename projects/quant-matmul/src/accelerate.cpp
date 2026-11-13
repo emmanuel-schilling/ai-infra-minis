@@ -9,7 +9,6 @@
 #include <Accelerate/Accelerate.h>
 
 #include <algorithm>
-#include <cstddef>
 #include <limits>
 #include <stdexcept>
 

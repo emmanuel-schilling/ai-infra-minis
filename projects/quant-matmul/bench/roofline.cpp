@@ -6,7 +6,6 @@
 #include <benchmark/benchmark.h>
 
 #include <cstddef>
-#include <cstdint>
 #include <vector>
 
 #include "qmm/matmul.hpp"

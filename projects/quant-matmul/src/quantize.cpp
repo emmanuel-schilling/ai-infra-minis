@@ -1,9 +1,9 @@
+// Q8 quantization: fp32 values to blocks of 32 int8 values in [-127, 127] with
+// one fp32 scale each (amax / 127, or 0 for a block that would divide by
+// zero), and back by multiplying each value by its block's scale.
 #include <algorithm>
 #include <cassert>
 #include <cmath>
-#include <cstddef>
-#include <cstdint>
-#include <span>
 
 #include "qmm/matmul.hpp"
 
