@@ -8,23 +8,11 @@
 
 #include <cassert>
 
+#include "hsum_avx2.hpp"
 #include "qmm/avx2_steps.hpp"
 #include "qmm/matmul.hpp"
 
 namespace qmm {
-
-namespace {
-// Helper to horizontally sum an 8-float AVX register
-float hsum256_ps(__m256 v) {
-  __m128 vlow = _mm256_castps256_ps128(v);
-  __m128 vhigh = _mm256_extractf128_ps(v, 1);
-  __m128 v128 = _mm_add_ps(vlow, vhigh);
-  __m128 vshuf = _mm_movehl_ps(v128, v128);
-  __m128 v128_2 = _mm_add_ps(v128, vshuf);
-  __m128 vshuf2 = _mm_movehdup_ps(v128_2);
-  return _mm_cvtss_f32(_mm_add_ss(v128_2, vshuf2));
-}
-}  // namespace
 
 // Points at the fastest finished version. Change it only after a benchmark run
 // shows the newer version is faster.

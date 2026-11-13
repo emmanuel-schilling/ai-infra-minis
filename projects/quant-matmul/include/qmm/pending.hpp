@@ -15,7 +15,8 @@ inline constexpr bool avx2_v3 = false;
 inline constexpr bool avx2_v4 = false;
 inline constexpr bool quantize = false;  // quantize_q8 and dequantize_q8
 inline constexpr bool q8_scalar = false;
-inline constexpr bool q8_avx2 = true;
+inline constexpr bool q8_avx2 = false;    // matmul_q8_avx2 and step v1
+inline constexpr bool q8_avx2_v2 = true;  // see qmm/q8_avx2_steps.hpp
 inline constexpr bool q8_neon = true;  // stretch goal
 
 }  // namespace qmm::pending

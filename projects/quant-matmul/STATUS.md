@@ -26,7 +26,13 @@ nonzero amax, giving an all-zero block. The scalar Q8 kernel,
 `matmul_q8_scalar`, is done and tested for real, the reference for the other
 Q8 kernels: each row of A is quantized once into a reused buffer of k / 32
 blocks, each block pair's dot product is exact in int32, and the scaled
-results are summed across blocks in fp32. It isn't benchmarked yet. The
+results are summed across blocks in fp32. The AVX2 Q8 kernel,
+`matmul_q8_avx2`, is done and tested for real, one output at a time: A is
+quantized once up front, and each block pair's dot product uses
+`_mm256_maddubs_epi16` with the `_mm256_sign_epi8` trick, is widened to int32
+with `_mm256_madd_epi16`, converted to fp32 and scaled into one 8-lane
+accumulator per output. Neither Q8 kernel is benchmarked yet. The AVX2 files
+share `hsum256_ps` through the internal header `src/hsum_avx2.hpp`. The
 other kernels you write are still stubs behind pending switches in
 `include/qmm/pending.hpp`, so their tests pass without checking anything. The
 BLAS baselines are done, and their tests run for real: Accelerate on macOS,
@@ -53,9 +59,12 @@ invalid: the screen saver started during it (see its `INVALID.md`).
 
 ## Next step
 In order:
-1. The AVX2 Q8 kernel, `matmul_q8_avx2` in `src/q8_avx2.cpp`
-   (`pending::q8_avx2`), using `_mm256_maddubs_epi16` with the
-   `_mm256_sign_epi8` trick.
+1. A tiled AVX2 Q8 kernel, following v4's structure: blocks of W outermost, a
+   2 × 4 register tile (3 × 4 would spill with the Q8 step's temporaries), and
+   single-output fallbacks for leftover rows and columns. Proposed, not yet
+   decided: keep both as steps, as for fp32 (`q8_avx2_steps::v1_one_accumulator`
+   for the current code, `v2_register_blocking` for the tile), with
+   `matmul_q8_avx2` calling the fastest measured one.
 2. A benchmark run for the Q8 kernels. Close other apps, Chrome included,
    turn Low Power Mode off, and start the run while the screen saver isn't
    running: `caffeinate` keeps it from starting but can't stop it.
