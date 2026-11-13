@@ -17,6 +17,7 @@
 #include "random_floats.hpp"
 #include "reference.hpp"
 #include "tdd.hpp"
+#include "test_names.hpp"
 
 namespace {
 
@@ -133,8 +134,7 @@ TEST(QuantizeQ8, DequantizeMultipliesByScale) {
 
 // --- Q8 kernels ---------------------------------------------------------------
 
-using Q8Kernel = void (*)(Shape, std::span<const float>, std::span<const BlockQ8>,
-                          std::span<float>);
+using qmm::Q8Kernel;
 
 struct Q8Case {
   const char* name;
@@ -174,10 +174,6 @@ std::vector<Q8Case> q8_kernels() {
 std::vector<Shape> q8_shapes() {
   return {{1, 1, 32},    {3, 7, 64},     {5, 9, 96},     {7, 131, 96},   {4, 2304, 768},
           {4, 768, 768}, {4, 3072, 768}, {4, 768, 3072}, {1, 50257, 768}};
-}
-
-std::string shape_name(const Shape& s) {
-  return "m" + std::to_string(s.m) + "_n" + std::to_string(s.n) + "_k" + std::to_string(s.k);
 }
 
 // The exact result of the Q8 computation: sum over blocks of
@@ -286,7 +282,7 @@ INSTANTIATE_TEST_SUITE_P(Kernels, Q8Kernels,
                                           testing::ValuesIn(q8_shapes())),
                          [](const testing::TestParamInfo<Q8Kernels::ParamType>& info) {
                            return std::string(std::get<0>(info.param).name) + "_" +
-                                  shape_name(std::get<1>(info.param));
+                                  qmm::test::shape_name(std::get<1>(info.param));
                          });
 
 class Q8Signs : public testing::TestWithParam<Q8Case> {};

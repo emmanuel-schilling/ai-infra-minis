@@ -23,10 +23,8 @@ namespace {
 using qmm::BlockQ8;
 using qmm::Shape;
 
-using Fp32Kernel = void (*)(Shape, std::span<const float>, std::span<const float>,
-                            std::span<float>);
-using Q8Kernel = void (*)(Shape, std::span<const float>, std::span<const BlockQ8>,
-                          std::span<float>);
+using qmm::Fp32Kernel;
+using qmm::Q8Kernel;
 
 struct WeightShape {
   const char* name;
@@ -69,11 +67,13 @@ void set_counters(benchmark::State& state, Shape shape, std::size_t weight_bytes
   state.SetBytesProcessed(state.iterations() * static_cast<std::int64_t>(bytes));
 }
 
-void bench_fp32(benchmark::State& state, Fp32Kernel kernel, Shape shape) {
-  const auto a = qmm::support::random_floats(shape.m * shape.k, 1);
-  const auto w = qmm::support::random_floats(shape.n * shape.k, 2);
-  const std::size_t weight_bytes = w.size() * sizeof(float);
-  const std::vector<std::vector<float>> weights(copies_for(shape.m, weight_bytes), w);
+// Times `kernel` on A and copies of W, cycling through the copies so that GEMV
+// reads its weights from memory (see copies_for).
+template <typename Kernel, typename Weight>
+void time_kernel(benchmark::State& state, Kernel kernel, Shape shape, const std::vector<float>& a,
+                 const std::vector<Weight>& w) {
+  const std::size_t weight_bytes = w.size() * sizeof(Weight);
+  const std::vector<std::vector<Weight>> weights(copies_for(shape.m, weight_bytes), w);
   std::vector<float> c(shape.m * shape.n);
 
   std::size_t next = 0;
@@ -86,6 +86,12 @@ void bench_fp32(benchmark::State& state, Fp32Kernel kernel, Shape shape) {
   set_counters(state, shape, weight_bytes);
 }
 
+void bench_fp32(benchmark::State& state, Fp32Kernel kernel, Shape shape) {
+  const auto a = qmm::support::random_floats(shape.m * shape.k, 1);
+  const auto w = qmm::support::random_floats(shape.n * shape.k, 2);
+  time_kernel(state, kernel, shape, a, w);
+}
+
 // Weights are quantized ahead of time, outside the timing; activations are
 // quantized inside each call, so that cost is measured.
 void bench_q8(benchmark::State& state, Q8Kernel kernel, Shape shape) {
@@ -93,18 +99,7 @@ void bench_q8(benchmark::State& state, Q8Kernel kernel, Shape shape) {
   const auto w_fp32 = qmm::support::random_floats(shape.n * shape.k, 2);
   std::vector<BlockQ8> w(w_fp32.size() / qmm::q8_block_size);
   qmm::quantize_q8(w_fp32, w);
-  const std::size_t weight_bytes = w.size() * sizeof(BlockQ8);
-  const std::vector<std::vector<BlockQ8>> weights(copies_for(shape.m, weight_bytes), w);
-  std::vector<float> c(shape.m * shape.n);
-
-  std::size_t next = 0;
-  for (auto _ : state) {
-    kernel(shape, a, weights[next], c);
-    benchmark::DoNotOptimize(c.data());
-    benchmark::ClobberMemory();
-    next = (next + 1) % weights.size();
-  }
-  set_counters(state, shape, weight_bytes);
+  time_kernel(state, kernel, shape, a, w);
 }
 
 template <typename Kernel, typename Bench>

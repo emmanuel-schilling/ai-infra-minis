@@ -14,21 +14,12 @@
 #include "random_floats.hpp"
 #include "reference.hpp"
 #include "tdd.hpp"
-
-namespace qmm {
-
-// Lets GoogleTest print shapes in failure messages.
-void PrintTo(const Shape& shape, std::ostream* os) {
-  *os << shape.m << "x" << shape.n << "x" << shape.k;
-}
-
-}  // namespace qmm
+#include "test_names.hpp"
 
 namespace {
 
+using qmm::Fp32Kernel;
 using qmm::Shape;
-using Fp32Kernel = void (*)(Shape, std::span<const float>, std::span<const float>,
-                            std::span<float>);
 
 struct Fp32Case {
   const char* name;
@@ -74,10 +65,6 @@ std::vector<Shape> shapes() {
           {4, 2304, 768}, {4, 768, 768}, {4, 3072, 768}, {4, 768, 3072}, {1, 50257, 768}};
 }
 
-std::string shape_name(const Shape& s) {
-  return "m" + std::to_string(s.m) + "_n" + std::to_string(s.n) + "_k" + std::to_string(s.k);
-}
-
 class Fp32Accuracy : public testing::TestWithParam<std::tuple<Fp32Case, Shape>> {};
 
 TEST_P(Fp32Accuracy, MatchesDoublePrecisionReference) {
@@ -109,7 +96,7 @@ INSTANTIATE_TEST_SUITE_P(Kernels, Fp32Accuracy,
                                           testing::ValuesIn(shapes())),
                          [](const testing::TestParamInfo<Fp32Accuracy::ParamType>& info) {
                            return std::string(std::get<0>(info.param).name) + "_" +
-                                  shape_name(std::get<1>(info.param));
+                                  qmm::test::shape_name(std::get<1>(info.param));
                          });
 
 class Fp32Exact : public testing::TestWithParam<Fp32Case> {};

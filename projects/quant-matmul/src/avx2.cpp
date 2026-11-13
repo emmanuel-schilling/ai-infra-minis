@@ -14,6 +14,30 @@
 
 namespace qmm {
 
+namespace {
+
+// The dot product of one row of A with one row of W: one 8-wide FMA
+// accumulator along k, a horizontal sum, then a scalar loop for the last
+// k % 8 values. The spans have the same length. Used by v1 for every output
+// and by v3 and v4 for the outputs their tiles leave over.
+float dot_fp32_rows(std::span<const float> a_row, std::span<const float> w_row) {
+  assert(a_row.size() == w_row.size());
+  const std::size_t k = a_row.size();
+  __m256 vsum = _mm256_setzero_ps();
+  std::size_t p = 0;
+  for (; p + 8 <= k; p += 8) {
+    vsum =
+        _mm256_fmadd_ps(_mm256_loadu_ps(a_row.data() + p), _mm256_loadu_ps(w_row.data() + p), vsum);
+  }
+  float sum = hsum256_ps(vsum);
+  for (; p < k; ++p) {
+    sum += a_row[p] * w_row[p];
+  }
+  return sum;
+}
+
+}  // namespace
+
 // Points at the fastest finished version. Change it only after a benchmark run
 // shows the newer version is faster.
 void matmul_avx2(Shape shape, std::span<const float> a, std::span<const float> w,
@@ -30,25 +54,9 @@ void v1_one_accumulator(Shape shape, std::span<const float> a, std::span<const f
   assert(c.size() == shape.m * shape.n);
 
   for (std::size_t i = 0; i < shape.m; ++i) {
+    const auto a_row = a.subspan(i * shape.k, shape.k);
     for (std::size_t j = 0; j < shape.n; ++j) {
-      __m256 vsum = _mm256_setzero_ps();
-      std::size_t p = 0;
-
-      // Vectorized dot product along K
-      for (; p + 8 <= shape.k; p += 8) {
-        __m256 va = _mm256_loadu_ps(a.data() + i * shape.k + p);
-        __m256 vw = _mm256_loadu_ps(w.data() + j * shape.k + p);
-        vsum = _mm256_fmadd_ps(va, vw, vsum);
-      }
-
-      float sum = hsum256_ps(vsum);
-
-      // Remainder scalar loop for k % 8 != 0
-      for (; p < shape.k; ++p) {
-        sum += a[i * shape.k + p] * w[j * shape.k + p];
-      }
-
-      c[i * shape.n + j] = sum;
+      c[(i * shape.n) + j] = dot_fp32_rows(a_row, w.subspan(j * shape.k, shape.k));
     }
   }
 }
@@ -134,18 +142,8 @@ void v3_register_blocking(Shape shape, std::span<const float> a, std::span<const
 
   // Fallback helper for fringe elements (edges of M and N)
   auto compute_single = [&](std::size_t row, std::size_t col) {
-    const float* a_row = a.data() + row * shape.k;
-    const float* w_row = w.data() + col * shape.k;
-    __m256 vsum = _mm256_setzero_ps();
-    std::size_t p = 0;
-    for (; p + 8 <= shape.k; p += 8) {
-      vsum = _mm256_fmadd_ps(_mm256_loadu_ps(a_row + p), _mm256_loadu_ps(w_row + p), vsum);
-    }
-    float sum = hsum256_ps(vsum);
-    for (; p < shape.k; ++p) {
-      sum += a_row[p] * w_row[p];
-    }
-    c[row * shape.n + col] = sum;
+    c[(row * shape.n) + col] =
+        dot_fp32_rows(a.subspan(row * shape.k, shape.k), w.subspan(col * shape.k, shape.k));
   };
 
   std::size_t i = 0;
@@ -277,20 +275,10 @@ void v4_cache_blocking(Shape shape, std::span<const float> a, std::span<const fl
   assert(w.size() == shape.n * shape.k);
   assert(c.size() == shape.m * shape.n);
 
-  // Fallback helper for fringe elements (edges of M, N, and K)
+  // Fallback helper for fringe elements (edges of M and N)
   auto compute_single = [&](std::size_t row, std::size_t col) {
-    const float* a_row = a.data() + row * shape.k;
-    const float* w_row = w.data() + col * shape.k;
-    __m256 vsum = _mm256_setzero_ps();
-    std::size_t p = 0;
-    for (; p + 8 <= shape.k; p += 8) {
-      vsum = _mm256_fmadd_ps(_mm256_loadu_ps(a_row + p), _mm256_loadu_ps(w_row + p), vsum);
-    }
-    float sum = hsum256_ps(vsum);
-    for (; p < shape.k; ++p) {
-      sum += a_row[p] * w_row[p];
-    }
-    c[row * shape.n + col] = sum;
+    c[(row * shape.n) + col] =
+        dot_fp32_rows(a.subspan(row * shape.k, shape.k), w.subspan(col * shape.k, shape.k));
   };
 
   // 64 rows of W * 768 floats * 4 bytes = 192 KB (fits comfortably inside 256 KB L2)

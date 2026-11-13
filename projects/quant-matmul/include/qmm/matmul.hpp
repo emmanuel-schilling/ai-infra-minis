@@ -23,6 +23,9 @@ struct Shape {
 // fp32 kernels. Preconditions: a.size() == m * k, w.size() == n * k and
 // c.size() == m * n. They overwrite c. Any size may be 0: with k = 0 every
 // output is an empty sum, so c is set to zero.
+using Fp32Kernel = void (*)(Shape shape, std::span<const float> a, std::span<const float> w,
+                            std::span<float> c);
+
 void matmul_scalar(Shape shape, std::span<const float> a, std::span<const float> w,
                    std::span<float> c);
 
@@ -65,6 +68,9 @@ void dequantize_q8(std::span<const BlockQ8> x, std::span<float> out);
 // computed exactly in integers, then multiplied by the two blocks' scales.
 // Preconditions: k % 32 == 0, a.size() == m * k, w.size() == n * k / 32 and
 // c.size() == m * n. They overwrite c.
+using Q8Kernel = void (*)(Shape shape, std::span<const float> a, std::span<const BlockQ8> w,
+                          std::span<float> c);
+
 void matmul_q8_scalar(Shape shape, std::span<const float> a, std::span<const BlockQ8> w,
                       std::span<float> c);
 
