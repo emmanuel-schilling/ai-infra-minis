@@ -7,7 +7,7 @@
 
 #include "qmm/matmul.hpp"
 
-namespace qmm::test {
+namespace qmm::support {
 
 // C = A * W^T in double precision, with, for each element of C, the sum of
 // |a_i * w_i| that scales its fp32 error bound. Products of two floats are
@@ -45,4 +45,4 @@ inline double gamma(std::size_t k) {
   return ku / (1.0 - ku);
 }
 
-}  // namespace qmm::test
+}  // namespace qmm::support

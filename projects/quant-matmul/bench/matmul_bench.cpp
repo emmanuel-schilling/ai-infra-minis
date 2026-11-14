@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 
+#include "gpt2_shapes.hpp"
 #include "qmm/avx2_steps.hpp"
 #include "qmm/matmul.hpp"
 #include "qmm/pending.hpp"
@@ -26,19 +27,7 @@ using qmm::Shape;
 using qmm::Fp32Kernel;
 using qmm::Q8Kernel;
 
-struct WeightShape {
-  const char* name;
-  std::size_t n;
-  std::size_t k;
-};
-
-// GPT-2 (124M): attention input projection (query, key and value together),
-// attention output projection, MLP up and down projections, and the output
-// layer over the 50,257-token vocabulary.
-constexpr WeightShape weight_shapes[] = {
-    {"attn_qkv", 2304, 768}, {"attn_out", 768, 768},  {"mlp_up", 3072, 768},
-    {"mlp_down", 768, 3072}, {"lm_head", 50257, 768},
-};
+using qmm::support::WeightShape;
 
 constexpr std::size_t token_counts[] = {1, 128, 1024};
 
@@ -104,7 +93,7 @@ void bench_q8(benchmark::State& state, Q8Kernel kernel, Shape shape) {
 
 template <typename Kernel, typename Bench>
 void register_kernel(const std::string& family, const char* name, Kernel kernel, Bench bench) {
-  for (const WeightShape& ws : weight_shapes) {
+  for (const WeightShape& ws : qmm::support::gpt2_weight_shapes) {
     for (const std::size_t m : token_counts) {
       if (skipped(ws, m)) {
         continue;

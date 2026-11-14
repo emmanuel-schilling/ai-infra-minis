@@ -76,6 +76,7 @@ endif()
 add_executable(qmm_tests
   tests/matmul_test.cpp
   tests/q8_test.cpp
+  tests/support_test.cpp
 )
 target_include_directories(qmm_tests PRIVATE support tests)
 target_compile_options(qmm_tests PRIVATE ${qmm_warnings})
@@ -96,3 +97,12 @@ endif()
 target_include_directories(qmm_bench PRIVATE support)
 target_compile_options(qmm_bench PRIVATE ${qmm_warnings})
 target_link_libraries(qmm_bench PRIVATE qmm benchmark::benchmark)
+
+# The accuracy of every kernel against a double-precision reference (see
+# bench/accuracy.cpp). The test only checks that it runs, on one token.
+add_executable(qmm_accuracy bench/accuracy.cpp)
+target_include_directories(qmm_accuracy PRIVATE support)
+target_compile_options(qmm_accuracy PRIVATE ${qmm_warnings})
+target_link_libraries(qmm_accuracy PRIVATE qmm)
+add_test(NAME qmm_accuracy.RunsOnOneToken
+  COMMAND qmm_accuracy --tokens 1 --out ${CMAKE_CURRENT_BINARY_DIR}/accuracy_smoke.json)

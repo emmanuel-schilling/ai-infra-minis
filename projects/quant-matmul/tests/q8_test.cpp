@@ -5,15 +5,15 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
-#include <ostream>
 #include <span>
 #include <string>
 #include <tuple>
 #include <vector>
 
+#include "error_stats.hpp"
+#include "kernel_list.hpp"
 #include "qmm/matmul.hpp"
 #include "qmm/pending.hpp"
-#include "qmm/q8_avx2_steps.hpp"
 #include "random_floats.hpp"
 #include "reference.hpp"
 #include "tdd.hpp"
@@ -134,39 +134,8 @@ TEST(QuantizeQ8, DequantizeMultipliesByScale) {
 
 // --- Q8 kernels ---------------------------------------------------------------
 
-using qmm::Q8Kernel;
-
-struct Q8Case {
-  const char* name;
-  Q8Kernel kernel;
-  bool pending;
-};
-
-void PrintTo(const Q8Case& c, std::ostream* os) { *os << c.name; }
-
-// The kernels this build and CPU can run. Each also depends on quantize_q8.
-std::vector<Q8Case> q8_kernels() {
-  std::vector<Q8Case> kernels{
-      {"scalar", qmm::matmul_q8_scalar, qmm::pending::q8_scalar || qmm::pending::quantize}};
-#if defined(QMM_HAVE_AVX2)
-  if (qmm::cpu_has_avx2_fma()) {
-    namespace steps = qmm::q8_avx2_steps;
-    namespace pending = qmm::pending;
-    kernels.push_back({"avx2", qmm::matmul_q8_avx2, pending::q8_avx2 || pending::quantize});
-    kernels.push_back(
-        {"avx2_v1", steps::v1_one_accumulator, pending::q8_avx2 || pending::quantize});
-    kernels.push_back(
-        {"avx2_v2", steps::v2_register_blocking, pending::q8_avx2_v2 || pending::quantize});
-  }
-#endif
-#if defined(QMM_HAVE_NEON_DOTPROD)
-  if (qmm::cpu_has_neon_dotprod()) {
-    kernels.push_back(
-        {"neon", qmm::matmul_q8_neon, qmm::pending::q8_neon || qmm::pending::quantize});
-  }
-#endif
-  return kernels;
-}
+using qmm::support::q8_kernels;
+using qmm::support::Q8Case;
 
 // k is a multiple of 32 throughout. {7, 131, 96} exercises a tiled kernel's
 // edges together: a leftover row of A after 2-row tiles, more than two 64-row
@@ -182,11 +151,11 @@ std::vector<Shape> q8_shapes() {
 // magnitudes of the individual products, not of each block's total, since a
 // kernel may scale partial dot products (such as AVX2's 8 lanes) separately,
 // and those can be larger than their sum.
-qmm::test::Reference q8_reference(Shape shape, const std::vector<BlockQ8>& a,
-                                  const std::vector<BlockQ8>& w) {
+qmm::support::Reference q8_reference(Shape shape, const std::vector<BlockQ8>& a,
+                                     const std::vector<BlockQ8>& w) {
   const std::size_t blocks_per_row = shape.k / q8_block_size;
-  qmm::test::Reference ref{std::vector<double>(shape.m * shape.n),
-                           std::vector<double>(shape.m * shape.n)};
+  qmm::support::Reference ref{std::vector<double>(shape.m * shape.n),
+                              std::vector<double>(shape.m * shape.n)};
   for (std::size_t i = 0; i < shape.m; ++i) {
     for (std::size_t j = 0; j < shape.n; ++j) {
       double sum = 0.0;
@@ -237,7 +206,7 @@ TEST_P(Q8Kernels, MatchesExactQ8Result) {
   const auto c = run(kernel_case, shape, a, w);
 
   const auto ref = q8_reference(shape, quantize(a), w);
-  const double g = qmm::test::gamma(shape.k + 1);
+  const double g = qmm::support::gamma(shape.k + 1);
   std::size_t failures = 0;
   for (std::size_t i = 0; i < c.size(); ++i) {
     const double error = std::abs(static_cast<double>(c[i]) - ref.c[i]);
@@ -260,21 +229,12 @@ TEST_P(Q8Kernels, StaysCloseToFp32) {
   const auto a = qmm::support::random_floats(shape.m * shape.k, 8);
   const auto w_fp32 = qmm::support::random_floats(shape.n * shape.k, 9);
   const auto c = run(kernel_case, shape, a, quantize(w_fp32));
-  const auto ref = qmm::test::reference_matmul(shape, a, w_fp32);
+  const auto ref = qmm::support::reference_matmul(shape, a, w_fp32);
 
-  double error_sq = 0.0;
-  double ref_sq = 0.0;
-  double max_abs_error = 0.0;
-  for (std::size_t i = 0; i < c.size(); ++i) {
-    const double error = static_cast<double>(c[i]) - ref.c[i];
-    error_sq += error * error;
-    ref_sq += ref.c[i] * ref.c[i];
-    max_abs_error = std::max(max_abs_error, std::abs(error));
-  }
-  const double relative_error = std::sqrt(error_sq / ref_sq);
-  RecordProperty("relative_error", std::to_string(relative_error));
-  RecordProperty("max_abs_error", std::to_string(max_abs_error));
-  EXPECT_LE(relative_error, 2e-2);
+  const auto errors = qmm::support::error_stats(c, ref.c);
+  RecordProperty("relative_error", std::to_string(errors.relative));
+  RecordProperty("max_abs_error", std::to_string(errors.max_abs));
+  EXPECT_LE(errors.relative, 2e-2);
 }
 
 INSTANTIATE_TEST_SUITE_P(Kernels, Q8Kernels,

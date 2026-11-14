@@ -42,7 +42,15 @@ per-block step `accumulate_block`, which is inlined. v2's compiled inner loop
 keeps 5 of the 8 accumulators in registers and spills 3 to the stack (3 loads
 and 3 stores per block step); whether that costs time is for the benchmark
 run. `matmul_q8_avx2` keeps calling v1 until a benchmark shows v2 is faster.
-No Q8 kernel is benchmarked yet. The AVX2 files
+Every kernel's accuracy and its place on the roofline are measured and in
+RESULTS.md, which completes the done criteria apart from closing the project.
+`bench/accuracy.cpp` (`qmm_accuracy`) measures each kernel against a
+double-precision product, on uniform random W and on GPT-2's own W, which
+`scripts/fetch_gpt2.py` downloads at a pinned revision into the git-ignored
+`data/gpt2/`; `scripts/run_accuracy.py` runs it into a dated results folder,
+and `scripts/roofline.py` writes a run's roofline table and chart. The tests,
+the benchmarks and the accuracy tool share their kernel lists, GPT-2 shapes,
+reference and error metric through `support/`. The AVX2 files
 share `hsum256_ps` through the internal header `src/hsum_avx2.hpp`. The
 other kernels you write are still stubs behind pending switches in
 `include/qmm/pending.hpp`, so their tests pass without checking anything. The
@@ -83,18 +91,19 @@ invalid: the screen saver started during it (see its `INVALID.md`).
 In order:
 1. Point `matmul_q8_avx2` at Q8 v2, which the 2026-11-13 run measured 1.5–3.2×
    faster on GEMM and equal at 1 token.
-2. The accuracy comparison, the last part of the done criteria: relative
-   error (‖C − C_ref‖ / ‖C_ref‖) and maximum absolute error of each kernel
-   against the scalar fp32 result, on the benchmarked GPT-2 shapes, in
-   RESULTS.md. The tests check bounds but don't report the errors.
-3. Place each version on the roofline in RESULTS.md (the run has the peak and
-   bandwidth; each kernel needs its arithmetic intensity).
+2. Close the project, as the roadmap describes: README.md gets the headline
+   result and one chart (`results/2026-11-14_i9-8950hk/roofline.svg`), a
+   lesson goes into ROADMAP.md, and the project is marked complete there.
 
 For benchmark runs: close other apps, Chrome included, turn Low Power Mode
 off, and start the run while the screen saver isn't running: `caffeinate`
 keeps it from starting but can't stop it.
 
-Optional work, after the required kernels:
+Optional work, ranked on 2026-11-13 by what the later projects need:
+fp16 scales with a comparison against ggml's Q8_0 kernel (sets up Profile
+llama.cpp), then v5 (also a warm-up for the CUDA port); the 1 × 4 tile waits
+for Tiny GPT's decode measurements, multithreading is deferred, and NEON waits
+for Arm hardware to benchmark on. Details:
 - v5, cache blocking that adapts to k, to test whether L2 explains the
   mlp_down gap. v4 keeps 64 full rows of W per block: 192 KB at k = 768,
   which fits the 256 KB L2, but 768 KB at k = 3,072, which doesn't. Three
@@ -291,3 +300,16 @@ Record each as: date, decision, reason.
   order, as the fp32 test's does. Checked that it still catches a real bug:
   with block 0's scales used for every block, v1 fails on all 8 shapes with
   more than one block.
+- 2026-11-13: Accuracy is measured against a double-precision product of the
+  same fp32 inputs, not against the scalar fp32 kernel as decided on
+  2026-11-03, with the same two metrics. A runs uniform random; W runs both
+  uniform random and GPT-2's own matrices (all 12 layers and the embedding,
+  revision `607a30d`, checked by SHA-256), fetched with the standard library
+  and never committed. Reason: the scalar kernel has its own rounding error,
+  which a double reference shows rather than hides, and real weights are what
+  quantization results are judged on; real activations need the model, which
+  is Tiny GPT's.
+- 2026-11-13: The roofline chart uses matplotlib (3.11.2, a pinned dev
+  dependency) and shows only the headline kernels; `roofline.md` lists every
+  benchmark. Reason: three colors is the most a scatter plot keeps
+  distinguishable for colorblind readers, and the table covers the rest.

@@ -13,6 +13,67 @@ keep the verdicts that rule gave; the check is still recorded as a diagnostic.
 A run with an excluded round is invalid. Invalid runs are
 kept, with an `INVALID.md` that gives the reason, and are never summarized.
 
+## Roofline (2026-11-13 run)
+
+Every benchmark of the 2026-11-13 run below, placed on that run's measured
+ceilings with `scripts/roofline.py`: peak FMA 156.2 GFLOP/s and read bandwidth
+16.75 GiB/s, so the ridge point is at 8.7 FLOP/byte. Intensity counts A, W and
+C read or written once (W at 36 bytes per 32 weights for Q8). The full table
+is `results/2026-11-14_i9-8950hk/roofline.md`.
+
+![Single-core roofline](results/2026-11-14_i9-8950hk/roofline.svg)
+
+Share of the roofline's ceiling reached, over the benchmarked shapes:
+
+| Kernel | GEMV (1 token) | GEMM (128 and 1,024 tokens) | GEMM, of the Q8 estimate |
+|---|---|---|---|
+| fp32/scalar | 23–24% | 1% | |
+| fp32/avx2_v1 | 96–100% | 6–14% | |
+| fp32/avx2_v2 | 100–105% | 6–19% | |
+| fp32/avx2_v3 | 96–100% | 13–55% | |
+| fp32/avx2_v4 | 96–99% | 47–72% | |
+| fp32/accelerate | 79–111% | 50–71% | |
+| q8/scalar | 48–49% | 10–16% | 15–24% |
+| q8/avx2_v1 | 72–74% | 15–32% | 23–48% |
+| q8/avx2_v2 | 72–74% | 46–49% | 69–73% |
+
+GEMV sits at 0.5 FLOP/byte for fp32 and 1.8 for Q8, both left of the ridge,
+so its ceiling is the bandwidth; GEMM sits at 47–270 FLOP/byte, so its ceiling
+is the peak. The Q8 estimate is 4/6 of the peak (about 104 GFLOP/s, see the
+conclusions), an estimate from instruction tables, not a measurement. Shares
+above 100% mean the read-bandwidth benchmark slightly understates what the
+memory system delivers.
+
+## Accuracy (2026-11-13)
+
+Run `results/2026-11-14_i9-8950hk_accuracy/` (dated in UTC), with
+`uv run python projects/quant-matmul/scripts/run_accuracy.py`: every kernel at
+128 tokens, against a double-precision product of the same fp32 A and W. The
+Q8 kernels quantize W ahead of time and A inside the call, so their error
+includes both quantizations. A is uniform random in [-1, 1) throughout; W is
+either uniform random (as in the benchmarks) or GPT-2's own matrices, from
+`openai-community/gpt2` revision `607a30d` (`scripts/fetch_gpt2.py`), all 12
+layers, with the token embedding as lm_head. The source was commit `f3a5784`
+plus uncommitted changes, saved as `source.patch` in the run folder.
+`summary.md` there also has the maximum absolute errors.
+
+Relative error ‖C − C_ref‖ / ‖C_ref‖, uniform random W:
+
+| Shape | fp32 scalar | v1 | v2 | v3 | v4 | Accelerate | Q8 scalar | Q8 v1 | Q8 v2 |
+|---|---|---|---|---|---|---|---|---|---|
+| k = 768 (attn_qkv, attn_out, mlp_up, lm_head) | 5.0e-7 | 1.8e-7 | 9.3e-8 | 1.8e-7 | 1.8e-7 | 1.8e-7 | 5.3e-3 | 5.3e-3 | 5.3e-3 |
+| k = 3,072 (mlp_down) | 9.9e-7 | 3.5e-7 | 1.4e-7 | 3.5e-7 | 3.5e-7 | 1.9e-7 | 5.3e-3 | 5.3e-3 | 5.3e-3 |
+
+Relative error, GPT-2's W, the worst of its 12 layers:
+
+| Shape | fp32 scalar | v1 | v2 | v3 | v4 | Accelerate | Q8 scalar | Q8 v1 | Q8 v2 |
+|---|---|---|---|---|---|---|---|---|---|
+| attn_qkv | 5.0e-7 | 1.8e-7 | 9.3e-8 | 1.8e-7 | 1.8e-7 | 1.8e-7 | 6.9e-3 | 6.9e-3 | 6.9e-3 |
+| attn_out | 5.1e-7 | 1.9e-7 | 9.4e-8 | 1.9e-7 | 1.9e-7 | 1.9e-7 | 6.8e-3 | 6.8e-3 | 6.8e-3 |
+| mlp_up | 5.0e-7 | 1.8e-7 | 9.3e-8 | 1.8e-7 | 1.8e-7 | 1.8e-7 | 6.9e-3 | 6.9e-3 | 6.9e-3 |
+| mlp_down | 1.0e-6 | 3.6e-7 | 1.4e-7 | 3.6e-7 | 3.6e-7 | 1.9e-7 | 7.6e-3 | 7.6e-3 | 7.6e-3 |
+| lm_head (embedding) | 5.0e-7 | 1.8e-7 | 9.4e-8 | 1.8e-7 | 1.8e-7 | 1.8e-7 | 6.8e-3 | 6.8e-3 | 6.8e-3 |
+
 ## Benchmarks
 
 ### Q8: scalar, AVX2 v1 and v2, against fp32 (2026-11-13)
@@ -137,6 +198,40 @@ GEMV (decode, 1 token), GiB/s of weights read:
 | lm_head | 3.9 | 16.2 | 17.0 | 15.9 | 13.1 |
 
 ## Conclusions
+
+From the accuracy run and the roofline (2026-11-13):
+
+- **Q8's error is quantization's, not the kernels'.** Every Q8 kernel has a
+  relative error of 0.5–0.8%, 10,000 to 60,000 times the fp32 kernels', and
+  the three agree to 7 significant digits (AVX2 v1 and v2 bit for bit, since they
+  do the same arithmetic per output). The order the kernels sum in doesn't
+  matter at this size of error.
+- **The uniform case matches a simple estimate.** Rounding to a step of
+  amax / 127 adds noise of step / √12 per value; for values uniform in
+  [-1, 1), that is 0.39% of their RMS for each of A and W, and 0.56% for
+  their product, against 0.53% measured (a block's amax is a little below 1,
+  so the real step is a little finer).
+- **GPT-2's weights raise Q8's error by 1.2–1.4×** over uniform weights, to
+  0.63–0.76% across its 12 layers, with layer 0 the worst on three of the four
+  layer shapes. The largest single error grows more, from 0.5–0.6% of the
+  largest output to up to 1.3%: a block's scale follows its largest weight,
+  so the heavier tails of real weights leave the rest of the block coarser.
+  A is still synthetic; real activations, whose few very large channels are
+  the usual difficulty for int8, are for Tiny GPT to measure.
+- **Among the fp32 kernels, more accumulators give smaller errors.** The
+  scalar kernel, one chain of k additions, is the least accurate (5e-7 at
+  k = 768); v2, with 8 accumulators of 8 lanes, the most (9e-8). Errors grow
+  with k: from k = 768 to 3,072 they roughly double, as random rounding
+  errors growing with √k would. Accelerate's barely grows (1.8e-7 to 1.9e-7),
+  which suggests it sums in blocks along k; that is an inference, not
+  documented.
+- **On the roofline, GEMV reaches the bandwidth for fp32 but not for Q8.** The
+  AVX2 fp32 versions read at 96–105% of the bandwidth ceiling, Q8 at 72–74%,
+  though both sit well left of the ridge point. Something other than memory
+  limits Q8 GEMV; that hasn't been measured.
+- **GEMM's best versions reach about 70% of their compute ceilings:** fp32 v4
+  47–72% of the FMA peak (64–72% outside mlp_down), Q8 v2 69–73% of the
+  estimated Q8 ceiling.
 
 From the 2026-11-13 run (one run; the port counts below come from Intel's
 published instruction tables for this core, not from hardware counters):

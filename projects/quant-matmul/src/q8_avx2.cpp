@@ -56,7 +56,7 @@ float dot_q8_rows(std::span<const BlockQ8> a_row, std::span<const BlockQ8> w_row
 // shows the newer version is faster.
 void matmul_q8_avx2(Shape shape, std::span<const float> a, std::span<const BlockQ8> w,
                     std::span<float> c) {
-  q8_avx2_steps::v1_one_accumulator(shape, a, w, c);
+  q8_avx2_steps::v2_register_blocking(shape, a, w, c);
 }
 
 namespace q8_avx2_steps {

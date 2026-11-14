@@ -4,13 +4,11 @@
 #include <gtest/gtest.h>
 
 #include <cmath>
-#include <ostream>
 #include <string>
 #include <tuple>
 #include <vector>
 
-#include "qmm/avx2_steps.hpp"
-#include "qmm/pending.hpp"
+#include "kernel_list.hpp"
 #include "random_floats.hpp"
 #include "reference.hpp"
 #include "tdd.hpp"
@@ -18,39 +16,10 @@
 
 namespace {
 
-using qmm::Fp32Kernel;
 using qmm::Shape;
 
-struct Fp32Case {
-  const char* name;
-  Fp32Kernel kernel;
-  bool pending;
-};
-
-void PrintTo(const Fp32Case& c, std::ostream* os) { *os << c.name; }
-
-// The kernels this build and CPU can run.
-std::vector<Fp32Case> fp32_kernels() {
-  std::vector<Fp32Case> kernels{{"scalar", qmm::matmul_scalar, qmm::pending::scalar}};
-#if defined(QMM_HAVE_AVX2)
-  if (qmm::cpu_has_avx2_fma()) {
-    namespace steps = qmm::avx2_steps;
-    namespace pending = qmm::pending;
-    kernels.push_back({"avx2", qmm::matmul_avx2, pending::avx2});
-    kernels.push_back({"avx2_v1", steps::v1_one_accumulator, pending::avx2});
-    kernels.push_back({"avx2_v2", steps::v2_accumulators, pending::avx2_v2});
-    kernels.push_back({"avx2_v3", steps::v3_register_blocking, pending::avx2_v3});
-    kernels.push_back({"avx2_v4", steps::v4_cache_blocking, pending::avx2_v4});
-  }
-#endif
-#if defined(QMM_HAVE_ACCELERATE)
-  kernels.push_back({"accelerate", qmm::matmul_accelerate, false});
-#endif
-#if defined(QMM_HAVE_OPENBLAS)
-  kernels.push_back({"openblas", qmm::matmul_openblas, false});
-#endif
-  return kernels;
-}
+using qmm::support::fp32_kernels;
+using qmm::support::Fp32Case;
 
 // Odd sizes that catch tail handling, then GPT-2's weight shapes with a few
 // tokens (the benchmarks use the full token counts). {7, 131, 72} exercises the
@@ -77,8 +46,8 @@ TEST_P(Fp32Accuracy, MatchesDoublePrecisionReference) {
   std::vector<float> c(shape.m * shape.n, std::nanf(""));
   kernel_case.kernel(shape, a, w, c);
 
-  const auto ref = qmm::test::reference_matmul(shape, a, w);
-  const double g = qmm::test::gamma(shape.k);
+  const auto ref = qmm::support::reference_matmul(shape, a, w);
+  const double g = qmm::support::gamma(shape.k);
   std::size_t failures = 0;
   for (std::size_t i = 0; i < c.size(); ++i) {
     const double error = std::abs(static_cast<double>(c[i]) - ref.c[i]);
