@@ -18,8 +18,9 @@ namespace qmm::q8_avx2_steps {
 void v1_one_accumulator(Shape shape, std::span<const float> a, std::span<const BlockQ8> w,
                         std::span<float> c);
 
-// A tile of outputs at once, such as 2 rows of A by 4 rows of W, so each loaded
-// block feeds several dot products, within blocks of W sized to stay in L2.
+// A tile of 2 rows of A by 4 rows of W at once, so each loaded A block feeds 4
+// dot products and each W block 2, within blocks of 64 rows of W that stay in
+// L2.
 void v2_register_blocking(Shape shape, std::span<const float> a, std::span<const BlockQ8> w,
                           std::span<float> c);
 

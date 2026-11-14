@@ -33,8 +33,16 @@ quantized once up front, and each block pair's dot product uses
 with `_mm256_madd_epi16`, converted to fp32 and scaled into one 8-lane
 accumulator per output. That version is now step v1,
 `q8_avx2_steps::v1_one_accumulator` (declared in `include/qmm/q8_avx2_steps.hpp`),
-and `matmul_q8_avx2` calls it; step v2 is a stub. Neither Q8 kernel is
-benchmarked yet. The AVX2 files
+and `matmul_q8_avx2` calls it. Step v2, `v2_register_blocking`, is done and
+tested for real: blocks of 64 rows of W, a 2 × 4 tile of outputs in 8
+accumulators, so each loaded A block feeds 4 block products and each W block
+2, and `dot_q8_rows` for the leftover rows and columns. With 1 token there is
+no pair of A rows to tile, so v2 then does v1's work. Both steps share the
+per-block step `accumulate_block`, which is inlined. v2's compiled inner loop
+keeps 5 of the 8 accumulators in registers and spills 3 to the stack (3 loads
+and 3 stores per block step); whether that costs time is for the benchmark
+run. `matmul_q8_avx2` keeps calling v1 until a benchmark shows v2 is faster.
+No Q8 kernel is benchmarked yet. The AVX2 files
 share `hsum256_ps` through the internal header `src/hsum_avx2.hpp`. The
 other kernels you write are still stubs behind pending switches in
 `include/qmm/pending.hpp`, so their tests pass without checking anything. The
@@ -61,16 +69,12 @@ folder's `source.patch`. The earlier run (`results/2026-11-10_i9-8950hk/`) is
 invalid: the screen saver started during it (see its `INVALID.md`).
 
 ## Next step
-In order:
-1. Step v2 of the AVX2 Q8 kernel, `q8_avx2_steps::v2_register_blocking` in
-   `src/q8_avx2.cpp` (`pending::q8_avx2_v2`), following v4's structure:
-   blocks of W outermost, a 2 × 4 register tile (3 × 4 would spill with the Q8
-   step's temporaries), and single-output fallbacks for leftover rows and
-   columns. `matmul_q8_avx2` keeps calling v1 until a benchmark shows v2 is
-   faster. The test shape {7, 131, 96} covers v2's edges.
-2. A benchmark run for the Q8 kernels. Close other apps, Chrome included,
-   turn Low Power Mode off, and start the run while the screen saver isn't
-   running: `caffeinate` keeps it from starting but can't stop it.
+A benchmark run for the Q8 kernels (scalar, AVX2 v1 and v2) alongside the
+fp32 ones, which also confirms that sharing `dot_fp32_rows` left the fp32
+steps' speed unchanged. Close other apps, Chrome included, turn Low Power Mode
+off, and start the run while the screen saver isn't running: `caffeinate`
+keeps it from starting but can't stop it. Then point `matmul_q8_avx2` at
+whichever step measures faster, and summarize the run in RESULTS.md.
 
 Optional work, after the required kernels:
 - v5, cache blocking that adapts to k, to test whether L2 explains the
