@@ -15,6 +15,55 @@ kept, with an `INVALID.md` that gives the reason, and are never summarized.
 
 ## Benchmarks
 
+### Q8: scalar, AVX2 v1 and v2, against fp32 (2026-11-13)
+Run `results/2026-11-14_i9-8950hk/` (the folder is dated in UTC; it ran on the
+evening of 2026-11-13 local time): 3 rounds × 5 repetitions, all valid (no
+throttling; rounds 2 and 3 took 1.004 and 1.000 times round 1's time). The
+speed check before round 2 was 6.6% faster than the run's first check (65.3
+against 69.9 ms); under the current rule that is a diagnostic only.
+
+- Hardware: as on 2026-11-11 below.
+- Software: macOS 15.8.3, Apple clang 17.0.0, Release (`-O3 -DNDEBUG
+  -std=c++20`; the AVX2 files add `-mavx2 -mfma`).
+- Source: commit `cc0e71e`, no uncommitted changes. `matmul_avx2` calls v4;
+  `matmul_q8_avx2` calls Q8 v1, and Q8 v2 is benchmarked as its own step.
+- Command: `uv run python projects/quant-matmul/scripts/run_bench.py`.
+- Measured ceilings: peak FMA 156 GFLOP/s, read bandwidth 16.8 GiB/s.
+
+Q8 kernels quantize A inside each call, so that cost is included; W is
+quantized ahead of time. GFLOP/s counts 2·m·n·k for every kernel, so the
+columns compare directly.
+
+GEMM (prefill), GFLOP/s, median over 15 repetitions:
+
+| Shape (n × k), tokens | Q8 scalar | Q8 v1 | Q8 v2 | fp32 v4 | Accelerate |
+|---|---|---|---|---|---|
+| attn_qkv 2,304 × 768, 128 | 25.4 | 49.6 | 74.7 | 106.9 | 87.3 |
+| attn_qkv 2,304 × 768, 1,024 | 25.2 | 49.2 | 75.5 | 111.6 | 108.2 |
+| attn_out 768 × 768, 128 | 24.7 | 48.5 | 72.0 | 107.2 | 87.4 |
+| attn_out 768 × 768, 1,024 | 24.9 | 47.9 | 72.0 | 111.8 | 111.2 |
+| mlp_up 3,072 × 768, 128 | 25.4 | 48.9 | 75.1 | 104.6 | 87.4 |
+| mlp_up 3,072 × 768, 1,024 | 25.4 | 49.0 | 76.4 | 112.7 | 104.7 |
+| mlp_down 768 × 3,072, 128 | 24.6 | 49.8 | 73.5 | 73.1 | 85.8 |
+| mlp_down 768 × 3,072, 1,024 | 24.8 | 49.6 | 73.3 | 73.3 | 111.6 |
+| lm_head 50,257 × 768, 128 | 15.9 | 23.8 | 76.5 | 100.2 | 78.2 |
+
+GEMV (decode, 1 token): GiB/s of data read (for Q8, the 36-byte blocks), and
+the speed-up of Q8 v1 in time over fp32 v4:
+
+| Shape | Q8 scalar | Q8 v1 | Q8 v2 | fp32 v4 | Accelerate | Q8 v1 over fp32 v4 |
+|---|---|---|---|---|---|---|
+| attn_qkv | 8.2 | 12.3 | 12.3 | 16.6 | 14.4 | 2.63× |
+| attn_out | 8.0 | 12.1 | 12.0 | 16.7 | 15.3 | 2.56× |
+| mlp_up | 8.3 | 12.2 | 12.3 | 16.6 | 14.3 | 2.61× |
+| mlp_down | 8.1 | 12.3 | 12.3 | 16.0 | 18.7 | 2.71× |
+| lm_head | 8.3 | 12.4 | 12.4 | 16.2 | 13.3 | 2.70× |
+
+The fp32 kernels ran again from the code that now shares `dot_fp32_rows`. Per
+benchmark, the median time ratio to the 2026-11-12 run is 0.990 for v1, 0.973
+for v3 and 1.001 for v4 (ranges 0.946–1.014), against 1.000 and 1.001 for
+the unchanged scalar and Accelerate kernels.
+
 ### fp32: scalar, AVX2 v1 to v4, Accelerate (2026-11-12)
 Run `results/2026-11-12_i9-8950hk_2/`: 3 rounds × 5 repetitions, all valid (no
 throttling; speed checks 66.0–68.9 ms, within 4.2% of the first). Over all
@@ -88,6 +137,42 @@ GEMV (decode, 1 token), GiB/s of weights read:
 | lm_head | 3.9 | 16.2 | 17.0 | 15.9 | 13.1 |
 
 ## Conclusions
+
+From the 2026-11-13 run (one run; the port counts below come from Intel's
+published instruction tables for this core, not from hardware counters):
+
+- **Q8 speeds up GEMV 2.6–2.7× over fp32 v4,** and 2.3–3.3× over Accelerate.
+  Q8 reads 1.125 bytes per weight against fp32's 4, so 3.6× fewer bytes, but
+  it reads them at 12.0–12.4 GiB/s, 73% of the bandwidth that fp32 reaches.
+  Why it falls short of the bandwidth isn't measured yet.
+- **Q8 v2 matches v1 at 1 token (0.99–1.01×),** as expected: with one row of A
+  there is no pair to tile, so v2 runs entirely through `dot_q8_rows`.
+- **Q8 v2's tiles and cache blocks give 1.5× over v1 on GEMM, and 3.2× on
+  lm_head,** where v1 streams the whole 43 MB Q8 W from memory for every row
+  of A. v2 runs at 72–76 GFLOP/s on every GEMM shape. The 3 accumulators its
+  inner loop spills to the stack cost an unknown share of that.
+- **Q8 GEMM is slower than fp32 v4: 0.64–0.76× of its speed.** Without VNNI,
+  each 32 int8 products take 6 operations on the two vector ports that also
+  run FMAs (sign, maddubs, madd, convert, FMA, and the scalar multiply of the
+  two scales), where fp32 needs 4 FMAs. That caps Q8 at 4/6 of fp32's
+  arithmetic rate, about 104 GFLOP/s against the 156 GFLOP/s peak. v2 reaches
+  69–74% of that cap, as v4 reaches 72% of the FMA peak, so the estimate fits;
+  it hasn't been checked with hardware counters. On this CPU, Q8 pays off in
+  memory-bound decode, not in compute-bound prefill.
+- **Q8 v2 has no mlp_down gap,** at 73.3–73.5 GFLOP/s, the same as its other
+  shapes, while fp32 v4 drops from 105–113 to 73 there. Q8 v2's 64-row block
+  of W is 216 KB at k = 3,072, within the 256 KB L2; fp32 v4's is 768 KB. This
+  supports the L2 explanation for v4's mlp_down gap, though it still isn't a
+  direct measurement.
+- **The scalar Q8 kernel is 11× faster than the scalar fp32 kernel** (15.9–25.4
+  against 2.2–2.3 GFLOP/s) because the compiler vectorized it: its release
+  build uses SSE's `pmovsxbw` and `pmaddwd`. Integer addition is associative,
+  so the compiler may reorder the int32 sums; it may not reorder fp32 sums
+  without `-ffast-math`. It remains the exact reference for the tests, but it
+  isn't a scalar speed baseline.
+- **Sharing `dot_fp32_rows` didn't slow the fp32 steps.** Against the
+  2026-11-12 run, v4 is unchanged (1.001); v1 and v3 are 1% and 3% faster,
+  which the refactor isn't shown to explain.
 
 From the 2026-11-12 run (one machine; macOS changed since the 2026-11-11 run,
 so numbers across the two runs aren't compared closely):

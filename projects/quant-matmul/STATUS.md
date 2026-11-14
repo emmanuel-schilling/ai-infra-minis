@@ -50,7 +50,18 @@ BLAS baselines are done, and their tests run for real: Accelerate on macOS,
 OpenBLAS on Linux and Windows. The NEON Q8 kernel (a stretch goal) is a stub
 too, built and tested on Arm only.
 
-The latest valid run is `results/2026-11-12_i9-8950hk_2/`, on macOS 15.8.3
+The latest valid run is `results/2026-11-14_i9-8950hk/` (dated in UTC; run on
+the evening of 2026-11-13), from commit `cc0e71e`, the first with the Q8
+kernels. Q8 v2 is 1.5× faster than v1 on GEMM and 3.2× on lm_head, and the
+same at 1 token. Q8 speeds up GEMV 2.6–2.7× over fp32 v4, but reaches only
+0.64–0.76× of v4's speed on GEMM: without VNNI, 32 int8 products take 6
+operations on the FMA ports against fp32's 4 FMAs (an estimate from the
+instruction tables, not counters). Q8 v2 shows no mlp_down gap, since its
+block of W fits L2 at k = 3,072, which supports the L2 hypothesis for v4. The
+scalar Q8 kernel is auto-vectorized with SSE, so it is 11× the scalar fp32
+kernel. The fp32 steps kept their speed after sharing `dot_fp32_rows`.
+
+The run before it is `results/2026-11-12_i9-8950hk_2/`, on macOS 15.8.3
 from commit `f454d55`, summarized in RESULTS.md. v4 is 1.3–4.8× faster than
 v3 on every GEMM shape and beats single-threaded Accelerate on four of the
 five (by 20–24% at 128 tokens, 3–6% at 1,024). mlp_down (k = 3,072) is the
@@ -69,12 +80,19 @@ folder's `source.patch`. The earlier run (`results/2026-11-10_i9-8950hk/`) is
 invalid: the screen saver started during it (see its `INVALID.md`).
 
 ## Next step
-A benchmark run for the Q8 kernels (scalar, AVX2 v1 and v2) alongside the
-fp32 ones, which also confirms that sharing `dot_fp32_rows` left the fp32
-steps' speed unchanged. Close other apps, Chrome included, turn Low Power Mode
+In order:
+1. Point `matmul_q8_avx2` at Q8 v2, which the 2026-11-13 run measured 1.5–3.2×
+   faster on GEMM and equal at 1 token.
+2. The accuracy comparison, the last part of the done criteria: relative
+   error (‖C − C_ref‖ / ‖C_ref‖) and maximum absolute error of each kernel
+   against the scalar fp32 result, on the benchmarked GPT-2 shapes, in
+   RESULTS.md. The tests check bounds but don't report the errors.
+3. Place each version on the roofline in RESULTS.md (the run has the peak and
+   bandwidth; each kernel needs its arithmetic intensity).
+
+For benchmark runs: close other apps, Chrome included, turn Low Power Mode
 off, and start the run while the screen saver isn't running: `caffeinate`
-keeps it from starting but can't stop it. Then point `matmul_q8_avx2` at
-whichever step measures faster, and summarize the run in RESULTS.md.
+keeps it from starting but can't stop it.
 
 Optional work, after the required kernels:
 - v5, cache blocking that adapts to k, to test whether L2 explains the
