@@ -281,7 +281,9 @@ void v4_cache_blocking(Shape shape, std::span<const float> a, std::span<const fl
         dot_fp32_rows(a.subspan(row * shape.k, shape.k), w.subspan(col * shape.k, shape.k));
   };
 
-  // 64 rows of W * 768 floats * 4 bytes = 192 KB (fits comfortably inside 256 KB L2)
+  // 64 rows of W * 768 floats * 4 bytes = 192 KB (fits comfortably inside 256 KB L2).
+  // At k = 3,072 (mlp_down) the block is 768 KB and doesn't fit, the likely cause
+  // of v4's slower mlp_down (see RESULTS.md, Open questions; v5 in STATUS.md).
   constexpr std::size_t BN = 64;
 
   // CACHE BLOCKING LEVEL (Outer loop over N chunks that fit into L2)

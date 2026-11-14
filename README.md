@@ -63,6 +63,16 @@ cooldowns between them, and writes the raw output, the machine and build
 details, and the medians to a new dated folder under
 `projects/quant-matmul/results/`.
 
+```sh
+# Place a run's benchmarks on its measured roofline (table and chart)
+uv run python projects/quant-matmul/scripts/roofline.py projects/quant-matmul/results/<run>
+
+# Accuracy against a double-precision reference, on uniform random weights and,
+# once downloaded (a pinned revision, about 1 GB on disk, not committed), GPT-2's own
+uv run python projects/quant-matmul/scripts/fetch_gpt2.py
+uv run python projects/quant-matmul/scripts/run_accuracy.py
+```
+
 ## License
 
 [MIT](LICENSE)

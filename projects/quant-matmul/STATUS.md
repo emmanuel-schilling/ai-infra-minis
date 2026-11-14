@@ -32,8 +32,8 @@ quantized once up front, and each block pair's dot product uses
 `_mm256_maddubs_epi16` with the `_mm256_sign_epi8` trick, is widened to int32
 with `_mm256_madd_epi16`, converted to fp32 and scaled into one 8-lane
 accumulator per output. That version is now step v1,
-`q8_avx2_steps::v1_one_accumulator` (declared in `include/qmm/q8_avx2_steps.hpp`),
-and `matmul_q8_avx2` calls it. Step v2, `v2_register_blocking`, is done and
+`q8_avx2_steps::v1_one_accumulator` (declared in `include/qmm/q8_avx2_steps.hpp`).
+Step v2, `v2_register_blocking`, is done and
 tested for real: blocks of 64 rows of W, a 2 × 4 tile of outputs in 8
 accumulators, so each loaded A block feeds 4 block products and each W block
 2, and `dot_q8_rows` for the leftover rows and columns. With 1 token there is
@@ -41,7 +41,8 @@ no pair of A rows to tile, so v2 then does v1's work. Both steps share the
 per-block step `accumulate_block`, which is inlined. v2's compiled inner loop
 keeps 5 of the 8 accumulators in registers and spills 3 to the stack (3 loads
 and 3 stores per block step); whether that costs time is for the benchmark
-run. `matmul_q8_avx2` keeps calling v1 until a benchmark shows v2 is faster.
+run. `matmul_q8_avx2` calls v2, which the 2026-11-13 run measured 1.5–3.2×
+faster than v1 on GEMM and the same at 1 token.
 Every kernel's accuracy and its place on the roofline are measured and in
 RESULTS.md, which completes the done criteria apart from closing the project.
 `bench/accuracy.cpp` (`qmm_accuracy`) measures each kernel against a
@@ -51,12 +52,12 @@ double-precision product, on uniform random W and on GPT-2's own W, which
 and `scripts/roofline.py` writes a run's roofline table and chart. The tests,
 the benchmarks and the accuracy tool share their kernel lists, GPT-2 shapes,
 reference and error metric through `support/`. The AVX2 files
-share `hsum256_ps` through the internal header `src/hsum_avx2.hpp`. The
-other kernels you write are still stubs behind pending switches in
-`include/qmm/pending.hpp`, so their tests pass without checking anything. The
-BLAS baselines are done, and their tests run for real: Accelerate on macOS,
-OpenBLAS on Linux and Windows. The NEON Q8 kernel (a stretch goal) is a stub
-too, built and tested on Arm only.
+share `hsum256_ps` through the internal header `src/hsum_avx2.hpp`. Every
+pending switch in `include/qmm/pending.hpp` is off except the NEON Q8
+kernel's: that stretch goal is still a stub, built and tested on Arm only,
+whose tests pass without checking anything. The BLAS baselines are done, and
+their tests run for real: Accelerate on macOS, OpenBLAS on Linux and
+Windows.
 
 The latest valid run is `results/2026-11-14_i9-8950hk/` (dated in UTC; run on
 the evening of 2026-11-13), from commit `cc0e71e`, the first with the Q8
@@ -88,12 +89,11 @@ folder's `source.patch`. The earlier run (`results/2026-11-10_i9-8950hk/`) is
 invalid: the screen saver started during it (see its `INVALID.md`).
 
 ## Next step
-In order:
-1. Point `matmul_q8_avx2` at Q8 v2, which the 2026-11-13 run measured 1.5–3.2×
-   faster on GEMM and equal at 1 token.
-2. Close the project, as the roadmap describes: README.md gets the headline
-   result and one chart (`results/2026-11-14_i9-8950hk/roofline.svg`), a
-   lesson goes into ROADMAP.md, and the project is marked complete there.
+Close the project, as the roadmap describes: README.md gets the headline
+result and one chart (`results/2026-11-14_i9-8950hk/roofline.svg`), and names
+the open mlp_down lead (RESULTS.md, Open questions); a lesson goes into
+ROADMAP.md, and the project is marked complete there and Profile llama.cpp
+active.
 
 For benchmark runs: close other apps, Chrome included, turn Low Power Mode
 off, and start the run while the screen saver isn't running: `caffeinate`
@@ -129,9 +129,14 @@ for Arm hardware to benchmark on. Details:
   format, not the fp32 kernel.
 - fp16 block scales, as in llama.cpp's Q8_0, converted with F16C's
   `_mm256_cvtph_ps`. A block shrinks from 36 to 34 bytes, about 6% less to
-  read for memory-bound GEMV, and the format then matches llama.cpp's
-  exactly. It needs the quantization test's scale tolerance widened for
-  fp16's rounding, and a benchmark against the fp32 version.
+  read, though Q8 GEMV runs at only 72–74% of the bandwidth ceiling, so that
+  may not make it faster (RESULTS.md, Open questions). The layout then matches
+  llama.cpp's; matching its blocks byte for byte also needs its rounding,
+  which may differ from `quantize_q8`'s (to be checked against its source).
+  It needs fp16's narrower range handled in quantize and its tests, the scale
+  tolerance widened for fp16's rounding, and a benchmark against the fp32
+  version. ggml's own Q8_0 numbers can also come from llama.cpp's operator
+  benchmarks during Profile llama.cpp, without adding ggml here.
 - A 1 × 4 tile for the leftover rows in v3 and v4, if a measurement shows the
   current single-accumulator fallback costs enough (it may cost GEMM a few
   percent at 128 tokens).
@@ -144,10 +149,14 @@ The AVX2 fp32 kernel was optimized in steps, each a separate version declared
 in `include/qmm/avx2_steps.hpp` and written in `src/avx2.cpp`: v1 one
 accumulator, v2 several accumulators, v3 register blocking (a 3 × 4 tile), v4
 cache blocking. `matmul_avx2` calls the fastest measured version, v4 since
-the 2026-11-12 run.
+the 2026-11-12 run. The AVX2 Q8 kernel followed the same pattern in
+`include/qmm/q8_avx2_steps.hpp` and `src/q8_avx2.cpp`: v1 one accumulator per
+output, v2 register and cache blocking (a 2 × 4 tile); `matmul_q8_avx2` calls
+v2 since the 2026-11-13 run.
 
 ## Open questions
-None.
+None for the required work. The measurements still missing, such as the
+cause of v4's slower mlp_down, are listed in RESULTS.md, Open questions.
 
 ## Decisions
 Record each as: date, decision, reason.

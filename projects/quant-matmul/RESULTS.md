@@ -310,6 +310,30 @@ From the 2026-11-11 run (one machine, one run; to be confirmed by later runs):
   tokens (1 leftover row) than at 128 (2 leftover rows), consistent with the
   estimate, though other effects differ between the two sizes too.
 
+## Open questions
+
+What the conclusions above infer but no run has measured yet, most promising
+first:
+
+1. **Does L2 explain v4's slower mlp_down?** v4 reaches 72.5–73.5 GFLOP/s on
+   mlp_down (k = 3,072) against 105–113 on the k = 768 shapes, and 66–83% of
+   Accelerate there. Its 64-row block of W is 192 KB at k = 768, inside the
+   256 KB L2, but 768 KB at k = 3,072. Q8 v2, whose block is 216 KB at
+   k = 3,072, shows no such drop, which supports the explanation. The test is
+   a v5 that sizes its block from k, or blocks along k as well: if L2 is the
+   cause, mlp_down improves clearly while the other shapes and GEMV don't,
+   and L2 misses counted with Instruments fall with it.
+2. **What limits Q8 GEMV?** It reads its weights at 72–74% of the bandwidth
+   ceiling, where the fp32 versions reach 96–105%, although its intensity
+   (1.8 FLOP/byte) is still well below the ridge point.
+3. **Is Q8 GEMM limited by its vector ports?** The 4/6-of-peak ceiling comes
+   from instruction tables; hardware counters would confirm it, and show what
+   the 3 accumulators v2 spills to the stack cost.
+4. **How large is Q8's error on real activations?** The accuracy run uses
+   GPT-2's weights but synthetic activations; the few very large activation
+   channels of real models are the usual difficulty for int8. Tiny GPT will
+   run the model and can measure it.
+
 ## Measurement notes
 
 ### GEMM runs with W warm in cache
