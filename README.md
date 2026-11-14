@@ -10,10 +10,32 @@ its benchmarks. Projects are added here as they start.
 
 | Project | What it explores | Language | Status |
 |---|---|---|---|
-| [Quantized matmul](projects/quant-matmul/) | Scalar, AVX2 + FMA and 8-bit quantized matrix multiply, compared with a vendor BLAS (Accelerate on macOS, OpenBLAS elsewhere) | C++20 | Active |
+| [Quantized matmul](projects/quant-matmul/) | Scalar, AVX2 + FMA and 8-bit quantized matrix multiply, compared with a vendor BLAS (Accelerate on macOS, OpenBLAS elsewhere) | C++20 | Complete |
+| [Profile llama.cpp](projects/profile-llama-cpp/) | Where a production inference engine spends its time on the CPU, for prompt processing and for token generation | Profiling | Active |
 
 Each project folder has a `STATUS.md` (state, open questions, decisions and
 their reasons) and a `RESULTS.md` (benchmarks and conclusions).
+
+### Quantized matmul
+
+On one core of an Intel i9-8950HK, with GPT-2's weight shapes:
+
+- The cache-blocked AVX2 + FMA kernel beats single-threaded Accelerate on four
+  of the five shapes: by 20–28% at 128 tokens and up to 8% at 1,024.
+- 8-bit (Q8_0-style) weights make decode, which reads every weight once per
+  token, 2.6–2.7× faster than fp32. Prefill runs at about 0.7× of fp32:
+  without VNNI, AVX2 needs 6 operations on the FMA ports per 32 int8 products
+  where fp32 needs 4 FMAs (an estimate from Intel's instruction tables).
+- Q8's error on GPT-2's own weights is 0.6–0.8% relative, all of it from
+  quantization; the fp32 kernels stay within 1e-6.
+- Open lead: the fp32 kernel slows on the MLP down projection (k = 3,072),
+  most likely because its block of weights outgrows L2. The 8-bit kernel,
+  whose block fits, doesn't slow there.
+
+![Single-core roofline on GPT-2's weight shapes](projects/quant-matmul/results/2026-11-14_i9-8950hk/roofline.svg)
+
+Details, tables and the open questions are in its
+[RESULTS.md](projects/quant-matmul/RESULTS.md).
 
 ## How results are measured
 

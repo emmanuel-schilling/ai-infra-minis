@@ -1,7 +1,8 @@
 # Quantized matmul: status
 
 ## Current state
-Active. The scaffolding is in place: the build, the kernel interface, the
+Complete (2026-11-13): the done criteria are met, and the headline result and
+roofline chart are in the repository's README.md. The scaffolding is in place: the build, the kernel interface, the
 tests, the benchmarks (including the roofline) and `scripts/run_bench.py`.
 The scalar fp32 kernel, `matmul_scalar`, is done: a plain triple loop, the
 reference every other version is tested against. Its pending switch is off,
@@ -89,11 +90,9 @@ folder's `source.patch`. The earlier run (`results/2026-11-10_i9-8950hk/`) is
 invalid: the screen saver started during it (see its `INVALID.md`).
 
 ## Next step
-Close the project, as the roadmap describes: README.md gets the headline
-result and one chart (`results/2026-11-14_i9-8950hk/roofline.svg`), and names
-the open mlp_down lead (RESULTS.md, Open questions); a lesson goes into
-ROADMAP.md, and the project is marked complete there and Profile llama.cpp
-active.
+None required: the project is complete, and work continues in Profile
+llama.cpp. If it resumes, start from the optional work below or RESULTS.md's
+Open questions.
 
 For benchmark runs: close other apps, Chrome included, turn Low Power Mode
 off, and start the run while the screen saver isn't running: `caffeinate`
