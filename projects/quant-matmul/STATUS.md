@@ -2,7 +2,14 @@
 
 ## Current state
 Complete (2026-11-13): the done criteria are met, and the headline result and
-roofline chart are in the repository's README.md. The scaffolding is in place: the build, the kernel interface, the
+roofline chart are in the repository's README.md.
+
+Since 2026-11-15 the kernels (`include/qmm/`, `src/`), their tests and the
+generic test helpers (the double reference, the error metric, the random
+inputs and the kernel list) are the shared `qmm` library in `common/qmm/`;
+the `include/`, `src/` and kernel-test paths below are relative to it. This
+project keeps its benchmarks, `qmm_accuracy`, the GPT-2 shapes and weight
+reader, and its scripts. The scaffolding is in place: the build, the kernel interface, the
 tests, the benchmarks (including the roofline) and `scripts/run_bench.py`.
 The scalar fp32 kernel, `matmul_scalar`, is done: a plain triple loop, the
 reference every other version is tested against. Its pending switch is off,
@@ -348,3 +355,14 @@ Record each as: date, decision, reason.
   scheduled task could begin with it running. The check looks for the
   `ScreenSaverEngine` process, confirmed on macOS 15.8.2 by starting the
   screen saver and seeing the scripts refuse.
+- 2026-11-15: The kernels, their tests and the generic test helpers moved to
+  `common/qmm/` (`git mv`, so their history follows them), with the build
+  flags and CPU checks in `common/qmm/QmmPlatform.cmake`, which this project
+  includes for its benchmarks. Reason: Tiny GPT is their second user, and one
+  tested implementation beats copies. Verified: the same 209 tests pass; the
+  kernels' release compile flags are identical apart from paths; the release
+  machine code of the 7 library objects and the 4 benchmark objects is
+  identical, so earlier results still describe the code that runs. The two
+  test objects differ only in the offsets of string literals, from the new
+  source path GoogleTest embeds. `run_bench.py` now records the library's
+  compile commands too.

@@ -28,4 +28,5 @@ endif()
 
 enable_testing()
 
+add_subdirectory(common/qmm)
 add_subdirectory(projects/quant-matmul)

@@ -4,8 +4,11 @@ from typing import Any
 
 import pytest
 from run_bench import (
+    PROJECT,
+    QMM_LIBRARY,
     check_changed_rounds,
     check_time_ns,
+    ours,
     round_speeds,
     slow_rounds,
     source_revision,
@@ -140,3 +143,12 @@ def test_source_revision_ignores_benchmark_results(tmp_path: Path) -> None:
 
     (tmp_path / "kernel.cpp").write_text("two\n")
     assert source_revision(tmp_path, results)["uncommitted_changes"] is True
+
+
+def test_build_details_keep_the_project_and_the_library_it_benchmarks() -> None:
+    commands = [
+        {"file": str(PROJECT / "bench" / "matmul_bench.cpp")},
+        {"file": str(QMM_LIBRARY / "src" / "avx2.cpp")},
+        {"file": str(PROJECT.parent / "profile-llama-cpp" / "x.cpp")},
+    ]
+    assert [Path(c["file"]).name for c in ours(commands)] == ["matmul_bench.cpp", "avx2.cpp"]

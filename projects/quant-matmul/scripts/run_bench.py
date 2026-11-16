@@ -57,6 +57,7 @@ from benchkit import (
 
 PROJECT = Path(__file__).resolve().parents[1]
 REPO = PROJECT.parents[1]
+QMM_LIBRARY = REPO / "common" / "qmm"
 BUILD = REPO / "build-release"
 RESULTS = PROJECT / "results"
 
@@ -171,8 +172,13 @@ def build_details() -> dict[str, Any]:
             if match:
                 compiler[key] = match.group(1)
     commands = json.loads((BUILD / "compile_commands.json").read_text())
-    ours = [c for c in commands if Path(c["file"]).is_relative_to(PROJECT)]
-    return {"cache": settings, "compiler": compiler, "compile_commands": ours}
+    return {"cache": settings, "compiler": compiler, "compile_commands": ours(commands)}
+
+
+def ours(commands: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """The compile commands of this project's files and of the qmm library it benchmarks."""
+    roots = (PROJECT, QMM_LIBRARY)
+    return [c for c in commands if any(Path(c["file"]).is_relative_to(r) for r in roots)]
 
 
 def source_revision(repo: Path, results: Path) -> dict[str, Any]:

@@ -15,8 +15,10 @@ its benchmarks. Projects are added here as they start.
 
 Each project folder has a `STATUS.md` (state, open questions, decisions and
 their reasons) and a `RESULTS.md` (benchmarks and conclusions). Code shared
-between projects lives in `common/`: `common/benchkit` holds the benchmark
-scripts' helpers for machine details, thermal state and results folders.
+between projects lives in `common/`: `common/qmm` is the matrix-multiply
+kernel library (built and measured in Quantized matmul) with its tests, and
+`common/benchkit` holds the benchmark scripts' helpers for machine details,
+thermal state and results folders.
 
 ### Quantized matmul
 
