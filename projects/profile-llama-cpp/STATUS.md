@@ -85,7 +85,8 @@ smoke tests' speeds, about ±30%.
 Plan: 1. settle the open questions; 2. setup script; 3. baseline timings;
 4. roofline; 5. `xctrace` profiles of each phase; 6. ggml's Q8_0 `MUL_MAT`
 against Quantized matmul's kernels; 7. thread scaling; 8. steps 3–5 for
-Q4_K_M; 9. Linux `perf` (future work, below); 10. write-up and close.
+Q4_K_M; 9. Linux `perf` (future work, below, outside the project's
+definition of done); 10. write-up and close.
 
 ## Write-up outline
 Planned sections of RESULTS.md (step 10), filled in once the results are in.
@@ -108,8 +109,10 @@ You write the conclusions; Claude checks the figures.
 9. Open questions and future work (the Linux `perf` runs).
 
 ## Future work
-Everything in this project so far runs on the development MacBook Pro. Not
-started, and not needed for steps 1–8:
+Everything in this project runs on the development MacBook Pro. The project
+is done when the write-up (step 10), from measurements on this Mac,
+identifies the hotspots per phase and the possible contribution targets. Not
+started, and not part of that:
 - Step 9: repeat the key measurements on Linux x86 hardware with `perf`,
   building llama.cpp both with OpenMP and without (see Decisions). It waits
   for the Mac results, which show which measurements are worth repeating.
@@ -213,3 +216,8 @@ Record each as: date, decision, reason.
   than sustained performance, which suits comparing kernels, models and
   thread counts; a warm steady state would need its own design. Costs about
   45 minutes over the whole set.
+- 2026-11-15: Redefine done: the write-up, from measurements on this Mac,
+  identifies the hotspots per phase and the possible contribution targets.
+  Repeating the key measurements under Linux `perf` (step 9) is future work,
+  outside that definition. Reason: the project's questions can be answered on
+  this machine, and other hardware is not available on a set timeline.
