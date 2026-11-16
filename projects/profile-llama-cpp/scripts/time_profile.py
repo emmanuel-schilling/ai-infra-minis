@@ -6,9 +6,25 @@ backtrace, leaf frame first. Any element that repeats is written in full once
 with an id attribute, and afterwards as an empty element whose ref attribute
 names that id.
 
-Only samples whose backtrace runs through ggml's graph computation count
-toward the shares, so model loading and startup are left out. For each, the
-time is attributed three ways:
+The compiler inlines most of ggml's thread-pool functions, so a sample's
+stack shows only part of what the thread was doing. Each sample whose
+backtrace runs through ggml's graph computation is labelled by what its stack
+proves:
+- an operation: a ggml_compute_forward_<op> frame;
+- at a barrier: spinning (ggml_thread_cpu_relax) under ggml_barrier, under
+  the main thread's ggml_graph_compute, or under ggml_compute_forward, all
+  places where only a barrier spins;
+- spinning in a worker's loop: spinning directly under the worker loop
+  (ggml_graph_compute_secondary_thread). The barrier between operations and
+  the polling for the next graph are both inlined there, so the stack can't
+  tell them apart; the return address within the loop can, given the
+  binary's debug information (for instance with atos -i);
+- idle between graphs: a worker checking for or sleeping until its next
+  graph (ggml_graph_compute_thread_ready, or a condition-variable wait);
+- the scheduler: anything else in the graph computation.
+The idle time is reported apart; the shares are of everything else. Model
+loading and startup, outside the graph computation, are left out. Time is
+attributed three ways:
 - self time, to the leaf function: where the CPU actually was, including
   spinning in ggml_barrier;
 - total time, to every function on the stack, counted once per sample;
@@ -18,32 +34,64 @@ time is attributed three ways:
 import re
 import xml.etree.ElementTree as ET
 from collections import Counter
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import IO, Any
+from typing import IO, Any, NamedTuple
 
 COMPUTE = "ggml_graph_compute"
+MAIN_COMPUTE = "ggml_graph_compute"
+WORKER_LOOP = "ggml_graph_compute_secondary_thread"
+DISPATCH = "ggml_compute_forward"
+BARRIER = "ggml_barrier"
+SPIN = "ggml_thread_cpu_relax"
+WAITING_FOR_WORK = {"ggml_graph_compute_thread_ready", "__psynch_cvwait", "_pthread_cond_wait"}
 OP = re.compile(r"ggml_compute_forward_([a-z0-9_]+)")
+AT_BARRIER = "(barrier)"
+WORKER_SPIN = "(spinning in a worker's loop: barrier or next graph)"
+SCHEDULER = "(scheduler)"
+IDLE = "(idle between graphs)"
+
+
+class Frame(NamedTuple):
+    name: str
+    addr: str
+    binary: str  # the binary's path, or "" when the export names none
+    load_addr: str
+
+
+# Where a worker's spin returns to: (binary, load address, return address).
+SpinSite = tuple[str, str, str]
 
 
 @dataclass
 class Profile:
     compute_ns: int = 0
+    idle_ns: int = 0
     other_ns: int = 0
     self_ns: Counter[str] = field(default_factory=Counter)
     total_ns: Counter[str] = field(default_factory=Counter)
     op_ns: Counter[str] = field(default_factory=Counter)
     thread_ns: Counter[str] = field(default_factory=Counter)
+    spin_sites: Counter[SpinSite] = field(default_factory=Counter)
 
-    def add(self, thread: str, weight: int, frames: list[str]) -> None:
-        if not any(name.startswith(COMPUTE) for name in frames):
+    def add(self, thread: str, weight: int, frames: list[Frame]) -> None:
+        names = [short_name(f.name) for f in frames]
+        if not any(name.startswith(COMPUTE) for name in names):
             self.other_ns += weight
+            return
+        op = operation(names)
+        if op == IDLE:
+            self.idle_ns += weight
             return
         self.compute_ns += weight
         self.thread_ns[thread] += weight
-        self.self_ns[short_name(frames[0])] += weight
-        for name in {short_name(f) for f in frames}:
+        self.self_ns[names[0]] += weight
+        for name in set(names):
             self.total_ns[name] += weight
-        self.op_ns[operation(frames)] += weight
+        self.op_ns[op] += weight
+        if op == WORKER_SPIN:
+            caller = frames[1]
+            self.spin_sites[(caller.binary, caller.load_addr, caller.addr)] += weight
 
 
 def short_name(name: str) -> str:
@@ -68,14 +116,26 @@ def operation(frames: list[str]) -> str:
     dispatcher called; inner ones are helpers such as mul_mat_one_chunk.
     Where the compiler inlined the operation's own function, a helper is the
     outermost frame and names the operation instead (mul_mat_one_chunk for
-    mul_mat). Samples outside any operation are threads waiting at the barrier
-    between operations, or the graph scheduler itself.
+    mul_mat). Outside any operation, the labels the module's docstring lists.
     """
     for name in reversed(frames):
         match = OP.search(name)
         if match:
             return match.group(1)
-    return "(between operations)"
+    names = [short_name(f) for f in frames]
+    present = set(names)
+    if present & WAITING_FOR_WORK:
+        return IDLE
+    if BARRIER in present:
+        return AT_BARRIER
+    if names and names[0] == SPIN:
+        # The spinning thread's caller: the first frame that isn't the spin itself.
+        caller = names[1] if len(names) > 1 else ""
+        if caller in (DISPATCH, MAIN_COMPUTE):
+            return AT_BARRIER
+        if caller == WORKER_LOOP:
+            return WORKER_SPIN
+    return SCHEDULER
 
 
 def parse(stream: IO[bytes] | IO[str]) -> Profile:
@@ -92,11 +152,17 @@ def parse(stream: IO[bytes] | IO[str]) -> Profile:
             known[element.get("id", "")] = result
         return result
 
-    def frame_name(frame: ET.Element) -> str:
-        return frame.get("name") or frame.get("addr") or "?"
+    def binary(element: ET.Element) -> tuple[str, str]:
+        return element.get("path", ""), element.get("load-addr", "")
 
-    def backtrace(element: ET.Element) -> list[str]:
-        return [value(f, frame_name) for f in element.findall("frame")]
+    def frame(element: ET.Element) -> Frame:
+        found = element.find("binary")
+        path, load = value(found, binary) if found is not None else ("", "")
+        addr = element.get("addr", "")
+        return Frame(element.get("name") or addr or "?", addr, path, load)
+
+    def backtrace(element: ET.Element) -> list[Frame]:
+        return [value(f, frame) for f in element.findall("frame")]
 
     for _, row in ET.iterparse(stream, events=("end",)):
         if row.tag != "row":
@@ -121,16 +187,43 @@ def table(counts: Counter[str], whole: int, top: int) -> list[tuple[str, float, 
     return [(name, ns / 1e6, ns / whole) for name, ns in counts.most_common(top)] if whole else []
 
 
-def summary(profile: Profile, top: int) -> dict[str, Any]:
+# Maps one binary's return addresses to the source line each is in, given the
+# binary's path, its load address and the addresses.
+Resolver = Callable[[str, str, list[str]], dict[str, str]]
+
+
+def spin_lines(profile: Profile, resolve: Resolver | None) -> Counter[str]:
+    """The worker-loop spin time by the source line it returns to, where resolvable.
+
+    Sites that can't be resolved are listed by binary and address instead.
+    """
+    by_binary: dict[tuple[str, str], list[str]] = {}
+    for path, load, addr in profile.spin_sites:
+        by_binary.setdefault((path, load), []).append(addr)
+    lines: dict[SpinSite, str] = {}
+    for (path, load), addrs in by_binary.items():
+        resolved = resolve(path, load, addrs) if resolve and path and load else {}
+        for addr in addrs:
+            lines[(path, load, addr)] = resolved.get(addr) or f"{path or '?'} {addr}"
+    out: Counter[str] = Counter()
+    for site, ns in profile.spin_sites.items():
+        out[lines[site]] += ns
+    return out
+
+
+def summary(profile: Profile, top: int, resolve: Resolver | None = None) -> dict[str, Any]:
     whole = profile.compute_ns
+    spins = spin_lines(profile, resolve)
     rows = {
         "self": table(profile.self_ns, whole, top),
         "total": table(profile.total_ns, whole, top),
         "operations": table(profile.op_ns, whole, len(profile.op_ns)),
         "threads": table(profile.thread_ns, whole, len(profile.thread_ns)),
+        "worker_spin_lines": table(spins, whole, len(spins)),
     }
     return {
         "compute_ms": whole / 1e6,
+        "idle_between_graphs_ms": profile.idle_ns / 1e6,
         "outside_compute_ms": profile.other_ns / 1e6,
         **{k: [{"name": n, "ms": ms, "share": s} for n, ms, s in v] for k, v in rows.items()},
     }
@@ -140,14 +233,16 @@ def markdown(title: str, data: dict[str, Any]) -> str:
     lines = [
         f"# {title}",
         "",
-        f"Samples in ggml's graph computation: {data['compute_ms']:.0f} ms of CPU time "
-        f"(outside it, left out: {data['outside_compute_ms']:.0f} ms).",
+        f"CPU time in ggml's graphs: {data['compute_ms']:.0f} ms, the whole for the shares "
+        f"below. Worker threads idle between graphs: {data['idle_between_graphs_ms']:.0f} ms. "
+        f"Outside the graph computation, left out: {data['outside_compute_ms']:.0f} ms.",
     ]
     headings = {
         "operations": "By ggml operation",
         "self": "Self time (leaf function)",
         "total": "Total time (function anywhere on the stack)",
         "threads": "By thread",
+        "worker_spin_lines": "Spinning in a worker's loop, by the source line it returns to",
     }
     for key, heading in headings.items():
         lines += ["", f"## {heading}", "", "| Share | ms | Name |", "|---:|---:|---|"]

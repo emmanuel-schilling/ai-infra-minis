@@ -1,6 +1,7 @@
 """Profile llama.cpp's prompt processing and token generation under xctrace.
 
-For each phase, records llama-bench under an Instruments template, with
+For each phase, after a --cooldown pause so each recording starts from a
+similar temperature, records llama-bench under an Instruments template, with
 nothing offloaded to a GPU:
 - pp: a prompt of --prompt tokens and no generation
 - tg: --gen generated tokens and no prompt
@@ -17,7 +18,9 @@ Writes a new folder results/<date>_<cpu>_profile[_<label>]/ in this project:
   traces run to hundreds of MB)
 - <model>_<phase>.log: llama-bench's output during the recording
 - <model>_<phase>.json and .md: the summary
-- metadata.json: hardware, build, revisions and commands
+- metadata.json: hardware, build, revisions and commands, the thermal state
+  before and after each recording, and the phases whose recording macOS
+  reported a CPU speed limit or the screen saver around
 
 Usage, from anywhere in the repository, with LLAMA_CPP_DIR and MODELS_DIR set:
     uv run python projects/profile-llama-cpp/scripts/run_profile.py --help
@@ -28,7 +31,9 @@ import json
 import os
 import subprocess
 import sys
+import time
 from pathlib import Path
+from typing import Any
 
 import time_profile
 from benchkit import (
@@ -37,7 +42,10 @@ from benchkit import (
     create_run_dir,
     machine_details,
     screen_saver_problem,
+    screen_saver_rounds,
     stay_awake,
+    thermal_state,
+    throttled_rounds,
     utc_date,
 )
 from runkit import (
@@ -86,8 +94,39 @@ def record_command(
     ]  # fmt: skip
 
 
+def phases_in(recordings: list[dict[str, Any]], numbers: list[int]) -> list[str]:
+    """The phases of the recordings with these numbers."""
+    return [r["phase"] for r in recordings if r["round"] in numbers]
+
+
 def export_command(trace: Path) -> list[str]:
     return ["xcrun", "xctrace", "export", "--input", str(trace), "--xpath", TIME_PROFILE_XPATH]
+
+
+def parse_atos(output: str, addrs: list[str]) -> dict[str, str]:
+    """atos -i's output, one group of lines per address, as {address: innermost line}.
+
+    With -i, atos prints an address's inlined frames innermost first, one per
+    line, and a blank line after each address. Only the innermost is kept, as
+    'function (file:line)'; addresses atos couldn't resolve to a line are left out.
+    """
+    groups = [g.strip().splitlines() for g in output.strip().split("\n\n")]
+    resolved = {}
+    for addr, group in zip(addrs, groups, strict=False):
+        if group and "(in " in group[0] and ":" in group[0].rsplit("(", 1)[-1]:
+            function = group[0].split(" (in ", 1)[0]
+            location = group[0].rsplit("(", 1)[-1].rstrip(")")
+            resolved[addr] = f"{function} ({location})"
+    return resolved
+
+
+def atos_resolver(binary: str, load_addr: str, addrs: list[str]) -> dict[str, str]:
+    """Each return address's source line, from the binary's debug information."""
+    # PLATFORM: macos — atos ships with Xcode's command-line tools; Linux
+    # would use addr2line -i on the same addresses.
+    command = ["xcrun", "atos", "-o", binary, "-l", load_addr, "-i", *addrs]
+    result = subprocess.run(command, capture_output=True, text=True)
+    return parse_atos(result.stdout, addrs) if result.returncode == 0 else {}
 
 
 def main() -> int:
@@ -101,6 +140,7 @@ def main() -> int:
     parser.add_argument("--repetitions", type=int, default=3, help="llama-bench's -r")
     parser.add_argument("--template", default=TIME_PROFILER, help="Instruments template")
     parser.add_argument("--top", type=int, default=30, help="functions listed per table")
+    parser.add_argument("--cooldown", type=float, default=30.0, help="seconds before each phase")
     parser.add_argument("--label", default="", help="suffix for the results folder")
     args = parser.parse_args()
     if problem := screen_saver_problem():
@@ -130,17 +170,23 @@ def main() -> int:
     run_dir = create_run_dir(RESULTS, f"{utc_date()}_{cpu_slug(cpu_model())}{suffix}")
     print(f"run_profile: writing to {run_dir}", file=sys.stderr)
     commands: dict[str, list[str]] = {}
+    recordings: list[dict[str, Any]] = []
     with stay_awake():
-        for phase, tokens in phases.items():
+        for number, (phase, tokens) in enumerate(phases.items(), start=1):
             stem = f"{args.model}_{phase}"
             trace = run_dir / f"{stem}.trace"
             command = record_command(
                 args.template, trace, bench, model, tokens, args.threads, args.repetitions
             )
             commands[phase] = command
+            time.sleep(args.cooldown)
             print(f"run_profile: recording {stem}", file=sys.stderr)
+            record: dict[str, Any] = {"round": number, "phase": phase}
+            record["thermal_before"] = thermal_state()
             with (run_dir / f"{stem}.log").open("w") as log:
                 subprocess.run(command, check=True, stdout=log, stderr=subprocess.STDOUT)
+            record["thermal_after"] = thermal_state()
+            recordings.append(record)
             if args.template != TIME_PROFILER:
                 continue
             with subprocess.Popen(export_command(trace), stdout=subprocess.PIPE) as export:
@@ -148,7 +194,7 @@ def main() -> int:
                 profile = time_profile.parse(export.stdout)
             if export.returncode != 0:
                 raise subprocess.CalledProcessError(export.returncode, export.args)
-            data = time_profile.summary(profile, args.top)
+            data = time_profile.summary(profile, args.top, atos_resolver)
             (run_dir / f"{stem}.json").write_text(json.dumps(data, indent=2) + "\n")
             title = f"{args.model} {phase}, {args.threads} threads"
             (run_dir / f"{stem}.md").write_text(time_profile.markdown(title, data))
@@ -160,6 +206,9 @@ def main() -> int:
         "model": str(model),
         "commands": commands,
         "settings": vars(args),
+        "recordings": recordings,
+        "throttled_phases": phases_in(recordings, throttled_rounds(recordings)),
+        "screen_saver_phases": phases_in(recordings, screen_saver_rounds(recordings)),
     }
     (run_dir / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
     print(f"run_profile: done; summaries in {run_dir}", file=sys.stderr)

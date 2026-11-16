@@ -14,7 +14,13 @@ The scripts for steps 3–8 are written and smoke-tested on tiny settings
   and FMA-peak benchmarks for this.
 - `report_baseline.py` (steps 4, 7): the roofline shares and thread scaling.
 - `run_profile.py` (step 5): `xctrace` Time Profiler per phase, summarized by
-  ggml operation, leaf function, stack function and thread.
+  ggml operation, leaf function, stack function and thread. Waiting is split
+  by what the stack proves: at a barrier, idle between graphs, or spinning in
+  a worker's loop, where ggml inlines both the barrier and the polling for
+  the next graph; those spins are listed by the source line they return to,
+  resolved with `atos` (at b12377, ggml-cpu.c:3281–3282 is inside a graph).
+  `--template` also records custom CPU Counters templates, for opening in
+  Instruments.
 - `run_kernel_compare.py` (step 6): ggml's `MUL_MAT` on GPT-2's shapes with
   Q8_0 and fp32 weights, single-threaded, against Quantized matmul's latest
   run.
@@ -40,33 +46,66 @@ the profiles:
 
 ## Next step
 Run the scripts, then read the results together (steps 3–8). Conditions, as
-for every benchmark here: AC power, Low Power Mode off, other apps closed
-(Docker Desktop too); the scripts keep the machine awake themselves, and
-refuse to start while the screen saver is running. From the
+for every benchmark here: AC power with the battery already charged (charging
+adds heat), Low Power Mode off, other apps closed (Docker Desktop too), and a
+machine that has been idle for a while; the scripts keep the machine awake
+themselves, and refuse to start while the screen saver is running. A smoke
+test with 1 s cooldowns, after hours of builds and with the battery
+charging, saw macOS limit the CPU to 20% for several minutes; the per-test
+records flagged it. From the
 repository root, with `LLAMA_CPP_DIR=~/src/llama.cpp MODELS_DIR=~/models`:
 
+Session 1 (about 2 h 30 min):
 1. `uv run python projects/profile-llama-cpp/scripts/run_baseline.py`: both
-   models, 1, 6 and 12 threads, 3 rounds (about 70 minutes; the 1-thread
-   tests take most of it). Then `report_baseline.py` on its folder.
-2. `run_baseline.py --models q8_0 --threads 1,2,3,4,6,8,10,12 --skip-ceilings
-   --label scaling` (about 90 minutes), then `report_baseline.py` on its
+   models, 1, 6 and 12 threads, 3 rounds of 12 tests (about 100 minutes; the
+   1-thread tests take most of it). Then `report_baseline.py` on its folder.
+2. `run_profile.py --model q8_0`, then `run_profile.py --model q4_k_m` (about
+   6 minutes each). Each writes summaries next to its `.trace` files, which
+   open in Instruments. With the counter templates built: `--template "LLM
+   Ports" --label ports` and `--template "LLM Memory" --label memory` for each
+   model (about 4 minutes each).
+3. `run_kernel_compare.py` (about 16 minutes).
+4. `run_baseline.py --build build-accelerate --threads 6 --skip-ceilings
+   --label accelerate` (about 20 minutes).
+
+Session 2 (about 2 hours):
+5. `run_baseline.py --models q8_0 --threads 1,2,3,4,6,8,10,12 --skip-ceilings
+   --label scaling` (about 115 minutes), then `report_baseline.py` on its
    folder with `--ceilings` set to run 1's folder.
-3. `run_baseline.py --build build-accelerate --threads 6 --skip-ceilings
-   --label accelerate` (about 15 minutes).
-4. `run_profile.py --model q8_0`, then `run_profile.py --model q4_k_m` (a few
-   minutes each). Each writes summaries next to its `.trace` files, which open
-   in Instruments.
-5. `run_kernel_compare.py` (about 15 minutes).
+
+Between runs, check each `metadata.json`: empty `slow_rounds`,
+`throttled_rounds` and `screen_saver_rounds` mean the run is valid. A flagged
+run keeps its folder, with an `INVALID.md` giving the reason, and is rerun,
+with a longer `--cooldown` if the cause was heat.
 
 All the scripts are in `projects/profile-llama-cpp/scripts/` and write to
 `projects/profile-llama-cpp/results/`. The durations are estimates from the
-smoke tests' speeds. Steps 1, 4 and 5 matter most if time is short; step 2
-can run another day.
+smoke tests' speeds, about ±30%.
 
 Plan: 1. settle the open questions; 2. setup script; 3. baseline timings;
 4. roofline; 5. `xctrace` profiles of each phase; 6. ggml's Q8_0 `MUL_MAT`
 against Quantized matmul's kernels; 7. thread scaling; 8. steps 3–5 for
 Q4_K_M; 9. Linux `perf` (future work, below); 10. write-up and close.
+
+## Write-up outline
+Planned sections of RESULTS.md (step 10), filled in once the results are in.
+You write the conclusions; Claude checks the figures.
+1. Setup: llama.cpp b12377, the models, the builds and their flags, the
+   machine and its measured ceilings.
+2. Baseline: prompt processing and token generation for both models at 1, 6
+   and 12 threads, on the roofline.
+3. Prompt processing hotspots, per model: time by ggml operation and
+   function, which kernels run (tinyBLAS for Q8_0, the repacked Q4_K), and
+   the hardware counters behind them.
+4. Token generation hotspots, per model, the same way, including time spent
+   at the barrier between operations.
+5. Thread scaling: where each phase stops scaling, and why.
+6. ggml's matrix multiply against Quantized matmul's kernels on GPT-2's
+   shapes, and what explains the difference.
+7. Accelerate: how much of prompt processing's speed it adds on macOS.
+8. Possible contribution targets, ranked by evidence and by what can be
+   verified on AVX2.
+9. Open questions and future work (the Linux `perf` runs).
 
 ## Future work
 Everything in this project so far runs on the development MacBook Pro. Not
@@ -162,3 +201,15 @@ Record each as: date, decision, reason.
   through `common/benchkit`, a uv workspace package; `runkit.py` keeps only
   what's specific to llama.cpp. Reason: the first copy of them had already
   drifted from the original (its Low Power Mode parser accepted only "1").
+- 2026-11-15: Stage the baseline per test: one llama-bench run per model,
+  phase and thread count, in a seeded shuffled order each round, each after
+  a 30 s cooldown, with the thermal state recorded before and after every
+  test. The profile and kernel-comparison scripts also record the thermal
+  state, and the kernel comparison checks its rounds against round 1.
+  Reason: llama-bench ran each model's tests back to back in a fixed order,
+  so the multi-threaded tests always started on a warmer CPU, a bias the
+  round checks can't see because it repeats in every round; and those two
+  scripts checked nothing. Starting every test cool measures burst rather
+  than sustained performance, which suits comparing kernels, models and
+  thread counts; a warm steady state would need its own design. Costs about
+  45 minutes over the whole set.

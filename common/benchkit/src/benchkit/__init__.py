@@ -10,6 +10,7 @@ import itertools
 import os
 import platform
 import re
+import statistics
 import subprocess
 import sys
 from collections.abc import Iterator
@@ -178,8 +179,33 @@ def thermal_state() -> dict[str, Any] | None:
     }
 
 
+def median_ratios_to_first(rounds: list[dict[str, float]]) -> list[float]:
+    """Each round's median, over the measurements it shares with round 1, of value / round 1's.
+
+    Each round maps a measurement's name to its value, such as a speed or a
+    time. A round sharing nothing with round 1 gets 1.0.
+    """
+    if not rounds:
+        return []
+    first = rounds[0]
+    ratios = []
+    for current in rounds:
+        common = [k for k in current if k in first and first[k] > 0]
+        ratios.append(statistics.median(current[k] / first[k] for k in common) if common else 1.0)
+    return ratios
+
+
+def rounds_beyond(ratios: list[float], tolerance: float) -> list[int]:
+    """1-based numbers of the rounds whose ratio to round 1 is off by more than tolerance."""
+    return [i + 1 for i, ratio in enumerate(ratios) if abs(ratio - 1) > tolerance]
+
+
 def throttled_rounds(rounds: list[dict[str, Any]]) -> list[int]:
-    """Rounds where macOS reported a CPU speed limit below 100% before or after."""
+    """Rounds where macOS reported a CPU speed limit below 100% before or after.
+
+    Takes one record per round, or several per round (one per test, say), each
+    with its round number and the thermal state before and after.
+    """
     limited = set()
     for r in rounds:
         for state in (r["thermal_before"], r["thermal_after"]):

@@ -17,7 +17,11 @@ Writes a new folder results/<date>_<cpu>_kernels[_<label>]/ in this project:
 - summary.json: the median time per case over the rounds, and its GFLOP/s
 - comparison.md: against the latest Quantized matmul run's q8/avx2_v2 and
   fp32/avx2_v4, as time ratios (above 1: ggml is slower)
-- metadata.json: hardware, build, revisions, command and settings
+- metadata.json: hardware, build, revisions, command and settings, the
+  thermal state before and after each round, and the round checks: each
+  round's median, over cases, of its time relative to round 1's (a round
+  more than 5% away is listed in slow_rounds), and the rounds where macOS
+  reported a CPU speed limit or the screen saver ran
 
 Usage, from anywhere in the repository, with LLAMA_CPP_DIR set:
     uv run python projects/profile-llama-cpp/scripts/run_kernel_compare.py --help
@@ -40,8 +44,13 @@ from benchkit import (
     cpu_slug,
     create_run_dir,
     machine_details,
+    median_ratios_to_first,
+    rounds_beyond,
     screen_saver_problem,
+    screen_saver_rounds,
     stay_awake,
+    thermal_state,
+    throttled_rounds,
     utc_date,
 )
 from runkit import QUANT_MATMUL, RESULTS, build_details, llama_source, revisions
@@ -50,6 +59,7 @@ from setup_llama_cpp import executable
 SHAPES_HEADER = QUANT_MATMUL / "support" / "gpt2_shapes.hpp"
 TOKENS = [1, 128, 1024]
 LARGEST_LM_HEAD_TOKENS = 128
+ROUND_TOLERANCE = 0.05
 # ggml's weight types compared, and the Quantized matmul kernel each is compared with.
 WEIGHT_TYPES = {"q8_0": "q8/avx2_v2", "f32": "fp32/avx2_v4"}
 
@@ -227,15 +237,25 @@ def main() -> int:
     env = {**os.environ, "TEST_ARG_HARDWARE_CONCURRENCY": str(2 * args.threads)}
 
     times: dict[str, list[float]] = {}
+    round_times: list[dict[str, float]] = []
+    rounds: list[dict[str, Any]] = []
     with stay_awake():
         for n in range(1, args.rounds + 1):
-            print(f"run_kernel_compare: round {n}/{args.rounds}", file=sys.stderr)
-            result = subprocess.run(command, check=True, capture_output=True, text=True, env=env)
-            (run_dir / f"round_{n}.txt").write_text(result.stdout)
-            for key, us in parse_output(result.stdout).items():
-                times.setdefault(key, []).append(us)
-            if n < args.rounds:
+            if n > 1:
                 time.sleep(args.cooldown)
+            print(f"run_kernel_compare: round {n}/{args.rounds}", file=sys.stderr)
+            record: dict[str, Any] = {"round": n, "thermal_before": thermal_state()}
+            result = subprocess.run(command, check=True, capture_output=True, text=True, env=env)
+            record["thermal_after"] = thermal_state()
+            rounds.append(record)
+            (run_dir / f"round_{n}.txt").write_text(result.stdout)
+            parsed = parse_output(result.stdout)
+            round_times.append(parsed)
+            for key, us in parsed.items():
+                times.setdefault(key, []).append(us)
+    ratios = median_ratios_to_first(round_times)
+    for record, ratio in zip(rounds, ratios, strict=True):
+        record["time_ratio_to_round_1"] = ratio
     missing = [c.key for c in all_cases if dims_key(c) not in times]
     if missing:
         print(f"run_kernel_compare: no result for {missing}", file=sys.stderr)
@@ -256,6 +276,11 @@ def main() -> int:
         "quant_matmul_run": str(qmm_run) if qmm_run else None,
         "settings": vars(args),
         "missing_cases": missing,
+        "rounds": rounds,
+        "round_tolerance": ROUND_TOLERANCE,
+        "slow_rounds": rounds_beyond(ratios, ROUND_TOLERANCE),
+        "throttled_rounds": throttled_rounds(rounds),
+        "screen_saver_rounds": screen_saver_rounds(rounds),
     }
     (run_dir / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
     print(f"run_kernel_compare: done; comparison in {run_dir / 'comparison.md'}", file=sys.stderr)

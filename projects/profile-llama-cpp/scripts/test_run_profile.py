@@ -1,7 +1,25 @@
 from pathlib import Path
 
 import pytest
-from run_profile import export_command, phase_tokens, record_command
+from run_profile import export_command, parse_atos, phase_tokens, phases_in, record_command
+
+
+def test_phases_in_maps_recording_numbers_to_phases() -> None:
+    recordings = [{"round": 1, "phase": "pp"}, {"round": 2, "phase": "tg"}]
+    assert phases_in(recordings, [2]) == ["tg"]
+    assert phases_in(recordings, []) == []
+
+
+def test_parse_atos_keeps_each_addresss_innermost_line() -> None:
+    output = (
+        "ggml_barrier (in libggml-cpu.dylib) (ggml-cpu.c:609)\n"
+        "ggml_graph_compute_thread (in libggml-cpu.dylib) (ggml-cpu.c:3165)\n"
+        "ggml_graph_compute_secondary_thread (in libggml-cpu.dylib) (ggml-cpu.c:3281)\n"
+        "\n"
+        "0x2f40 (in libggml-cpu.dylib)\n"
+        "\n"
+    )
+    assert parse_atos(output, ["0x2efa", "0x2f40"]) == {"0x2efa": "ggml_barrier (ggml-cpu.c:609)"}
 
 
 def test_phase_tokens() -> None:

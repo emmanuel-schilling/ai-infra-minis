@@ -14,10 +14,12 @@ from benchkit import (
     create_run_dir,
     mac_cpu_features,
     machine_details,
+    median_ratios_to_first,
     parse_cmake_cache,
     parse_cpu_speed_limit,
     parse_low_power_mode,
     pgrep_found,
+    rounds_beyond,
     screen_saver_rounds,
     screen_saver_running,
     stay_awake,
@@ -37,6 +39,27 @@ def test_screen_saver_running_is_a_bool_on_macos() -> None:
     # Tests run with the screen saver off: a running one would have stopped them.
     expected = False if sys.platform == "darwin" else None
     assert screen_saver_running() is expected
+
+
+def test_median_ratios_to_first_use_only_shared_measurements() -> None:
+    rounds = [
+        {"a": 100.0, "b": 20.0},
+        {"a": 101.0, "b": 20.2, "c": 5.0},  # c isn't in round 1
+        {"a": 90.0, "b": 18.0},
+        {"c": 5.0},  # nothing shared with round 1
+    ]
+    ratios = median_ratios_to_first(rounds)
+    assert [round(r, 3) for r in ratios] == [1.0, 1.01, 0.9, 1.0]
+    assert rounds_beyond(ratios, 0.05) == [3]
+    assert median_ratios_to_first([]) == []
+
+
+def test_throttled_rounds_takes_several_records_per_round() -> None:
+    def record(n: int, limit: int) -> dict[str, Any]:
+        state = {"cpu_speed_limit": limit, "raw": ""}
+        return {"round": n, "thermal_before": state, "thermal_after": state}
+
+    assert throttled_rounds([record(1, 100), record(1, 90), record(2, 100)]) == [1]
 
 
 def test_screen_saver_problem(monkeypatch: pytest.MonkeyPatch) -> None:
