@@ -64,9 +64,9 @@ The latest valid run is `results/2026-11-14_i9-8950hk/` (dated in UTC; run on
 the evening of 2026-11-13), from commit `cc0e71e`, the first with the Q8
 kernels. Q8 v2 is 1.5× faster than v1 on GEMM and 3.2× on lm_head, and the
 same at 1 token. Q8 speeds up GEMV 2.6–2.7× over fp32 v4, but reaches only
-0.64–0.76× of v4's speed on GEMM: without VNNI, 32 int8 products take 6
-operations on the FMA ports against fp32's 4 FMAs (an estimate from the
-instruction tables, not counters). Q8 v2 shows no mlp_down gap, since its
+0.64–0.76× of v4's speed on GEMM: AVX2's int8 path takes 6 operations on the
+FMA ports per 32 int8 products against fp32's 4 FMAs (an estimate from the
+instruction tables, not counters); VNNI fuses them into one instruction. Q8 v2 shows no mlp_down gap, since its
 block of W fits L2 at k = 3,072, which supports the L2 hypothesis for v4. The
 scalar Q8 kernel is auto-vectorized with SSE, so it is 11× the scalar fp32
 kernel. The fp32 steps kept their speed after sharing `dot_fp32_rows`.
@@ -100,9 +100,9 @@ keeps it from starting but can't stop it.
 
 Optional work, ranked on 2026-11-13 by what the later projects need:
 fp16 scales with a comparison against ggml's Q8_0 kernel (sets up Profile
-llama.cpp), then v5 (also a warm-up for the CUDA port); the 1 × 4 tile waits
-for Tiny GPT's decode measurements, multithreading is deferred, and NEON waits
-for Arm hardware to benchmark on. Details:
+llama.cpp), then v5 (also a warm-up for future GPU work); the 1 × 4 tile waits
+for Tiny GPT's decode measurements, multithreading is deferred, and
+benchmarking NEON on Arm hardware is future work. Details:
 - v5, cache blocking that adapts to k, to test whether L2 explains the
   mlp_down gap. v4 keeps 64 full rows of W per block: 192 KB at k = 768,
   which fits the 256 KB L2, but 768 KB at k = 3,072, which doesn't. Three
@@ -139,8 +139,8 @@ for Arm hardware to benchmark on. Details:
 - A 1 × 4 tile for the leftover rows in v3 and v4, if a measurement shows the
   current single-accumulator fallback costs enough (it may cost GEMM a few
   percent at 128 tokens).
-- The NEON Q8 kernel (stretch goal), `src/q8_neon.cpp`, tested only by CI's
-  Arm runners.
+- The NEON Q8 kernel (stretch goal), `src/q8_neon.cpp`, tested by CI's Arm
+  runners; benchmarking it on Arm hardware is future work.
 - Multithreading with `std::thread` (stretch goal), once all versions are
   compared single-threaded.
 
@@ -152,6 +152,16 @@ the 2026-11-12 run. The AVX2 Q8 kernel followed the same pattern in
 `include/qmm/q8_avx2_steps.hpp` and `src/q8_avx2.cpp`: v1 one accumulator per
 output, v2 register and cache blocking (a 2 × 4 tile); `matmul_q8_avx2` calls
 v2 since the 2026-11-13 run.
+
+## Future work: other hardware
+Every benchmark in this project ran on one machine, the development MacBook
+Pro (Intel Core i9-8950HK). On Linux, Windows and Arm, CI builds the code and
+runs its tests, including the OpenBLAS baseline's and the NEON stub's, but
+times nothing. Benchmarking on other hardware is future work, not part of
+this project's completed scope:
+- the OpenBLAS baseline, on Linux or Windows
+- the NEON Q8 kernel, once written, on Arm
+- the kernels on a GPU, in a later project
 
 ## Open questions
 None for the required work. The measurements still missing, such as the
@@ -321,3 +331,9 @@ Record each as: date, decision, reason.
   dependency) and shows only the headline kernels; `roofline.md` lists every
   benchmark. Reason: three colors is the most a scatter plot keeps
   distinguishable for colorblind readers, and the table covers the rest.
+- 2026-11-15: The run scripts' machine, thermal, results-folder and
+  `caffeinate` helpers moved from `run_bench.py` to the shared
+  `common/benchkit` package, with their tests. Reason: Profile llama.cpp's
+  scripts need the same helpers, and a copy had already drifted.
+  `roofline.cpp` also gained 6- and 12-thread variants of its ceilings for
+  that project; this project's single-thread results are unchanged.

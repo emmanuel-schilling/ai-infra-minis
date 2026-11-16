@@ -31,21 +31,27 @@ Usage, from anywhere in the repository:
 """
 
 import argparse
-import contextlib
 import datetime
-import itertools
 import json
 import os
-import platform
 import re
 import shlex
 import statistics
 import subprocess
 import sys
 import time
-from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
+
+from benchkit import (
+    cpu_slug,
+    create_run_dir,
+    machine_details,
+    output_of,
+    stay_awake,
+    thermal_state,
+    throttled_rounds,
+)
 
 PROJECT = Path(__file__).resolve().parents[1]
 REPO = PROJECT.parents[1]
@@ -53,7 +59,6 @@ BUILD = REPO / "build-release"
 RESULTS = PROJECT / "results"
 
 NS_PER_UNIT = {"ns": 1.0, "us": 1e3, "ms": 1e6, "s": 1e9}
-IGNORED_CPU_WORDS = {"intel", "core", "cpu", "processor"}
 
 # The speed check: short, built on every platform, and bound by the latency of
 # fp32 additions, so its time follows the CPU's clock speed.
@@ -62,39 +67,6 @@ SPEED_CHECK_TOLERANCE = 0.05
 
 # A round whose results differ from round 1's by more than this is excluded.
 ROUND_TOLERANCE = 0.05
-
-
-def cpu_slug(model: str) -> str:
-    """A short folder-name form of a CPU model, e.g. 'i9-8950hk' or 'apple-m2-pro'."""
-    text = re.sub(r"\((R|TM)\)", "", model, flags=re.IGNORECASE).split("@")[0]
-    words = [w for w in re.split(r"[^A-Za-z0-9-]+", text) if w]
-    kept = [w.lower() for w in words if w.lower() not in IGNORED_CPU_WORDS]
-    return "-".join(kept) or "unknown-cpu"
-
-
-def create_run_dir(results: Path, date: str, slug: str) -> Path:
-    """Create and return a new folder for this run, never reusing an existing one."""
-    results.mkdir(parents=True, exist_ok=True)
-    for n in itertools.count(1):
-        path = results / (f"{date}_{slug}" if n == 1 else f"{date}_{slug}_{n}")
-        try:
-            path.mkdir()
-        except FileExistsError:
-            continue
-        return path
-    raise AssertionError("unreachable")
-
-
-def parse_cpu_speed_limit(pmset_therm: str) -> int | None:
-    """The CPU_Speed_Limit percentage in `pmset -g therm` output, if reported."""
-    match = re.search(r"CPU_Speed_Limit\s*=\s*(\d+)", pmset_therm)
-    return int(match.group(1)) if match else None
-
-
-def parse_low_power_mode(pmset_settings: str) -> bool | None:
-    """Whether `pmset -g` output reports Low Power Mode on, if it reports it."""
-    match = re.search(r"lowpowermode\s+(\d+)", pmset_settings)
-    return match.group(1) != "0" if match else None
 
 
 def summarize(rounds: list[dict[str, Any]]) -> dict[str, dict[str, float]]:
@@ -177,51 +149,6 @@ def check_changed_rounds(rounds: list[dict[str, Any]], tolerance: float) -> list
     return sorted({n for n, t in known if abs(t / reference - 1.0) > tolerance})
 
 
-def output_of(command: list[str]) -> str:
-    return subprocess.run(command, check=True, capture_output=True, text=True).stdout.strip()
-
-
-def cpu_model() -> str:
-    # PLATFORM: macOS, Linux, Windows — each reports the CPU model its own way;
-    # other systems fall back to platform.processor().
-    if sys.platform == "darwin":
-        return output_of(["sysctl", "-n", "machdep.cpu.brand_string"])
-    if sys.platform.startswith("linux"):
-        for line in Path("/proc/cpuinfo").read_text().splitlines():
-            if line.startswith("model name"):
-                return line.split(":", 1)[1].strip()
-    if sys.platform == "win32":
-        return output_of(
-            ["powershell", "-NoProfile", "-Command", "(Get-CimInstance Win32_Processor).Name"]
-        )
-    return platform.processor() or "unknown"
-
-
-def machine_details() -> dict[str, Any]:
-    details: dict[str, Any] = {
-        "cpu": cpu_model(),
-        "logical_cpus": os.cpu_count(),
-        "os": platform.platform(),
-        "python": platform.python_version(),
-    }
-    # PLATFORM: macOS — physical cores, memory and Low Power Mode come from
-    # sysctl and pmset; Linux would need /proc/meminfo and lscpu, Windows CIM.
-    if sys.platform == "darwin":
-        details["physical_cpus"] = int(output_of(["sysctl", "-n", "hw.physicalcpu"]))
-        details["memory_bytes"] = int(output_of(["sysctl", "-n", "hw.memsize"]))
-        details["low_power_mode"] = parse_low_power_mode(output_of(["pmset", "-g"]))
-    return details
-
-
-def thermal_state() -> dict[str, Any] | None:
-    # PLATFORM: macOS — pmset reports the CPU speed limit under thermal
-    # pressure; Linux would read /sys/devices/system/cpu/*/cpufreq instead.
-    if sys.platform != "darwin":
-        return None
-    text = output_of(["pmset", "-g", "therm"])
-    return {"cpu_speed_limit": parse_cpu_speed_limit(text), "raw": text}
-
-
 def build_details() -> dict[str, Any]:
     """The compiler and the exact compile commands of the release build."""
     wanted = {
@@ -258,24 +185,6 @@ def source_revision(repo: Path, results: Path) -> dict[str, Any]:
     return {"revision": head, "uncommitted_changes": status != ""}
 
 
-@contextlib.contextmanager
-def stay_awake() -> Iterator[None]:
-    """Keep the display and system awake for the whole block, cooldowns included."""
-    # PLATFORM: macOS — caffeinate keeps the display and system awake, so
-    # neither the screen saver nor sleep starts during the run; -w ends it if
-    # this script dies. Linux could use systemd-inhibit, and Windows
-    # SetThreadExecutionState.
-    if sys.platform != "darwin":
-        yield
-        return
-    awake = subprocess.Popen(["caffeinate", "-d", "-i", "-w", str(os.getpid())])
-    try:
-        yield
-    finally:
-        awake.terminate()
-        awake.wait()
-
-
 def bench_command(exe: Path, out: Path, repetitions: int, bench_filter: str) -> list[str]:
     return [
         str(exe),
@@ -292,16 +201,6 @@ def speed_check(exe: Path, out: Path, env: dict[str, str]) -> float | None:
     command = bench_command(exe, out, 3, f"^{re.escape(SPEED_CHECK)}$")
     subprocess.run(command, check=True, env=env, stdout=subprocess.DEVNULL)
     return check_time_ns(json.loads(out.read_text()), SPEED_CHECK)
-
-
-def throttled_rounds(rounds: list[dict[str, Any]]) -> list[int]:
-    """Rounds where macOS reported a CPU speed limit below 100% before or after."""
-    limited = set()
-    for r in rounds:
-        for state in (r["thermal_before"], r["thermal_after"]):
-            if state and state["cpu_speed_limit"] is not None and state["cpu_speed_limit"] < 100:
-                limited.add(r["round"])
-    return sorted(limited)
 
 
 def main() -> int:
@@ -327,7 +226,7 @@ def main() -> int:
         print("run_bench: WARNING: Low Power Mode is on, which lowers CPU speed", file=sys.stderr)
     source = source_revision(REPO, RESULTS)
     started = datetime.datetime.now(datetime.UTC)
-    run_dir = create_run_dir(RESULTS, started.date().isoformat(), cpu_slug(machine["cpu"]))
+    run_dir = create_run_dir(RESULTS, f"{started.date().isoformat()}_{cpu_slug(machine['cpu'])}")
     single_thread = {"VECLIB_MAXIMUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1"}
     env = os.environ | single_thread
 

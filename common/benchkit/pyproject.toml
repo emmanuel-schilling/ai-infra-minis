@@ -1,0 +1,10 @@
+[project]
+name = "benchkit"
+version = "0.1.0"
+description = "Helpers shared by the projects' benchmark scripts: machine details, thermal state, run folders."
+requires-python = ">=3.14"
+dependencies = []
+
+[build-system]
+requires = ["uv_build==0.13.6"]
+build-backend = "uv_build"

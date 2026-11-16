@@ -22,3 +22,7 @@ __pycache__/
 
 # Downloaded model weights (scripts/fetch_gpt2.py)
 /projects/quant-matmul/data/
+
+# Instruments recordings (scripts/run_profile.py): hundreds of MB each; their
+# summaries are committed
+/projects/profile-llama-cpp/results/**/*.trace/

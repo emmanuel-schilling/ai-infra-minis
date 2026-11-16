@@ -1,0 +1,159 @@
+"""Helpers shared by the projects' benchmark scripts.
+
+Machine details, thermal state, keeping the machine awake, and dated results
+folders that are never reused, so every project records its runs the same way.
+"""
+
+import contextlib
+import datetime
+import itertools
+import os
+import platform
+import re
+import subprocess
+import sys
+from collections.abc import Iterator
+from pathlib import Path
+from typing import Any
+
+IGNORED_CPU_WORDS = {"intel", "core", "cpu", "processor"}
+
+
+def output_of(command: list[str]) -> str:
+    return subprocess.run(command, check=True, capture_output=True, text=True).stdout.strip()
+
+
+def cpu_slug(model: str) -> str:
+    """A short folder-name form of a CPU model, e.g. 'i9-8950hk' or 'apple-m2-pro'."""
+    text = re.sub(r"\((R|TM)\)", "", model, flags=re.IGNORECASE).split("@")[0]
+    words = [w for w in re.split(r"[^A-Za-z0-9-]+", text) if w]
+    kept = [w.lower() for w in words if w.lower() not in IGNORED_CPU_WORDS]
+    return "-".join(kept) or "unknown-cpu"
+
+
+def utc_date() -> str:
+    """Today's date in UTC, as results folders are named: 2026-11-15."""
+    return datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%d")
+
+
+def parse_cmake_cache(text: str) -> dict[str, str]:
+    """NAME:TYPE=VALUE lines of a CMakeCache.txt, as {NAME: VALUE}."""
+    entries = {}
+    for line in text.splitlines():
+        if not line or line.startswith(("#", "//")) or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        entries[key.split(":", 1)[0]] = value
+    return entries
+
+
+def create_run_dir(results: Path, name: str) -> Path:
+    """Create and return a new folder results/<name>, never reusing an existing one.
+
+    If the name is taken, the folder gets a suffix: <name>_2, <name>_3 and so on.
+    """
+    results.mkdir(parents=True, exist_ok=True)
+    for n in itertools.count(1):
+        path = results / (name if n == 1 else f"{name}_{n}")
+        try:
+            path.mkdir()
+        except FileExistsError:
+            continue
+        return path
+    raise AssertionError("unreachable")
+
+
+def parse_cpu_speed_limit(pmset_therm: str) -> int | None:
+    """The CPU_Speed_Limit percentage in `pmset -g therm` output, if reported."""
+    match = re.search(r"CPU_Speed_Limit\s*=\s*(\d+)", pmset_therm)
+    return int(match.group(1)) if match else None
+
+
+def parse_low_power_mode(pmset_settings: str) -> bool | None:
+    """Whether `pmset -g` output reports Low Power Mode on, if it reports it."""
+    match = re.search(r"lowpowermode\s+(\d+)", pmset_settings)
+    return match.group(1) != "0" if match else None
+
+
+def cpu_model() -> str:
+    # PLATFORM: macOS, Linux, Windows — each reports the CPU model its own way;
+    # other systems fall back to platform.processor().
+    if sys.platform == "darwin":
+        return output_of(["sysctl", "-n", "machdep.cpu.brand_string"])
+    if sys.platform.startswith("linux"):
+        for line in Path("/proc/cpuinfo").read_text().splitlines():
+            if line.startswith("model name"):
+                return line.split(":", 1)[1].strip()
+    if sys.platform == "win32":
+        return output_of(
+            ["powershell", "-NoProfile", "-Command", "(Get-CimInstance Win32_Processor).Name"]
+        )
+    return platform.processor() or "unknown"
+
+
+def mac_cpu_features() -> list[str]:
+    """The CPU feature flags macOS reports on Intel Macs, such as AVX2 and FMA."""
+    # PLATFORM: macOS on Intel — sysctl's machdep.cpu feature keys; Apple
+    # silicon has none (it reports hw.optional.* instead), so they come back
+    # empty there. Linux would read the flags line of /proc/cpuinfo.
+    names: list[str] = []
+    for key in ("machdep.cpu.features", "machdep.cpu.leaf7_features"):
+        result = subprocess.run(["sysctl", "-n", key], capture_output=True, text=True)
+        if result.returncode == 0:
+            names += result.stdout.split()
+    return sorted(set(names))
+
+
+def machine_details() -> dict[str, Any]:
+    details: dict[str, Any] = {
+        "cpu": cpu_model(),
+        "logical_cpus": os.cpu_count(),
+        "os": platform.platform(),
+        "python": platform.python_version(),
+    }
+    # PLATFORM: macOS — physical cores, memory, CPU features and Low Power
+    # Mode come from sysctl and pmset; Linux would need /proc/cpuinfo,
+    # /proc/meminfo and lscpu, Windows CIM.
+    if sys.platform == "darwin":
+        details["physical_cpus"] = int(output_of(["sysctl", "-n", "hw.physicalcpu"]))
+        details["memory_bytes"] = int(output_of(["sysctl", "-n", "hw.memsize"]))
+        details["cpu_features"] = mac_cpu_features()
+        details["low_power_mode"] = parse_low_power_mode(output_of(["pmset", "-g"]))
+    return details
+
+
+def thermal_state() -> dict[str, Any] | None:
+    # PLATFORM: macOS — pmset reports the CPU speed limit under thermal
+    # pressure; Linux would read /sys/devices/system/cpu/*/cpufreq instead.
+    if sys.platform != "darwin":
+        return None
+    text = output_of(["pmset", "-g", "therm"])
+    return {"cpu_speed_limit": parse_cpu_speed_limit(text), "raw": text}
+
+
+def throttled_rounds(rounds: list[dict[str, Any]]) -> list[int]:
+    """Rounds where macOS reported a CPU speed limit below 100% before or after."""
+    limited = set()
+    for r in rounds:
+        for state in (r["thermal_before"], r["thermal_after"]):
+            if state and state["cpu_speed_limit"] is not None and state["cpu_speed_limit"] < 100:
+                limited.add(r["round"])
+    return sorted(limited)
+
+
+@contextlib.contextmanager
+def stay_awake() -> Iterator[None]:
+    """Keep the display and system awake for the whole block, cooldowns included."""
+    # PLATFORM: macOS — caffeinate keeps the display and system awake, so
+    # neither the screen saver nor sleep starts during the run; -w ends it if
+    # this script dies. Linux could use systemd-inhibit, and Windows
+    # SetThreadExecutionState.
+    if sys.platform != "darwin":
+        yield
+        return
+    awake = subprocess.Popen(["caffeinate", "-d", "-i", "-w", str(os.getpid())])
+    try:
+        yield
+    finally:
+        awake.terminate()
+        awake.wait()

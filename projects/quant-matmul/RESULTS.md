@@ -4,6 +4,11 @@ Each benchmark run records the hardware, compiler flags and exact command, and
 keeps its raw output in a dated folder under `results/` in this project. Never
 overwrite an earlier run; add a new one and summarize it here.
 
+Every result here was measured on the development MacBook Pro (Intel Core
+i9-8950HK, AVX2 and FMA). Benchmarks on other hardware, such as the OpenBLAS
+baseline on Linux or Windows and a NEON kernel on Arm, are future work (see
+STATUS.md, Future work).
+
 A round is excluded when its results differ from round 1's by more than 5%:
 the median, over all benchmarks, of the ratio of each benchmark's time in that
 round to its time in round 1 (`time_vs_round_1` and `slow_rounds` in
@@ -246,10 +251,11 @@ published instruction tables for this core, not from hardware counters):
   lm_head,** where v1 streams the whole 43 MB Q8 W from memory for every row
   of A. v2 runs at 72–76 GFLOP/s on every GEMM shape. The 3 accumulators its
   inner loop spills to the stack cost an unknown share of that.
-- **Q8 GEMM is slower than fp32 v4: 0.64–0.76× of its speed.** Without VNNI,
-  each 32 int8 products take 6 operations on the two vector ports that also
-  run FMAs (sign, maddubs, madd, convert, FMA, and the scalar multiply of the
-  two scales), where fp32 needs 4 FMAs. That caps Q8 at 4/6 of fp32's
+- **Q8 GEMM is slower than fp32 v4: 0.64–0.76× of its speed.** On AVX2's
+  int8 path, each 32 int8 products take 6 operations on the two vector ports
+  that also run FMAs (sign, maddubs, madd, convert, FMA, and the scalar
+  multiply of the two scales), where fp32 needs 4 FMAs; VNNI fuses the int8
+  steps into one instruction. That caps Q8 at 4/6 of fp32's
   arithmetic rate, about 104 GFLOP/s against the 156 GFLOP/s peak. v2 reaches
   69–74% of that cap, as v4 reaches 72% of the FMA peak, so the estimate fits;
   it hasn't been checked with hardware counters. On this CPU, Q8 pays off in

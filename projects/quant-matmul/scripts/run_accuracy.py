@@ -25,17 +25,9 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from benchkit import cpu_slug, create_run_dir, machine_details
 from fetch_gpt2 import DEFAULT_DIR as WEIGHTS_DIR
-from run_bench import (
-    BUILD,
-    REPO,
-    RESULTS,
-    build_details,
-    cpu_slug,
-    create_run_dir,
-    machine_details,
-    source_revision,
-)
+from run_bench import BUILD, REPO, RESULTS, build_details, source_revision
 
 # The kernels in the tables; matmul_avx2 and matmul_q8_avx2 only call steps
 # already listed, so their rows would repeat them.
@@ -117,7 +109,7 @@ def main() -> int:
     source = source_revision(REPO, RESULTS)
     started = datetime.datetime.now(datetime.UTC)
     run_dir = create_run_dir(
-        RESULTS, started.date().isoformat(), cpu_slug(machine["cpu"]) + "_accuracy"
+        RESULTS, f"{started.date().isoformat()}_{cpu_slug(machine['cpu'])}_accuracy"
     )
     command = [str(exe), "--tokens", str(args.tokens), "--out", str(run_dir / "accuracy.json")]
     has_weights = (args.weights / "index.txt").exists()
