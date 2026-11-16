@@ -31,7 +31,15 @@ import sys
 from pathlib import Path
 
 import time_profile
-from benchkit import cpu_model, cpu_slug, create_run_dir, machine_details, stay_awake, utc_date
+from benchkit import (
+    cpu_model,
+    cpu_slug,
+    create_run_dir,
+    machine_details,
+    screen_saver_problem,
+    stay_awake,
+    utc_date,
+)
 from runkit import (
     RESULTS,
     build_details,
@@ -95,6 +103,9 @@ def main() -> int:
     parser.add_argument("--top", type=int, default=30, help="functions listed per table")
     parser.add_argument("--label", default="", help="suffix for the results folder")
     args = parser.parse_args()
+    if problem := screen_saver_problem():
+        print(f"run_profile: {problem}", file=sys.stderr)
+        return 2
 
     # PLATFORM: macos — xctrace ships with Xcode; Linux would use perf, in a
     # script of its own (future work: step 9 of the plan in STATUS.md).

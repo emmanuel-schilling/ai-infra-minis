@@ -48,6 +48,8 @@ from benchkit import (
     create_run_dir,
     machine_details,
     output_of,
+    screen_saver_problem,
+    screen_saver_rounds,
     stay_awake,
     thermal_state,
     throttled_rounds,
@@ -210,6 +212,9 @@ def main() -> int:
     parser.add_argument("--cooldown", type=float, default=60.0, help="seconds between rounds")
     parser.add_argument("--filter", default=".", help="regular expression of benchmarks to run")
     args = parser.parse_args()
+    if problem := screen_saver_problem():
+        print(f"run_bench: {problem}", file=sys.stderr)
+        return 2
 
     if "VCPKG_ROOT" not in os.environ:
         print("run_bench: set VCPKG_ROOT to your vcpkg checkout", file=sys.stderr)
@@ -278,6 +283,7 @@ def main() -> int:
         "round_tolerance": ROUND_TOLERANCE,
         "rounds": rounds,
         "throttled_rounds": throttled,
+        "screen_saver_rounds": screen_saver_rounds(rounds),
         "slow_rounds": slow,
     }
     (run_dir / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")

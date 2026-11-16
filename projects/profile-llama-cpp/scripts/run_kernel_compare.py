@@ -35,7 +35,15 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from benchkit import cpu_model, cpu_slug, create_run_dir, machine_details, stay_awake, utc_date
+from benchkit import (
+    cpu_model,
+    cpu_slug,
+    create_run_dir,
+    machine_details,
+    screen_saver_problem,
+    stay_awake,
+    utc_date,
+)
 from runkit import QUANT_MATMUL, RESULTS, build_details, llama_source, revisions
 from setup_llama_cpp import executable
 
@@ -191,6 +199,9 @@ def main() -> int:
     parser.add_argument("--cooldown", type=float, default=30.0, help="seconds between rounds")
     parser.add_argument("--label", default="", help="suffix for the results folder")
     args = parser.parse_args()
+    if problem := screen_saver_problem():
+        print(f"run_kernel_compare: {problem}", file=sys.stderr)
+        return 2
 
     try:
         source = llama_source(os.environ)

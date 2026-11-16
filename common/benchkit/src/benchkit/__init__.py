@@ -122,13 +122,60 @@ def machine_details() -> dict[str, Any]:
     return details
 
 
+# The process a running screen saver shows up as (checked on macOS 15.8 with
+# the built-in screen saver). Third-party savers run in a legacyScreenSaver
+# process under it, so this one name covers both.
+SCREEN_SAVER_PROCESS = "ScreenSaverEngine"
+
+
+class ScreenSaverRunning(RuntimeError):
+    """The screen saver was running when a benchmark run was about to start."""
+
+
+def pgrep_found(returncode: int) -> bool:
+    """pgrep's exit status as found (0) or not found (1); anything else is an error."""
+    if returncode not in (0, 1):
+        raise RuntimeError(f"pgrep failed with exit status {returncode}")
+    return returncode == 0
+
+
+def screen_saver_running() -> bool | None:
+    """Whether the screen saver is running now; None where this can't be checked."""
+    # PLATFORM: macOS — the screen saver is a process, ScreenSaverEngine. Linux
+    # has none to check: it would depend on the desktop environment, if any.
+    if sys.platform != "darwin":
+        return None
+    found = subprocess.run(["pgrep", "-x", SCREEN_SAVER_PROCESS], capture_output=True)
+    return pgrep_found(found.returncode)
+
+
+SCREEN_SAVER_MESSAGE = (
+    "the screen saver is running; dismiss it (move the mouse or press a key) "
+    "and start the run again"
+)
+
+
+def screen_saver_problem() -> str | None:
+    """Why a run must not start now, if the screen saver is running; else None.
+
+    For scripts to check before they create anything. stay_awake checks again
+    once caffeinate holds the display awake.
+    """
+    return SCREEN_SAVER_MESSAGE if screen_saver_running() else None
+
+
 def thermal_state() -> dict[str, Any] | None:
+    """The CPU speed limit and whether the screen saver is running, at this moment."""
     # PLATFORM: macOS — pmset reports the CPU speed limit under thermal
     # pressure; Linux would read /sys/devices/system/cpu/*/cpufreq instead.
     if sys.platform != "darwin":
         return None
     text = output_of(["pmset", "-g", "therm"])
-    return {"cpu_speed_limit": parse_cpu_speed_limit(text), "raw": text}
+    return {
+        "cpu_speed_limit": parse_cpu_speed_limit(text),
+        "screen_saver_running": screen_saver_running(),
+        "raw": text,
+    }
 
 
 def throttled_rounds(rounds: list[dict[str, Any]]) -> list[int]:
@@ -141,9 +188,26 @@ def throttled_rounds(rounds: list[dict[str, Any]]) -> list[int]:
     return sorted(limited)
 
 
+def screen_saver_rounds(rounds: list[dict[str, Any]]) -> list[int]:
+    """Rounds where the screen saver was found running before or after."""
+    found = set()
+    for r in rounds:
+        for state in (r["thermal_before"], r["thermal_after"]):
+            if state and state.get("screen_saver_running"):
+                found.add(r["round"])
+    return sorted(found)
+
+
 @contextlib.contextmanager
 def stay_awake() -> Iterator[None]:
-    """Keep the display and system awake for the whole block, cooldowns included."""
+    """Keep the display and system awake for the whole block, cooldowns included.
+
+    Raises ScreenSaverRunning, before the block runs, if the screen saver is
+    already running: keeping the display awake stops it from starting, not a
+    running one, which slows the CPU (by 1.3-3.4x in Quantized matmul's
+    2026-11-10 run). The check comes after caffeinate starts, so the screen
+    saver can't start between the check and the run.
+    """
     # PLATFORM: macOS — caffeinate keeps the display and system awake, so
     # neither the screen saver nor sleep starts during the run; -w ends it if
     # this script dies. Linux could use systemd-inhibit, and Windows
@@ -153,6 +217,8 @@ def stay_awake() -> Iterator[None]:
         return
     awake = subprocess.Popen(["caffeinate", "-d", "-i", "-w", str(os.getpid())])
     try:
+        if screen_saver_running():
+            raise ScreenSaverRunning(SCREEN_SAVER_MESSAGE)
         yield
     finally:
         awake.terminate()

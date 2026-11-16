@@ -41,7 +41,8 @@ the profiles:
 ## Next step
 Run the scripts, then read the results together (steps 3–8). Conditions, as
 for every benchmark here: AC power, Low Power Mode off, other apps closed
-(Docker Desktop too); the scripts keep the machine awake themselves. From the
+(Docker Desktop too); the scripts keep the machine awake themselves, and
+refuse to start while the screen saver is running. From the
 repository root, with `LLAMA_CPP_DIR=~/src/llama.cpp MODELS_DIR=~/models`:
 
 1. `uv run python projects/profile-llama-cpp/scripts/run_baseline.py`: both

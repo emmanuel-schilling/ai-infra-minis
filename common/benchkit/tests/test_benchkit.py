@@ -6,8 +6,10 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import benchkit
 import pytest
 from benchkit import (
+    ScreenSaverRunning,
     cpu_slug,
     create_run_dir,
     mac_cpu_features,
@@ -15,10 +17,46 @@ from benchkit import (
     parse_cmake_cache,
     parse_cpu_speed_limit,
     parse_low_power_mode,
+    pgrep_found,
+    screen_saver_rounds,
+    screen_saver_running,
     stay_awake,
     throttled_rounds,
     utc_date,
 )
+
+
+def test_pgrep_found() -> None:
+    assert pgrep_found(0) is True
+    assert pgrep_found(1) is False
+    with pytest.raises(RuntimeError, match="exit status 2"):
+        pgrep_found(2)
+
+
+def test_screen_saver_running_is_a_bool_on_macos() -> None:
+    # Tests run with the screen saver off: a running one would have stopped them.
+    expected = False if sys.platform == "darwin" else None
+    assert screen_saver_running() is expected
+
+
+def test_screen_saver_problem(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(benchkit, "screen_saver_running", lambda: True)
+    assert "dismiss it" in (benchkit.screen_saver_problem() or "")
+    for state in (False, None):
+        monkeypatch.setattr(benchkit, "screen_saver_running", lambda s=state: s)
+        assert benchkit.screen_saver_problem() is None
+
+
+def test_screen_saver_rounds() -> None:
+    def state(running: bool | None) -> dict[str, Any]:
+        return {"cpu_speed_limit": 100, "screen_saver_running": running, "raw": ""}
+
+    rounds = [
+        {"round": 1, "thermal_before": state(False), "thermal_after": state(False)},
+        {"round": 2, "thermal_before": state(False), "thermal_after": state(True)},
+        {"round": 3, "thermal_before": None, "thermal_after": {"cpu_speed_limit": 100}},
+    ]
+    assert screen_saver_rounds(rounds) == [2]
 
 
 def test_utc_date_names_a_day() -> None:
@@ -103,4 +141,16 @@ def test_stay_awake_holds_caffeinate_for_the_whole_block() -> None:
     assert caffeinate_children() == 0
     with stay_awake():
         assert caffeinate_children() == 1
+    assert caffeinate_children() == 0
+
+
+@pytest.mark.skipif(sys.platform != "darwin", reason="caffeinate is macOS only")
+def test_stay_awake_refuses_a_running_screen_saver(monkeypatch: pytest.MonkeyPatch) -> None:
+    # Stands in for a running screen saver: starting the real one locks the screen.
+    monkeypatch.setattr(benchkit, "screen_saver_running", lambda: True)
+    ran = False
+    with pytest.raises(ScreenSaverRunning, match="dismiss it"):
+        with stay_awake():
+            ran = True
+    assert not ran
     assert caffeinate_children() == 0

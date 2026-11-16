@@ -47,6 +47,8 @@ from benchkit import (
     cpu_slug,
     create_run_dir,
     machine_details,
+    screen_saver_problem,
+    screen_saver_rounds,
     stay_awake,
     thermal_state,
     throttled_rounds,
@@ -158,6 +160,9 @@ def main() -> int:
     parser.add_argument("--label", default="", help="suffix for the results folder")
     parser.add_argument("--skip-ceilings", action="store_true", help="don't run qmm_bench")
     args = parser.parse_args()
+    if problem := screen_saver_problem():
+        print(f"run_baseline: {problem}", file=sys.stderr)
+        return 2
 
     try:
         source = llama_source(os.environ)
@@ -227,6 +232,7 @@ def main() -> int:
         "rounds": rounds,
         "slow_rounds": slow_rounds(ratios, ROUND_TOLERANCE),
         "throttled_rounds": throttled_rounds(rounds),
+        "screen_saver_rounds": screen_saver_rounds(rounds),
     }
     (run_dir / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
     print(f"run_baseline: done; round ratios {[round(r, 4) for r in ratios]}", file=sys.stderr)

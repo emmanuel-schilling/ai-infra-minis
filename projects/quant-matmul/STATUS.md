@@ -94,9 +94,11 @@ None required: the project is complete, and work continues in Profile
 llama.cpp. If it resumes, start from the optional work below or RESULTS.md's
 Open questions.
 
-For benchmark runs: close other apps, Chrome included, turn Low Power Mode
-off, and start the run while the screen saver isn't running: `caffeinate`
-keeps it from starting but can't stop it.
+For benchmark runs: close other apps, Chrome included, and turn Low Power Mode
+off. `run_bench.py` keeps the screen saver from starting during the run, and
+refuses to start while it is already running, since keeping the display awake
+can't stop a running one; it also records the screen saver's state before and
+after each round.
 
 Optional work, ranked on 2026-11-13 by what the later projects need:
 fp16 scales with a comparison against ggml's Q8_0 kernel (sets up Profile
@@ -337,3 +339,12 @@ Record each as: date, decision, reason.
   scripts need the same helpers, and a copy had already drifted.
   `roofline.cpp` also gained 6- and 12-thread variants of its ceilings for
   that project; this project's single-thread results are unchanged.
+- 2026-11-15: The run scripts refuse to start while the screen saver is
+  running, checking before they create anything and again once `caffeinate`
+  holds the display awake, and they record the screen saver's state before
+  and after each round (`screen_saver_rounds` in `metadata.json`). Reason:
+  `caffeinate` stops the screen saver from starting, not a running one, and
+  the 2026-11-10 run showed what it costs; a run started remotely or by a
+  scheduled task could begin with it running. The check looks for the
+  `ScreenSaverEngine` process, confirmed on macOS 15.8.2 by starting the
+  screen saver and seeing the scripts refuse.
