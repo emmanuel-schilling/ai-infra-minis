@@ -20,8 +20,9 @@ Writes a new folder results/<date>_<cpu>_kernels[_<label>]/ in this project:
 - metadata.json: hardware, build, revisions, command and settings, the
   thermal state before and after each round, and the round checks: each
   round's median, over cases, of its time relative to round 1's (a round
-  more than 5% away is listed in slow_rounds), and the rounds where macOS
-  reported a CPU speed limit or the screen saver ran
+  more than 5% away is listed in slow_rounds), the rounds that started under
+  a macOS CPU speed limit, those where a limit was reported at all, and those
+  where the screen saver ran
 
 Usage, from anywhere in the repository, with LLAMA_CPP_DIR set:
     uv run python projects/profile-llama-cpp/scripts/run_kernel_compare.py --help
@@ -48,6 +49,7 @@ from benchkit import (
     rounds_beyond,
     screen_saver_problem,
     screen_saver_rounds,
+    started_throttled_rounds,
     stay_awake,
     thermal_state,
     throttled_rounds,
@@ -279,6 +281,7 @@ def main() -> int:
         "rounds": rounds,
         "round_tolerance": ROUND_TOLERANCE,
         "slow_rounds": rounds_beyond(ratios, ROUND_TOLERANCE),
+        "started_throttled_rounds": started_throttled_rounds(rounds),
         "throttled_rounds": throttled_rounds(rounds),
         "screen_saver_rounds": screen_saver_rounds(rounds),
     }

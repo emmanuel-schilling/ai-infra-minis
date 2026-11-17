@@ -1,0 +1,34 @@
+{
+  "tests": {
+    "q4_k_m/pp512/threads:6": {
+      "tokens_per_second": 186.273,
+      "samples": 15
+    },
+    "q4_k_m/tg128/threads:6": {
+      "tokens_per_second": 27.6563,
+      "samples": 15
+    },
+    "q8_0/pp512/threads:6": {
+      "tokens_per_second": 109.792,
+      "samples": 15
+    },
+    "q8_0/tg128/threads:6": {
+      "tokens_per_second": 17.0466,
+      "samples": 15
+    }
+  },
+  "models": {
+    "q8_0": {
+      "values": 1777088000,
+      "bytes": 1888581632,
+      "embedding_values": 233373696,
+      "embedding_bytes": 247959552
+    },
+    "q4_k_m": {
+      "values": 1777088000,
+      "bytes": 1111370240,
+      "embedding_values": 233373696,
+      "embedding_bytes": 131272704
+    }
+  }
+}

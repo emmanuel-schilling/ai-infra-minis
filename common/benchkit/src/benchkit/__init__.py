@@ -214,6 +214,23 @@ def throttled_rounds(rounds: list[dict[str, Any]]) -> list[int]:
     return sorted(limited)
 
 
+def started_throttled(record: dict[str, Any]) -> bool:
+    """Whether macOS reported a CPU speed limit below 100% before this test or round began."""
+    state = record["thermal_before"]
+    return bool(state and state["cpu_speed_limit"] is not None and state["cpu_speed_limit"] < 100)
+
+
+def started_throttled_rounds(rounds: list[dict[str, Any]]) -> list[int]:
+    """Rounds with a test (or the round itself) that started under a CPU speed limit.
+
+    Unlike throttled_rounds, a limit that only set in during a test doesn't
+    count: under sustained all-core load a laptop can reach its power and
+    thermal limits within seconds, which is its real behaviour, not a bad
+    starting condition.
+    """
+    return sorted({r["round"] for r in rounds if started_throttled(r)})
+
+
 def screen_saver_rounds(rounds: list[dict[str, Any]]) -> list[int]:
     """Rounds where the screen saver was found running before or after."""
     found = set()

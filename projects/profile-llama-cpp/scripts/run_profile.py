@@ -43,6 +43,7 @@ from benchkit import (
     machine_details,
     screen_saver_problem,
     screen_saver_rounds,
+    started_throttled_rounds,
     stay_awake,
     thermal_state,
     throttled_rounds,
@@ -207,6 +208,7 @@ def main() -> int:
         "commands": commands,
         "settings": vars(args),
         "recordings": recordings,
+        "started_throttled_phases": phases_in(recordings, started_throttled_rounds(recordings)),
         "throttled_phases": phases_in(recordings, throttled_rounds(recordings)),
         "screen_saver_phases": phases_in(recordings, screen_saver_rounds(recordings)),
     }

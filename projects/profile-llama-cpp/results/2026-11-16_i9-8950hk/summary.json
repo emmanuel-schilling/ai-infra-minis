@@ -1,0 +1,66 @@
+{
+  "tests": {
+    "q4_k_m/pp512/threads:1": {
+      "tokens_per_second": 48.4486,
+      "samples": 15
+    },
+    "q4_k_m/pp512/threads:12": {
+      "tokens_per_second": 216.175,
+      "samples": 15
+    },
+    "q4_k_m/pp512/threads:6": {
+      "tokens_per_second": 218.375,
+      "samples": 15
+    },
+    "q4_k_m/tg128/threads:1": {
+      "tokens_per_second": 10.6382,
+      "samples": 15
+    },
+    "q4_k_m/tg128/threads:12": {
+      "tokens_per_second": 27.7437,
+      "samples": 15
+    },
+    "q4_k_m/tg128/threads:6": {
+      "tokens_per_second": 27.6146,
+      "samples": 15
+    },
+    "q8_0/pp512/threads:1": {
+      "tokens_per_second": 24.2726,
+      "samples": 15
+    },
+    "q8_0/pp512/threads:12": {
+      "tokens_per_second": 106.939,
+      "samples": 15
+    },
+    "q8_0/pp512/threads:6": {
+      "tokens_per_second": 104.188,
+      "samples": 15
+    },
+    "q8_0/tg128/threads:1": {
+      "tokens_per_second": 7.02966,
+      "samples": 15
+    },
+    "q8_0/tg128/threads:12": {
+      "tokens_per_second": 17.7822,
+      "samples": 15
+    },
+    "q8_0/tg128/threads:6": {
+      "tokens_per_second": 17.149,
+      "samples": 15
+    }
+  },
+  "models": {
+    "q8_0": {
+      "values": 1777088000,
+      "bytes": 1888581632,
+      "embedding_values": 233373696,
+      "embedding_bytes": 247959552
+    },
+    "q4_k_m": {
+      "values": 1777088000,
+      "bytes": 1111370240,
+      "embedding_values": 233373696,
+      "embedding_bytes": 131272704
+    }
+  }
+}

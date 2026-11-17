@@ -1,0 +1,527 @@
+{
+  "machine": {
+    "cpu": "Intel(R) Core(TM) i9-8950HK CPU @ 2.90GHz",
+    "logical_cpus": 12,
+    "os": "macOS-15.8.3-x86_64-i386-64bit-Mach-O",
+    "python": "3.14.7",
+    "physical_cpus": 6,
+    "memory_bytes": 34359738368,
+    "cpu_features": [
+      "ACAPMSR",
+      "ACPI",
+      "ADX",
+      "AES",
+      "APIC",
+      "AVX1.0",
+      "AVX2",
+      "BMI1",
+      "BMI2",
+      "CLFSH",
+      "CLFSOPT",
+      "CMOV",
+      "CX16",
+      "CX8",
+      "DE",
+      "DS",
+      "DSCPL",
+      "DTES64",
+      "ERMS",
+      "EST",
+      "F16C",
+      "FMA",
+      "FPU",
+      "FPU_CSDS",
+      "FXSR",
+      "HLE",
+      "HTT",
+      "IBRS",
+      "INVPCID",
+      "IPT",
+      "L1DF",
+      "MCA",
+      "MCE",
+      "MDCLEAR",
+      "MMX",
+      "MON",
+      "MOVBE",
+      "MPX",
+      "MSR",
+      "MTRR",
+      "OSXSAVE",
+      "PAE",
+      "PAT",
+      "PBE",
+      "PCID",
+      "PCLMULQDQ",
+      "PDCM",
+      "PGE",
+      "POPCNT",
+      "PSE",
+      "PSE36",
+      "RDRAND",
+      "RDSEED",
+      "RDWRFSGS",
+      "RTM",
+      "SEGLIM64",
+      "SEP",
+      "SGX",
+      "SGXLC",
+      "SMAP",
+      "SMEP",
+      "SS",
+      "SSBD",
+      "SSE",
+      "SSE2",
+      "SSE3",
+      "SSE4.1",
+      "SSE4.2",
+      "SSSE3",
+      "STIBP",
+      "TM",
+      "TM2",
+      "TPR",
+      "TSC",
+      "TSCTMR",
+      "TSC_THREAD_OFFSET",
+      "TSXFA",
+      "VME",
+      "VMX",
+      "XSAVE",
+      "x2APIC"
+    ],
+    "low_power_mode": false
+  },
+  "build": {
+    "folder": "build-accelerate",
+    "cache": {
+      "CMAKE_BUILD_TYPE": "Release",
+      "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+      "CMAKE_CXX_FLAGS": "-g",
+      "CMAKE_C_FLAGS": "-g",
+      "GGML_ACCELERATE": "ON",
+      "GGML_ALL_WARNINGS_3RD_PARTY": "OFF",
+      "GGML_AMX_BF16": "OFF",
+      "GGML_AMX_INT8": "OFF",
+      "GGML_AMX_TILE": "OFF",
+      "GGML_AVX": "OFF",
+      "GGML_AVX2": "OFF",
+      "GGML_AVX512": "OFF",
+      "GGML_AVX512_BF16": "OFF",
+      "GGML_AVX512_VBMI": "OFF",
+      "GGML_AVX512_VNNI": "OFF",
+      "GGML_AVX_VNNI": "OFF",
+      "GGML_BACKEND_DIR": "",
+      "GGML_BACKEND_DL": "OFF",
+      "GGML_BIN_INSTALL_DIR": "bin",
+      "GGML_BLAS": "ON",
+      "GGML_BLAS_VENDOR": "Apple",
+      "GGML_BMI2": "OFF",
+      "GGML_BUILD_EXAMPLES": "OFF",
+      "GGML_BUILD_TESTS": "OFF",
+      "GGML_CCACHE": "ON",
+      "GGML_CCACHE_FOUND": "GGML_CCACHE_FOUND-NOTFOUND",
+      "GGML_CPU": "ON",
+      "GGML_CPU_ALL_VARIANTS": "OFF",
+      "GGML_CPU_ARM_ARCH": "",
+      "GGML_CPU_HBM": "OFF",
+      "GGML_CPU_KLEIDIAI": "OFF",
+      "GGML_CPU_POWERPC_CPUTYPE": "",
+      "GGML_CPU_REPACK": "ON",
+      "GGML_CUDA": "OFF",
+      "GGML_CUDA_CCCL_VERSION": "",
+      "GGML_CUDA_COMPRESSION_MODE": "size",
+      "GGML_CUDA_FA": "ON",
+      "GGML_CUDA_FA_ALL_QUANTS": "OFF",
+      "GGML_CUDA_FA_QUANTS": "q4_0-q4_0;q8_0-q8_0;f16-f16;bf16-bf16;f8_e4m3-f8_e4m3",
+      "GGML_CUDA_FORCE_CUBLAS": "OFF",
+      "GGML_CUDA_FORCE_MMQ": "OFF",
+      "GGML_CUDA_GRAPHS": "ON",
+      "GGML_CUDA_NCCL": "ON",
+      "GGML_CUDA_NO_PEER_COPY": "OFF",
+      "GGML_CUDA_NO_VMM": "OFF",
+      "GGML_ET": "OFF",
+      "GGML_ET_SYSEMU": "OFF",
+      "GGML_F16C": "OFF",
+      "GGML_FMA": "OFF",
+      "GGML_GPROF": "OFF",
+      "GGML_HEXAGON": "OFF",
+      "GGML_HIP": "OFF",
+      "GGML_HIP_EXPORT_METRICS": "OFF",
+      "GGML_HIP_GRAPHS": "ON",
+      "GGML_HIP_MMQ_MFMA": "ON",
+      "GGML_HIP_NO_VMM": "ON",
+      "GGML_HIP_RCCL": "OFF",
+      "GGML_INCLUDE_INSTALL_DIR": "include",
+      "GGML_LASX": "ON",
+      "GGML_LIB_INSTALL_DIR": "lib",
+      "GGML_LLAMAFILE": "ON",
+      "GGML_LSX": "ON",
+      "GGML_LTO": "OFF",
+      "GGML_METAL": "OFF",
+      "GGML_METAL_EMBED_LIBRARY": "OFF",
+      "GGML_METAL_MACOSX_VERSION_MIN": "",
+      "GGML_METAL_NDEBUG": "OFF",
+      "GGML_METAL_SHADER_DEBUG": "OFF",
+      "GGML_METAL_STD": "",
+      "GGML_METAL_TARGET_OS": "macos",
+      "GGML_MUSA": "OFF",
+      "GGML_MUSA_GRAPHS": "OFF",
+      "GGML_MUSA_MUDNN_COPY": "OFF",
+      "GGML_NATIVE": "ON",
+      "GGML_OPENCL": "OFF",
+      "GGML_OPENCL_EMBED_KERNELS": "ON",
+      "GGML_OPENCL_PROFILING": "OFF",
+      "GGML_OPENCL_TARGET_VERSION": "300",
+      "GGML_OPENCL_USE_ADRENO_KERNELS": "ON",
+      "GGML_OPENMP": "ON",
+      "GGML_OPENMP_FETCH": "OFF",
+      "GGML_OPENVINO": "OFF",
+      "GGML_RPC": "OFF",
+      "GGML_RVV": "ON",
+      "GGML_RV_ZFH": "ON",
+      "GGML_RV_ZICBOP": "ON",
+      "GGML_RV_ZIHINTPAUSE": "ON",
+      "GGML_RV_ZVFBFWMA": "OFF",
+      "GGML_RV_ZVFH": "ON",
+      "GGML_SANITIZE_ADDRESS": "OFF",
+      "GGML_SANITIZE_THREAD": "OFF",
+      "GGML_SANITIZE_UNDEFINED": "OFF",
+      "GGML_SCCACHE_FOUND": "GGML_SCCACHE_FOUND-NOTFOUND",
+      "GGML_SCHED_MAX_COPIES": "4",
+      "GGML_SCHED_NO_REALLOC": "OFF",
+      "GGML_SSE42": "OFF",
+      "GGML_STATIC": "OFF",
+      "GGML_SYCL": "OFF",
+      "GGML_SYCL_DEVICE_ARCH": "",
+      "GGML_SYCL_DNN": "ON",
+      "GGML_SYCL_F16": "OFF",
+      "GGML_SYCL_GRAPH": "ON",
+      "GGML_SYCL_HOST_MEM_FALLBACK": "ON",
+      "GGML_SYCL_SUPPORT_LEVEL_ZERO_API": "ON",
+      "GGML_SYCL_SUPPORT_XMX": "ON",
+      "GGML_SYCL_TARGET": "INTEL",
+      "GGML_VIRTGPU": "OFF",
+      "GGML_VIRTGPU_BACKEND": "OFF",
+      "GGML_VULKAN": "OFF",
+      "GGML_VULKAN_CHECK_RESULTS": "OFF",
+      "GGML_VULKAN_DEBUG": "OFF",
+      "GGML_VULKAN_MEMORY_DEBUG": "OFF",
+      "GGML_VULKAN_RUN_TESTS": "OFF",
+      "GGML_VULKAN_SHADERS_GEN_TOOLCHAIN": "",
+      "GGML_VULKAN_SHADER_DEBUG_INFO": "OFF",
+      "GGML_VULKAN_VALIDATE": "OFF",
+      "GGML_VXE": "ON",
+      "GGML_WEBGPU": "OFF",
+      "GGML_WEBGPU_CPU_PROFILE": "OFF",
+      "GGML_WEBGPU_DEBUG": "OFF",
+      "GGML_WEBGPU_GPU_PROFILE": "OFF",
+      "GGML_WEBGPU_JSPI": "ON",
+      "GGML_XTHEADVECTOR": "OFF",
+      "GGML_ZDNN": "OFF",
+      "GGML_ZENDNN": "OFF",
+      "GGML_AVAILABLE_BACKENDS": "ggml-cpu;ggml-blas",
+      "GGML_CUDA_COMPRESSION_MODE-STRINGS": "none;speed;balance;size",
+      "GGML_OPENMP_ENABLED": "OFF"
+    },
+    "compiler": {
+      "CMAKE_CXX_COMPILER_ID": "AppleClang",
+      "CMAKE_CXX_COMPILER_VERSION": "17.0.0.17000604"
+    }
+  },
+  "revisions": {
+    "repo": "112a4118e3c4126a475f7cc3399a4bda1be7807a",
+    "repo_uncommitted_changes": true,
+    "llama_cpp_tag": "b12377",
+    "llama_cpp": "32bdc3a89e6528d3e419024c833c5dabf32c7541",
+    "llama_cpp_uncommitted_changes": false
+  },
+  "models": {
+    "q8_0": "/Users/emmanuelschilling/models/qwen2.5-1.5b-instruct/qwen2.5-1.5b-instruct-q8_0.gguf",
+    "q4_k_m": "/Users/emmanuelschilling/models/qwen2.5-1.5b-instruct/qwen2.5-1.5b-instruct-q4_k_m.gguf"
+  },
+  "commands": {
+    "q8_0_tg_threads6": [
+      "/Users/emmanuelschilling/src/llama.cpp-b12377/build-accelerate/bin/llama-bench",
+      "-m",
+      "/Users/emmanuelschilling/models/qwen2.5-1.5b-instruct/qwen2.5-1.5b-instruct-q8_0.gguf",
+      "-p",
+      "0",
+      "-n",
+      "128",
+      "-t",
+      "6",
+      "-r",
+      "5",
+      "-ngl",
+      "0",
+      "-o",
+      "json"
+    ],
+    "q4_k_m_pp_threads6": [
+      "/Users/emmanuelschilling/src/llama.cpp-b12377/build-accelerate/bin/llama-bench",
+      "-m",
+      "/Users/emmanuelschilling/models/qwen2.5-1.5b-instruct/qwen2.5-1.5b-instruct-q4_k_m.gguf",
+      "-p",
+      "512",
+      "-n",
+      "0",
+      "-t",
+      "6",
+      "-r",
+      "5",
+      "-ngl",
+      "0",
+      "-o",
+      "json"
+    ],
+    "q8_0_pp_threads6": [
+      "/Users/emmanuelschilling/src/llama.cpp-b12377/build-accelerate/bin/llama-bench",
+      "-m",
+      "/Users/emmanuelschilling/models/qwen2.5-1.5b-instruct/qwen2.5-1.5b-instruct-q8_0.gguf",
+      "-p",
+      "512",
+      "-n",
+      "0",
+      "-t",
+      "6",
+      "-r",
+      "5",
+      "-ngl",
+      "0",
+      "-o",
+      "json"
+    ],
+    "q4_k_m_tg_threads6": [
+      "/Users/emmanuelschilling/src/llama.cpp-b12377/build-accelerate/bin/llama-bench",
+      "-m",
+      "/Users/emmanuelschilling/models/qwen2.5-1.5b-instruct/qwen2.5-1.5b-instruct-q4_k_m.gguf",
+      "-p",
+      "0",
+      "-n",
+      "128",
+      "-t",
+      "6",
+      "-r",
+      "5",
+      "-ngl",
+      "0",
+      "-o",
+      "json"
+    ]
+  },
+  "settings": {
+    "build": "build-accelerate",
+    "models": "q8_0,q4_k_m",
+    "threads": "6",
+    "prompt": 512,
+    "gen": 128,
+    "rounds": 3,
+    "repetitions": 5,
+    "cooldown": 30.0,
+    "seed": 1,
+    "label": "accelerate",
+    "skip_ceilings": true
+  },
+  "tests": [
+    {
+      "round": 1,
+      "position": 1,
+      "test": "q8_0_tg_threads6",
+      "thermal_before": {
+        "cpu_speed_limit": 100,
+        "screen_saver_running": false,
+        "raw": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\n2026-11-16 16:46:20 -0800 CPU Power notify\n\tCPU_Scheduler_Limit \t= 100\n\tCPU_Available_CPUs \t= 12\n\tCPU_Speed_Limit \t= 100"
+      },
+      "thermal_after": {
+        "cpu_speed_limit": 100,
+        "screen_saver_running": false,
+        "raw": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\n2026-11-16 16:47:00 -0800 CPU Power notify\n\tCPU_Scheduler_Limit \t= 100\n\tCPU_Available_CPUs \t= 12\n\tCPU_Speed_Limit \t= 100"
+      }
+    },
+    {
+      "round": 1,
+      "position": 2,
+      "test": "q4_k_m_pp_threads6",
+      "thermal_before": {
+        "cpu_speed_limit": 100,
+        "screen_saver_running": false,
+        "raw": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\n2026-11-16 16:47:30 -0800 CPU Power notify\n\tCPU_Scheduler_Limit \t= 100\n\tCPU_Available_CPUs \t= 12\n\tCPU_Speed_Limit \t= 100"
+      },
+      "thermal_after": {
+        "cpu_speed_limit": 68,
+        "screen_saver_running": false,
+        "raw": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\n2026-11-16 16:47:47 -0800 CPU Power notify\n\tCPU_Scheduler_Limit \t= 100\n\tCPU_Available_CPUs \t= 12\n\tCPU_Speed_Limit \t= 68"
+      }
+    },
+    {
+      "round": 1,
+      "position": 3,
+      "test": "q8_0_pp_threads6",
+      "thermal_before": {
+        "cpu_speed_limit": 100,
+        "screen_saver_running": false,
+        "raw": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\n2026-11-16 16:48:17 -0800 CPU Power notify\n\tCPU_Scheduler_Limit \t= 100\n\tCPU_Available_CPUs \t= 12\n\tCPU_Speed_Limit \t= 100"
+      },
+      "thermal_after": {
+        "cpu_speed_limit": 66,
+        "screen_saver_running": false,
+        "raw": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\n2026-11-16 16:48:45 -0800 CPU Power notify\n\tCPU_Scheduler_Limit \t= 100\n\tCPU_Available_CPUs \t= 12\n\tCPU_Speed_Limit \t= 66"
+      }
+    },
+    {
+      "round": 1,
+      "position": 4,
+      "test": "q4_k_m_tg_threads6",
+      "thermal_before": {
+        "cpu_speed_limit": 100,
+        "screen_saver_running": false,
+        "raw": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\n2026-11-16 16:49:15 -0800 CPU Power notify\n\tCPU_Scheduler_Limit \t= 100\n\tCPU_Available_CPUs \t= 12\n\tCPU_Speed_Limit \t= 100"
+      },
+      "thermal_after": {
+        "cpu_speed_limit": 100,
+        "screen_saver_running": false,
+        "raw": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\n2026-11-16 16:49:40 -0800 CPU Power notify\n\tCPU_Scheduler_Limit \t= 100\n\tCPU_Available_CPUs \t= 12\n\tCPU_Speed_Limit \t= 100"
+      }
+    },
+    {
+      "round": 2,
+      "position": 1,
+      "test": "q4_k_m_tg_threads6",
+      "thermal_before": {
+        "cpu_speed_limit": 100,
+        "screen_saver_running": false,
+        "raw": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\n2026-11-16 16:50:10 -0800 CPU Power notify\n\tCPU_Scheduler_Limit \t= 100\n\tCPU_Available_CPUs \t= 12\n\tCPU_Speed_Limit \t= 100"
+      },
+      "thermal_after": {
+        "cpu_speed_limit": 100,
+        "screen_saver_running": false,
+        "raw": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\n2026-11-16 16:50:34 -0800 CPU Power notify\n\tCPU_Scheduler_Limit \t= 100\n\tCPU_Available_CPUs \t= 12\n\tCPU_Speed_Limit \t= 100"
+      }
+    },
+    {
+      "round": 2,
+      "position": 2,
+      "test": "q4_k_m_pp_threads6",
+      "thermal_before": {
+        "cpu_speed_limit": 100,
+        "screen_saver_running": false,
+        "raw": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\n2026-11-16 16:51:04 -0800 CPU Power notify\n\tCPU_Scheduler_Limit \t= 100\n\tCPU_Available_CPUs \t= 12\n\tCPU_Speed_Limit \t= 100"
+      },
+      "thermal_after": {
+        "cpu_speed_limit": 70,
+        "screen_saver_running": false,
+        "raw": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\n2026-11-16 16:51:21 -0800 CPU Power notify\n\tCPU_Scheduler_Limit \t= 100\n\tCPU_Available_CPUs \t= 12\n\tCPU_Speed_Limit \t= 70"
+      }
+    },
+    {
+      "round": 2,
+      "position": 3,
+      "test": "q8_0_tg_threads6",
+      "thermal_before": {
+        "cpu_speed_limit": 100,
+        "screen_saver_running": false,
+        "raw": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\n2026-11-16 16:51:51 -0800 CPU Power notify\n\tCPU_Scheduler_Limit \t= 100\n\tCPU_Available_CPUs \t= 12\n\tCPU_Speed_Limit \t= 100"
+      },
+      "thermal_after": {
+        "cpu_speed_limit": 100,
+        "screen_saver_running": false,
+        "raw": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\n2026-11-16 16:52:29 -0800 CPU Power notify\n\tCPU_Scheduler_Limit \t= 100\n\tCPU_Available_CPUs \t= 12\n\tCPU_Speed_Limit \t= 100"
+      }
+    },
+    {
+      "round": 2,
+      "position": 4,
+      "test": "q8_0_pp_threads6",
+      "thermal_before": {
+        "cpu_speed_limit": 100,
+        "screen_saver_running": false,
+        "raw": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\n2026-11-16 16:52:59 -0800 CPU Power notify\n\tCPU_Scheduler_Limit \t= 100\n\tCPU_Available_CPUs \t= 12\n\tCPU_Speed_Limit \t= 100"
+      },
+      "thermal_after": {
+        "cpu_speed_limit": 66,
+        "screen_saver_running": false,
+        "raw": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\n2026-11-16 16:53:27 -0800 CPU Power notify\n\tCPU_Scheduler_Limit \t= 100\n\tCPU_Available_CPUs \t= 12\n\tCPU_Speed_Limit \t= 66"
+      }
+    },
+    {
+      "round": 3,
+      "position": 1,
+      "test": "q8_0_tg_threads6",
+      "thermal_before": {
+        "cpu_speed_limit": 100,
+        "screen_saver_running": false,
+        "raw": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\n2026-11-16 16:53:57 -0800 CPU Power notify\n\tCPU_Scheduler_Limit \t= 100\n\tCPU_Available_CPUs \t= 12\n\tCPU_Speed_Limit \t= 100"
+      },
+      "thermal_after": {
+        "cpu_speed_limit": 100,
+        "screen_saver_running": false,
+        "raw": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\n2026-11-16 16:54:35 -0800 CPU Power notify\n\tCPU_Scheduler_Limit \t= 100\n\tCPU_Available_CPUs \t= 12\n\tCPU_Speed_Limit \t= 100"
+      }
+    },
+    {
+      "round": 3,
+      "position": 2,
+      "test": "q4_k_m_tg_threads6",
+      "thermal_before": {
+        "cpu_speed_limit": 100,
+        "screen_saver_running": false,
+        "raw": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\n2026-11-16 16:55:05 -0800 CPU Power notify\n\tCPU_Scheduler_Limit \t= 100\n\tCPU_Available_CPUs \t= 12\n\tCPU_Speed_Limit \t= 100"
+      },
+      "thermal_after": {
+        "cpu_speed_limit": 100,
+        "screen_saver_running": false,
+        "raw": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\n2026-11-16 16:55:30 -0800 CPU Power notify\n\tCPU_Scheduler_Limit \t= 100\n\tCPU_Available_CPUs \t= 12\n\tCPU_Speed_Limit \t= 100"
+      }
+    },
+    {
+      "round": 3,
+      "position": 3,
+      "test": "q8_0_pp_threads6",
+      "thermal_before": {
+        "cpu_speed_limit": 100,
+        "screen_saver_running": false,
+        "raw": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\n2026-11-16 16:56:00 -0800 CPU Power notify\n\tCPU_Scheduler_Limit \t= 100\n\tCPU_Available_CPUs \t= 12\n\tCPU_Speed_Limit \t= 100"
+      },
+      "thermal_after": {
+        "cpu_speed_limit": 66,
+        "screen_saver_running": false,
+        "raw": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\n2026-11-16 16:56:27 -0800 CPU Power notify\n\tCPU_Scheduler_Limit \t= 100\n\tCPU_Available_CPUs \t= 12\n\tCPU_Speed_Limit \t= 66"
+      }
+    },
+    {
+      "round": 3,
+      "position": 4,
+      "test": "q4_k_m_pp_threads6",
+      "thermal_before": {
+        "cpu_speed_limit": 100,
+        "screen_saver_running": false,
+        "raw": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\n2026-11-16 16:56:57 -0800 CPU Power notify\n\tCPU_Scheduler_Limit \t= 100\n\tCPU_Available_CPUs \t= 12\n\tCPU_Speed_Limit \t= 100"
+      },
+      "thermal_after": {
+        "cpu_speed_limit": 66,
+        "screen_saver_running": false,
+        "raw": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\n2026-11-16 16:57:15 -0800 CPU Power notify\n\tCPU_Scheduler_Limit \t= 100\n\tCPU_Available_CPUs \t= 12\n\tCPU_Speed_Limit \t= 66"
+      }
+    }
+  ],
+  "round_ratios_to_round_1": [
+    1.0,
+    1.005000761313115,
+    1.0021685493848107
+  ],
+  "slow_rounds": [],
+  "throttled_rounds": [
+    1,
+    2,
+    3
+  ],
+  "throttled_tests": [
+    "round 1: q4_k_m_pp_threads6",
+    "round 1: q8_0_pp_threads6",
+    "round 2: q4_k_m_pp_threads6",
+    "round 2: q8_0_pp_threads6",
+    "round 3: q8_0_pp_threads6",
+    "round 3: q4_k_m_pp_threads6"
+  ],
+  "screen_saver_rounds": []
+}

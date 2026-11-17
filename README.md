@@ -12,6 +12,7 @@ its benchmarks. Projects are added here as they start.
 |---|---|---|---|
 | [Quantized matmul](projects/quant-matmul/) | Scalar, AVX2 + FMA and 8-bit quantized matrix multiply, compared with a vendor BLAS (Accelerate on macOS, OpenBLAS elsewhere) | C++20 | Complete |
 | [Profile llama.cpp](projects/profile-llama-cpp/) | Where a production inference engine spends its time on the CPU, for prompt processing and for token generation | Profiling | Active |
+| [Tiny GPT](projects/tiny-gpt/) | GPT-2 inference from scratch on the CPU, on this repo's own kernels, checked layer by layer against PyTorch | C++20 | Active |
 
 Each project folder has a `STATUS.md` (state, open questions, decisions and
 their reasons) and a `RESULTS.md` (benchmarks and conclusions). Code shared

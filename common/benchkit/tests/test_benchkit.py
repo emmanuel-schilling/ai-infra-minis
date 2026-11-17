@@ -22,6 +22,8 @@ from benchkit import (
     rounds_beyond,
     screen_saver_rounds,
     screen_saver_running,
+    started_throttled,
+    started_throttled_rounds,
     stay_awake,
     throttled_rounds,
     utc_date,
@@ -60,6 +62,21 @@ def test_throttled_rounds_takes_several_records_per_round() -> None:
         return {"round": n, "thermal_before": state, "thermal_after": state}
 
     assert throttled_rounds([record(1, 100), record(1, 90), record(2, 100)]) == [1]
+
+
+def test_started_throttled_counts_only_the_starting_state() -> None:
+    def record(n: int, before: int | None, after: int) -> dict[str, Any]:
+        state = None if before is None else {"cpu_speed_limit": before, "raw": ""}
+        return {"round": n, "thermal_before": state, "thermal_after": {"cpu_speed_limit": after}}
+
+    records = [
+        record(1, 100, 70),  # the limit set in during the test: not a bad start
+        record(2, 80, 80),  # started under a limit
+        record(3, None, 100),  # no reading (not macOS)
+    ]
+    assert [started_throttled(r) for r in records] == [False, True, False]
+    assert started_throttled_rounds(records) == [2]
+    assert throttled_rounds(records) == [1, 2]
 
 
 def test_screen_saver_problem(monkeypatch: pytest.MonkeyPatch) -> None:

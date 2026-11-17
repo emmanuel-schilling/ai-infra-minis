@@ -6,8 +6,25 @@ b12377 and the two Qwen2.5-1.5B models outside the repository (see Decisions),
 builds them and runs a smoke test. It ran on 2026-11-14 into ~/src/llama.cpp
 and ~/models: both builds succeeded, and both models generate coherent text.
 
-The scripts for steps 3–8 are written and smoke-tested on tiny settings
-(2026-11-15), but haven't run for real: no measurements yet.
+Session A ran on 2026-11-16: `results/2026-11-16_i9-8950hk/` (baseline) and
+`results/2026-11-17_i9-8950hk_accelerate/` (the folder dates are UTC), with
+`report.md` in each. Verified complete and repeatable: rounds within 0.2%
+(baseline) and 0.5% (Accelerate) of round 1, no slow rounds, no screen saver.
+Every multi-threaded prompt-processing test (6 and 12 threads, both builds)
+ran into a macOS CPU speed limit of 66–70% during the test, never before it:
+sustained all-core compute exceeds the laptop's power and thermal limits
+within seconds, so a longer cooldown wouldn't change it. Those tests still
+agree across rounds within 0.4–1.5%, with 4–10% spread inside each test as
+the limit sets in. Two tests are noisier: Q4_K_M token generation at 12
+threads (11.6% across rounds) and Q8_0 token generation at 1 thread (round 1
+8.8% faster). The ceilings agree before and after the run except the 6-thread
+FMA peak (639 against 743 GFLOP/s); the report uses the higher, and the peak
+is a short burst while the throttled tests are sustained, so prompt
+processing's shares of it understate what the machine sustains. Sessions B
+and C are still to run.
+
+The scripts for steps 3–8 are written; session A's runs took about 45 and
+12 minutes, about half the estimates below.
 - `run_baseline.py` (steps 3, 7, 8): llama-bench rounds with cooldowns, and
   the ceilings from Quantized matmul's `qmm_bench`, measured before and after
   the rounds. `qmm_bench` gained 6- and 12-thread variants of its bandwidth
@@ -55,28 +72,43 @@ charging, saw macOS limit the CPU to 20% for several minutes; the per-test
 records flagged it. From the
 repository root, with `LLAMA_CPP_DIR=~/src/llama.cpp MODELS_DIR=~/models`:
 
-Session 1 (about 2 h 30 min):
+The sessions are independent and can run in any order. Within session A,
+Accelerate follows the baseline so the two are compared under the same
+conditions.
+
+Session A (about 2 hours):
 1. `uv run python projects/profile-llama-cpp/scripts/run_baseline.py`: both
    models, 1, 6 and 12 threads, 3 rounds of 12 tests (about 100 minutes; the
    1-thread tests take most of it). Then `report_baseline.py` on its folder.
-2. `run_profile.py --model q8_0`, then `run_profile.py --model q4_k_m` (about
+2. Right after it, `run_baseline.py --build build-accelerate --threads 6
+   --skip-ceilings --label accelerate` (about 20 minutes), then
+   `report_baseline.py` on its folder with `--ceilings` set to run 1's folder.
+
+Session B (about 30 minutes):
+3. `run_profile.py --model q8_0`, then `run_profile.py --model q4_k_m` (about
    6 minutes each). Each writes summaries next to its `.trace` files, which
-   open in Instruments. With the counter templates built: `--template "LLM
-   Ports" --label ports` and `--template "LLM Memory" --label memory` for each
-   model (about 4 minutes each).
-3. `run_kernel_compare.py` (about 16 minutes).
-4. `run_baseline.py --build build-accelerate --threads 6 --skip-ceilings
-   --label accelerate` (about 20 minutes).
+   open in Instruments.
+4. `run_kernel_compare.py` (about 16 minutes).
 
-Session 2 (about 2 hours):
-5. `run_baseline.py --models q8_0 --threads 1,2,3,4,6,8,10,12 --skip-ceilings
-   --label scaling` (about 115 minutes), then `report_baseline.py` on its
-   folder with `--ceilings` set to run 1's folder.
+Session C (about 2 hours):
+5. `run_baseline.py --models q8_0 --threads 1,2,3,4,6,8,10,12 --label
+   scaling` (about 120 minutes, with its own ceilings), then
+   `report_baseline.py` on its folder.
 
-Between runs, check each `metadata.json`: empty `slow_rounds`,
-`throttled_rounds` and `screen_saver_rounds` mean the run is valid. A flagged
-run keeps its folder, with an `INVALID.md` giving the reason, and is rerun,
-with a longer `--cooldown` if the cause was heat.
+Later, once the two counter templates exist in Instruments (not yet built as
+of 2026-11-16): `run_profile.py --model <m> --template "LLM Ports" --label
+ports` and `--template "LLM Memory" --label memory` for each model (about
+4 minutes each, 16 in all).
+
+Between runs, check each `metadata.json`. A run is valid when
+`slow_rounds`, `started_throttled_rounds` (a test or round that started
+under a CPU speed limit) and `screen_saver_rounds` are empty. An invalid run
+keeps its folder, with an `INVALID.md` giving the reason, and is rerun, with
+a longer `--cooldown` if it started hot. `throttled_rounds` also lists
+limits that set in during a test; those don't invalidate a run, but the
+write-up states which tests ran under a limit, and how much. (Session A's
+runs predate the `started_throttled_rounds` field; their per-test thermal
+records show no test started under a limit.)
 
 All the scripts are in `projects/profile-llama-cpp/scripts/` and write to
 `projects/profile-llama-cpp/results/`. The durations are estimates from the
@@ -221,3 +253,18 @@ Record each as: date, decision, reason.
   Repeating the key measurements under Linux `perf` (step 9) is future work,
   outside that definition. Reason: the project's questions can be answered on
   this machine, and other hardware is not available on a set timeline.
+- 2026-11-16: Session A's runs (`2026-11-16_i9-8950hk`,
+  `2026-11-17_i9-8950hk_accelerate`) are valid, and the validity rule is
+  refined: a run is invalid if a round is slow, a test starts under a CPU
+  speed limit, or the screen saver runs; a limit that sets in during a test
+  is recorded and reported, not disqualifying. The scripts now record
+  `started_throttled_rounds` (and the tests or phases) for this. Reason:
+  every multi-threaded prompt-processing test reached a 66–70% speed limit
+  during the test, never before it, in every round: sustained all-core
+  compute exceeds this laptop's power and thermal limits within seconds,
+  which is its real behaviour, and those tests still agreed across rounds
+  within 0.4–1.5%. The old rule, written for tests that start hot, would
+  have rejected every possible multi-threaded run on this machine. The
+  write-up states that multi-threaded prompt processing was measured under a
+  66–70% limit, and that its shares of the short-burst FMA peak understate
+  what the machine sustains.

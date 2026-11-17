@@ -25,8 +25,11 @@ Writes a new folder results/<date>_<cpu>[_<label>]/ in this project:
 
 The checks, as in Quantized matmul: each round is compared with round 1
 through its own results, the median over all tests of the ratio of their
-speeds, and a round more than 5% away is listed in slow_rounds. Rounds where
-macOS reported a CPU speed limit, or the screen saver ran, are listed too.
+speeds, and a round more than 5% away is listed in slow_rounds. Also listed:
+rounds with a test that started under a macOS CPU speed limit
+(started_throttled_rounds, which invalidate a run), rounds where a limit was
+reported at all, typically one that set in during a test (throttled_rounds,
+recorded and reported), and rounds where the screen saver ran.
 
 Steps of the plan it serves, with their options:
 - baseline (the defaults): both models, 1, 6 and 12 threads
@@ -58,6 +61,8 @@ from benchkit import (
     rounds_beyond,
     screen_saver_problem,
     screen_saver_rounds,
+    started_throttled,
+    started_throttled_rounds,
     stay_awake,
     thermal_state,
     throttled_rounds,
@@ -266,6 +271,10 @@ def main() -> int:
         "tests": records,
         "round_ratios_to_round_1": ratios,
         "slow_rounds": rounds_beyond(ratios, ROUND_TOLERANCE),
+        "started_throttled_rounds": started_throttled_rounds(records),
+        "started_throttled_tests": [
+            f"round {r['round']}: {r['test']}" for r in records if started_throttled(r)
+        ],
         "throttled_rounds": throttled_rounds(records),
         "throttled_tests": [
             f"round {r['round']}: {r['test']}" for r in records if throttled_rounds([r])
