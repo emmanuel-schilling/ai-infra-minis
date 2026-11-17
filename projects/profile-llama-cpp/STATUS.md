@@ -29,7 +29,29 @@ ceilings agree before and after (this time the 6-thread FMA peak read 772
 and 751 GFLOP/s, so session A's 639 was the outlier). Every prompt-processing
 test from 2 threads up reached a 62–79% speed limit during the test; token
 generation never did. The six tests it shares with session A agree within
-1.4% across the two days. Session B is still to run.
+1.4% across the two days.
+
+Session B ran on 2026-11-17: `results/2026-11-17_i9-8950hk_profile/` (Q8_0),
+`..._profile_2/` (Q4_K_M) and `..._kernels/`, all from a clean tree
+(`161f4e7`). Valid: no recording or round started under a limit, no screen
+saver, kernel rounds within 1.3% of round 1, all 28 cases present. Notes for
+the write-up:
+- The profiles' thermal readings after each recording come after xctrace has
+  saved the trace, seconds later, so "no limit after" doesn't show that
+  prompt processing ran unthrottled while profiled.
+- llama-bench's speeds during the recordings weren't kept: xctrace drops the
+  launched program's output unless given `--target-stdout`, which
+  `run_profile.py` now passes (writing `<model>_<phase>.bench.json`). The
+  profiles' shares don't depend on it; it only checks profiling overhead.
+- Kernel cases under about 300 µs (GEMV on the small shapes) vary 3–20%
+  across rounds, and Q8_0 on 2304 × 768 ran about 9% slower in round 1 at
+  every token count. Cases over 1 ms agree within 0.3–4.8%. Compare small
+  cases by their medians, and treat differences under about 10% there as
+  inconclusive; `run_kernel_compare.py --rounds 7` would tighten them (about
+  25 minutes) if a conclusion depends on them.
+- The comparison is with Quantized matmul's 2026-11-14 run, on another day.
+
+Remaining: the counter recordings, once the two templates exist.
 
 The scripts for steps 3–8 are written; session A's runs took about 45 and
 12 minutes, about half the estimates below.

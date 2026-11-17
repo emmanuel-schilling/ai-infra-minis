@@ -16,7 +16,9 @@ Instruments.
 Writes a new folder results/<date>_<cpu>_profile[_<label>]/ in this project:
 - <model>_<phase>.trace: the recording, to open in Instruments (git-ignored:
   traces run to hundreds of MB)
-- <model>_<phase>.log: llama-bench's output during the recording
+- <model>_<phase>.bench.json: llama-bench's own output (its speeds) during
+  the recording, for comparison with the unprofiled runs
+- <model>_<phase>.log: xctrace's messages during the recording
 - <model>_<phase>.json and .md: the summary
 - metadata.json: hardware, build, revisions and commands, the thermal state
   before and after each recording, and the phases whose recording macOS
@@ -74,15 +76,21 @@ def phase_tokens(phase: str, prompt: int, gen: int) -> tuple[int, int]:
 
 
 def record_command(
-    template: str, trace: Path, bench: Path, model: Path, tokens: tuple[int, int], threads: int,
-    repetitions: int,
+    template: str, trace: Path, bench_output: Path, bench: Path, model: Path,
+    tokens: tuple[int, int], threads: int, repetitions: int,
 ) -> list[str]:  # fmt: skip
+    """xctrace recording llama-bench; llama-bench's own output goes to bench_output.
+
+    Without --target-stdout, xctrace doesn't pass the launched program's
+    standard output on, so llama-bench's speeds would be lost.
+    """
     prompt, gen = tokens
     return [
         "xcrun", "xctrace", "record",
         "--template", template,
         "--output", str(trace),
         "--no-prompt",
+        "--target-stdout", str(bench_output),
         "--launch", "--",
         str(bench),
         "-m", str(model),
@@ -177,7 +185,14 @@ def main() -> int:
             stem = f"{args.model}_{phase}"
             trace = run_dir / f"{stem}.trace"
             command = record_command(
-                args.template, trace, bench, model, tokens, args.threads, args.repetitions
+                args.template,
+                trace,
+                run_dir / f"{stem}.bench.json",
+                bench,
+                model,
+                tokens,
+                args.threads,
+                args.repetitions,
             )
             commands[phase] = command
             time.sleep(args.cooldown)

@@ -1,0 +1,405 @@
+{
+  "compute_ms": 56714.0,
+  "idle_between_graphs_ms": 75.0,
+  "outside_compute_ms": 766.0,
+  "self": [
+    {
+      "name": "ggml_gemm_q4_K_8x8_q8_K",
+      "ms": 40895.0,
+      "share": 0.721074161582678
+    },
+    {
+      "name": "void tiled_run_microtile_avx2<16, false, 32, 1, true>",
+      "ms": 6548.0,
+      "share": 0.11545650104030751
+    },
+    {
+      "name": "ggml_thread_cpu_relax",
+      "ms": 1373.0,
+      "share": 0.024209189970730332
+    },
+    {
+      "name": "void simd_gemm_ukernel<6, 2>",
+      "ms": 1178.0,
+      "share": 0.020770885495644813
+    },
+    {
+      "name": "ggml_compute_forward_flash_attn_ext_tiled",
+      "ms": 875.0,
+      "share": 0.015428289311281165
+    },
+    {
+      "name": "ggml_v_silu",
+      "ms": 707.0,
+      "share": 0.01246605776351518
+    },
+    {
+      "name": "ggml_vec_swiglu_f32",
+      "ms": 637.0,
+      "share": 0.011231794618612689
+    },
+    {
+      "name": "ggml_quantize_mat_q8_K_4x8",
+      "ms": 612.0,
+      "share": 0.010790986352576084
+    },
+    {
+      "name": "quantize_row_q8_K_ref",
+      "ms": 558.0,
+      "share": 0.009838840497937018
+    },
+    {
+      "name": "tiled_unpack_src0",
+      "ms": 433.0,
+      "share": 0.007634799167753994
+    },
+    {
+      "name": "tiled_unpack_src1_q8_K",
+      "ms": 295.0,
+      "share": 0.005201537539231936
+    },
+    {
+      "name": "void ggml_compute_forward_rms_norm_f32<(ggml_rms_norm_fuse_op)1>",
+      "ms": 268.0,
+      "share": 0.004725464611912402
+    },
+    {
+      "name": "ggml_v_expf",
+      "ms": 241.0,
+      "share": 0.004249391684592869
+    },
+    {
+      "name": "void simd_gemm_ukernel<1, 2>",
+      "ms": 218.0,
+      "share": 0.003843848079839193
+    },
+    {
+      "name": "void vec_binary_op_contiguous<&op_add(float, float), float, float, float>",
+      "ms": 215.0,
+      "share": 0.0037909510879148007
+    },
+    {
+      "name": "ggml_vec_max_f32",
+      "ms": 201.0,
+      "share": 0.003544098458934302
+    },
+    {
+      "name": "void tiled_repack_src0<16>",
+      "ms": 163.0,
+      "share": 0.0028740698945586628
+    },
+    {
+      "name": "ggml_vec_dot_q6_K_q8_K",
+      "ms": 157.0,
+      "share": 0.0027682759107098775
+    },
+    {
+      "name": "ggml_vec_soft_max_f32",
+      "ms": 109.0,
+      "share": 0.0019219240399195965
+    },
+    {
+      "name": "op_add",
+      "ms": 84.0,
+      "share": 0.0014811157738829918
+    },
+    {
+      "name": "_platform_bzero$VARIANT$Haswell",
+      "ms": 83.0,
+      "share": 0.0014634834432415277
+    },
+    {
+      "name": "tiled_repack_src1",
+      "ms": 69.0,
+      "share": 0.001216630814261029
+    },
+    {
+      "name": "void tiled_unpk_or<0, 4, 3>",
+      "ms": 68.0,
+      "share": 0.001198998483619565
+    },
+    {
+      "name": "ggml_lookup_fp16_to_fp32",
+      "ms": 59.0,
+      "share": 0.0010403075078463872
+    },
+    {
+      "name": "void rotate_pairs<float>",
+      "ms": 57.0,
+      "share": 0.0010050428465634587
+    },
+    {
+      "name": "ggml_cpu_fp16_to_fp32",
+      "ms": 57.0,
+      "share": 0.0010050428465634587
+    },
+    {
+      "name": "_platform_memmove$VARIANT$Haswell",
+      "ms": 55.0,
+      "share": 0.0009697781852805304
+    },
+    {
+      "name": "ggml_barrier",
+      "ms": 46.0,
+      "share": 0.0008110872095073527
+    },
+    {
+      "name": "tiled_unpk_nib4",
+      "ms": 45.0,
+      "share": 0.0007934548788658885
+    },
+    {
+      "name": "tiled_byte_sum_16",
+      "ms": 43.0,
+      "share": 0.0007581902175829601
+    }
+  ],
+  "total": [
+    {
+      "name": "ggml_compute_forward",
+      "ms": 55073.0,
+      "share": 0.9710653454173572
+    },
+    {
+      "name": "_pthread_start",
+      "ms": 47266.0,
+      "share": 0.8334097400994464
+    },
+    {
+      "name": "thread_start",
+      "ms": 47266.0,
+      "share": 0.8334097400994464
+    },
+    {
+      "name": "ggml_graph_compute_secondary_thread",
+      "ms": 47266.0,
+      "share": 0.8334097400994464
+    },
+    {
+      "name": "ggml_cpu_extra_compute_forward",
+      "ms": 41550.0,
+      "share": 0.7326233381528371
+    },
+    {
+      "name": "ggml::cpu::repack::tensor_traits<block_q4_K, 8ll, 8ll, (ggml_type)15>::compute_forward",
+      "ms": 41544.0,
+      "share": 0.7325175441689883
+    },
+    {
+      "name": "ggml::cpu::repack::tensor_traits<block_q4_K, 8ll, 8ll, (ggml_type)15>::forward_mul_mat",
+      "ms": 40931.0,
+      "share": 0.7217089254857707
+    },
+    {
+      "name": "void ggml::cpu::repack::gemm<block_q4_K, 8ll, 8ll, (ggml_type)15>",
+      "ms": 40895.0,
+      "share": 0.721074161582678
+    },
+    {
+      "name": "ggml_gemm_q4_K_8x8_q8_K",
+      "ms": 40895.0,
+      "share": 0.721074161582678
+    },
+    {
+      "name": "llama_context::decode",
+      "ms": 9448.0,
+      "share": 0.16659025990055365
+    },
+    {
+      "name": "ggml_backend_graph_compute_async",
+      "ms": 9448.0,
+      "share": 0.16659025990055365
+    },
+    {
+      "name": "llama_context::graph_compute",
+      "ms": 9448.0,
+      "share": 0.16659025990055365
+    },
+    {
+      "name": "llama_bench",
+      "ms": 9448.0,
+      "share": 0.16659025990055365
+    },
+    {
+      "name": "ggml_backend_cpu_graph_compute",
+      "ms": 9448.0,
+      "share": 0.16659025990055365
+    },
+    {
+      "name": "test_prompt",
+      "ms": 9448.0,
+      "share": 0.16659025990055365
+    },
+    {
+      "name": "ggml_graph_compute",
+      "ms": 9448.0,
+      "share": 0.16659025990055365
+    },
+    {
+      "name": "llama_context::process_ubatch",
+      "ms": 9448.0,
+      "share": 0.16659025990055365
+    },
+    {
+      "name": "start",
+      "ms": 9448.0,
+      "share": 0.16659025990055365
+    },
+    {
+      "name": "ggml_compute_forward_mul_mat",
+      "ms": 8448.0,
+      "share": 0.14895792925908946
+    },
+    {
+      "name": "ggml_compute_forward_mul_mat_tiled",
+      "ms": 8448.0,
+      "share": 0.14895792925908946
+    },
+    {
+      "name": "void ggml_compute_forward_mul_mat_tiled_one_chunk<block_q6_K, 16, false, 32, true>",
+      "ms": 7229.0,
+      "share": 0.12746411820714462
+    },
+    {
+      "name": "void tiled_run_microtile_avx2<16, false, 32, 1, true>",
+      "ms": 6548.0,
+      "share": 0.11545650104030751
+    },
+    {
+      "name": "ggml_compute_forward_flash_attn_ext_tiled",
+      "ms": 2546.0,
+      "share": 0.04489191381316782
+    },
+    {
+      "name": "ggml_compute_forward_swiglu_f32",
+      "ms": 1527.0,
+      "share": 0.026924568889515815
+    },
+    {
+      "name": "ggml_thread_cpu_relax",
+      "ms": 1373.0,
+      "share": 0.024209189970730332
+    },
+    {
+      "name": "void simd_gemm_ukernel<6, 2>",
+      "ms": 1178.0,
+      "share": 0.020770885495644813
+    },
+    {
+      "name": "ggml_v_silu",
+      "ms": 707.0,
+      "share": 0.01246605776351518
+    },
+    {
+      "name": "ggml_vec_swiglu_f32",
+      "ms": 637.0,
+      "share": 0.011231794618612689
+    },
+    {
+      "name": "void ggml_quantize_mat_t<8ll, (ggml_type)15>",
+      "ms": 613.0,
+      "share": 0.010808618683217548
+    },
+    {
+      "name": "ggml_quantize_mat_q8_K_4x8",
+      "ms": 612.0,
+      "share": 0.010790986352576084
+    }
+  ],
+  "operations": [
+    {
+      "name": "(scheduler)",
+      "ms": 42325.0,
+      "share": 0.7462883943999717
+    },
+    {
+      "name": "mul_mat",
+      "ms": 8448.0,
+      "share": 0.14895792925908946
+    },
+    {
+      "name": "flash_attn_ext_tiled",
+      "ms": 2547.0,
+      "share": 0.044909546143809286
+    },
+    {
+      "name": "swiglu_f32",
+      "ms": 1527.0,
+      "share": 0.026924568889515815
+    },
+    {
+      "name": "(spinning in a worker's loop: barrier or next graph)",
+      "ms": 1127.0,
+      "share": 0.01987163663293014
+    },
+    {
+      "name": "(barrier)",
+      "ms": 270.0,
+      "share": 0.004760729273195331
+    },
+    {
+      "name": "rms_norm_f32",
+      "ms": 268.0,
+      "share": 0.004725464611912402
+    },
+    {
+      "name": "mul_mat_one_chunk",
+      "ms": 158.0,
+      "share": 0.002785908241351342
+    },
+    {
+      "name": "rope_flt",
+      "ms": 29.0,
+      "share": 0.0005113375886024614
+    },
+    {
+      "name": "set_rows_impl",
+      "ms": 12.0,
+      "share": 0.00021158796769757027
+    },
+    {
+      "name": "get_rows_q",
+      "ms": 3.0,
+      "share": 5.289699192439257e-05
+    }
+  ],
+  "threads": [
+    {
+      "name": "llama-bench 0x3f954a (llama-bench, pid: 71793)",
+      "ms": 9458.0,
+      "share": 0.1667665832069683
+    },
+    {
+      "name": "llama-bench 0x3f954d (llama-bench, pid: 71793)",
+      "ms": 9456.0,
+      "share": 0.16673131854568538
+    },
+    {
+      "name": "llama-bench 0x3f954b (llama-bench, pid: 71793)",
+      "ms": 9451.0,
+      "share": 0.16664315689247805
+    },
+    {
+      "name": "llama-bench 0x3f9549 (llama-bench, pid: 71793)",
+      "ms": 9451.0,
+      "share": 0.16664315689247805
+    },
+    {
+      "name": "llama-bench 0x3f954c (llama-bench, pid: 71793)",
+      "ms": 9450.0,
+      "share": 0.16662552456183657
+    },
+    {
+      "name": "Main Thread 0x3f92ed (llama-bench, pid: 71793)",
+      "ms": 9448.0,
+      "share": 0.16659025990055365
+    }
+  ],
+  "worker_spin_lines": [
+    {
+      "name": "ggml_graph_compute_secondary_thread (ggml-cpu.c:3282)",
+      "ms": 1127.0,
+      "share": 0.01987163663293014
+    }
+  ]
+}

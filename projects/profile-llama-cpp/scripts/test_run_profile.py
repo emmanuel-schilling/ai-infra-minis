@@ -31,9 +31,19 @@ def test_phase_tokens() -> None:
 
 def test_record_command_launches_llama_bench_on_the_cpu() -> None:
     command = record_command(
-        "Time Profiler", Path("t.trace"), Path("llama-bench"), Path("m.gguf"), (0, 128), 6, 3
+        "Time Profiler",
+        Path("t.trace"),
+        Path("t.bench.json"),
+        Path("llama-bench"),
+        Path("m.gguf"),
+        (0, 128),
+        6,
+        3,
     )
     assert command[:3] == ["xcrun", "xctrace", "record"]
+    # llama-bench's own output is kept, not dropped by xctrace
+    assert command[command.index("--target-stdout") + 1] == "t.bench.json"
+    assert command.index("--target-stdout") < command.index("--launch")
     launched = command[command.index("--") + 1 :]
     assert launched[0] == "llama-bench"
     assert launched[launched.index("-p") + 1] == "0"

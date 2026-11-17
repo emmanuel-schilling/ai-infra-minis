@@ -1,0 +1,37 @@
+Testing 1 devices
+
+Backend 1/1: CPU
+  Device description: Intel(R) Core(TM) i9-8950HK CPU @ 2.90GHz
+  Device memory: 32768 MB (32768 MB free)
+
+  MUL_MAT(type=f32,ne=[2304,1,1,1],op_params=[],sources=q8_0[768,2304,1,1],f32[768,1,1,1]):                    13620 runs -    88.42 us/run -     1848 kB/run - [1;34m  19.93 GB/s[0m
+  MUL_MAT(type=f32,ne=[2304,128,1,1],op_params=[],sources=q8_0[768,2304,1,1],f32[768,128,1,1]):                 2488 runs -  7292.52 us/run -     3372 kB/run - [1;34m   0.44 GB/s[0m
+  MUL_MAT(type=f32,ne=[2304,1024,1,1],op_params=[],sources=q8_0[768,2304,1,1],f32[768,1024,1,1]):                594 runs - 59513.48 us/run -    14124 kB/run - [1;34m   0.23 GB/s[0m
+  MUL_MAT(type=f32,ne=[768,1,1,1],op_params=[],sources=q8_0[768,768,1,1],f32[768,1,1,1]):              32768 runs -    30.70 us/run -      618 kB/run - [1;34m  19.20 GB/s[0m
+  MUL_MAT(type=f32,ne=[768,128,1,1],op_params=[],sources=q8_0[768,768,1,1],f32[768,128,1,1]):                   6079 runs -  2420.61 us/run -     1380 kB/run - [1;34m   0.54 GB/s[0m
+  MUL_MAT(type=f32,ne=[768,1024,1,1],op_params=[],sources=q8_0[768,768,1,1],f32[768,1024,1,1]):                 1242 runs - 19997.49 us/run -     6756 kB/run - [1;34m   0.32 GB/s[0m
+  MUL_MAT(type=f32,ne=[3072,1,1,1],op_params=[],sources=q8_0[768,3072,1,1],f32[768,1,1,1]):                    10218 runs -   115.20 us/run -     2463 kB/run - [1;34m  20.39 GB/s[0m
+  MUL_MAT(type=f32,ne=[3072,128,1,1],op_params=[],sources=q8_0[768,3072,1,1],f32[768,128,1,1]):                 1921 runs -  9655.18 us/run -     4368 kB/run - [1;34m   0.43 GB/s[0m
+  MUL_MAT(type=f32,ne=[3072,1024,1,1],op_params=[],sources=q8_0[768,3072,1,1],f32[768,1024,1,1]):                472 runs - 78682.75 us/run -    17808 kB/run - [1;34m   0.22 GB/s[0m
+  MUL_MAT(type=f32,ne=[768,1,1,1],op_params=[],sources=q8_0[3072,768,1,1],f32[3072,1,1,1]):                    10218 runs -   102.52 us/run -     2463 kB/run - [1;34m  22.91 GB/s[0m
+  MUL_MAT(type=f32,ne=[768,128,1,1],op_params=[],sources=q8_0[3072,768,1,1],f32[3072,128,1,1]):                 1921 runs -  9394.04 us/run -     4368 kB/run - [1;34m   0.44 GB/s[0m
+  MUL_MAT(type=f32,ne=[768,1024,1,1],op_params=[],sources=q8_0[3072,768,1,1],f32[3072,1024,1,1]):                472 runs - 72982.67 us/run -    17808 kB/run - [1;34m   0.23 GB/s[0m
+  MUL_MAT(type=f32,ne=[50257,1,1,1],op_params=[],sources=q8_0[768,50257,1,1],f32[768,1,1,1]):                    418 runs -  3590.48 us/run -    40247 kB/run - [1;34m  10.69 GB/s[0m
+  MUL_MAT(type=f32,ne=[50257,128,1,1],op_params=[],sources=q8_0[768,50257,1,1],f32[768,128,1,1]):                128 runs - 155512.16 us/run -    65561 kB/run - [1;34m   0.40 GB/s[0m
+  MUL_MAT(type=f32,ne=[2304,1,1,1],op_params=[],sources=f32[768,2304,1,1],f32[768,1,1,1]):              7272 runs -   158.40 us/run -     6924 kB/run - [1;34m  41.69 GB/s[0m
+  MUL_MAT(type=f32,ne=[2304,128,1,1],op_params=[],sources=f32[768,2304,1,1],f32[768,128,1,1]):                   993 runs -  4132.85 us/run -     8448 kB/run - [1;34m   1.95 GB/s[0m
+  MUL_MAT(type=f32,ne=[2304,1024,1,1],op_params=[],sources=f32[768,2304,1,1],f32[768,1024,1,1]):                 437 runs - 35285.44 us/run -    19200 kB/run - [1;34m   0.52 GB/s[0m
+  MUL_MAT(type=f32,ne=[768,1,1,1],op_params=[],sources=f32[768,768,1,1],f32[768,1,1,1]):               25424 runs -    44.16 us/run -     2310 kB/run - [1;34m  49.89 GB/s[0m
+  MUL_MAT(type=f32,ne=[768,128,1,1],op_params=[],sources=f32[768,768,1,1],f32[768,128,1,1]):                    2731 runs -  1360.98 us/run -     3072 kB/run - [1;34m   2.15 GB/s[0m
+  MUL_MAT(type=f32,ne=[768,1024,1,1],op_params=[],sources=f32[768,768,1,1],f32[768,1024,1,1]):                   993 runs - 11140.48 us/run -     8448 kB/run - [1;34m   0.72 GB/s[0m
+  MUL_MAT(type=f32,ne=[3072,1,1,1],op_params=[],sources=f32[768,3072,1,1],f32[768,1,1,1]):              3636 runs -   282.51 us/run -     9231 kB/run - [1;34m  31.16 GB/s[0m
+  MUL_MAT(type=f32,ne=[3072,128,1,1],op_params=[],sources=f32[768,3072,1,1],f32[768,128,1,1]):                   754 runs -  5869.25 us/run -    11136 kB/run - [1;34m   1.81 GB/s[0m
+  MUL_MAT(type=f32,ne=[3072,1024,1,1],op_params=[],sources=f32[768,3072,1,1],f32[768,1024,1,1]):                 342 runs - 48465.52 us/run -    24576 kB/run - [1;34m   0.48 GB/s[0m
+  MUL_MAT(type=f32,ne=[768,1,1,1],op_params=[],sources=f32[3072,768,1,1],f32[3072,1,1,1]):              3636 runs -   288.46 us/run -     9231 kB/run - [1;34m  30.52 GB/s[0m
+  MUL_MAT(type=f32,ne=[768,128,1,1],op_params=[],sources=f32[3072,768,1,1],f32[3072,128,1,1]):                   754 runs -  7734.90 us/run -    11136 kB/run - [1;34m   1.37 GB/s[0m
+  MUL_MAT(type=f32,ne=[768,1024,1,1],op_params=[],sources=f32[3072,768,1,1],f32[3072,1024,1,1]):                 342 runs - 63839.01 us/run -    24576 kB/run - [1;34m   0.37 GB/s[0m
+  MUL_MAT(type=f32,ne=[50257,1,1,1],op_params=[],sources=f32[768,50257,1,1],f32[768,1,1,1]):                     112 runs -  9242.24 us/run -   150970 kB/run - [1;34m  15.58 GB/s[0m
+  MUL_MAT(type=f32,ne=[50257,128,1,1],op_params=[],sources=f32[768,50257,1,1],f32[768,128,1,1]):                  48 runs - 332001.71 us/run -   176283 kB/run - [1;34m   0.51 GB/s[0m
+  Backend CPU: [1;32mOK[0m
+1/1 backends passed
+[1;32mOK[0m
