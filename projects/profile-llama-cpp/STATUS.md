@@ -20,8 +20,16 @@ threads (11.6% across rounds) and Q8_0 token generation at 1 thread (round 1
 8.8% faster). The ceilings agree before and after the run except the 6-thread
 FMA peak (639 against 743 GFLOP/s); the report uses the higher, and the peak
 is a short burst while the throttled tests are sustained, so prompt
-processing's shares of it understate what the machine sustains. Sessions B
-and C are still to run.
+processing's shares of it understate what the machine sustains.
+
+Session C ran on 2026-11-17: `results/2026-11-17_i9-8950hk_scaling/`, with
+`report.md`. Valid: rounds within 0.1% of round 1, no test started under a
+limit, no screen saver, no test more than 5% apart across rounds, and the
+ceilings agree before and after (this time the 6-thread FMA peak read 772
+and 751 GFLOP/s, so session A's 639 was the outlier). Every prompt-processing
+test from 2 threads up reached a 62–79% speed limit during the test; token
+generation never did. The six tests it shares with session A agree within
+1.4% across the two days. Session B is still to run.
 
 The scripts for steps 3–8 are written; session A's runs took about 45 and
 12 minutes, about half the estimates below.
