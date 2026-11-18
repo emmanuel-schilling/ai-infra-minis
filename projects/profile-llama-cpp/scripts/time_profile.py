@@ -46,6 +46,11 @@ BARRIER = "ggml_barrier"
 SPIN = "ggml_thread_cpu_relax"
 WAITING_FOR_WORK = {"ggml_graph_compute_thread_ready", "__psynch_cvwait", "_pthread_cond_wait"}
 OP = re.compile(r"ggml_compute_forward_([a-z0-9_]+)")
+# An operation on an extra buffer type, such as weights repacked at load time,
+# which ggml's dispatcher hands to that buffer type instead of to its own
+# ggml_compute_forward_<op>: the buffer type's forward_<op> method.
+EXTRA_DISPATCH = "ggml_cpu_extra_compute_forward"
+EXTRA_OP = re.compile(r"::forward_([a-z0-9_]+)$")
 AT_BARRIER = "(barrier)"
 WORKER_SPIN = "(spinning in a worker's loop: barrier or next graph)"
 SCHEDULER = "(scheduler)"
@@ -86,7 +91,8 @@ class Profile:
         self.compute_ns += weight
         self.thread_ns[thread] += weight
         self.self_ns[names[0]] += weight
-        for name in set(names):
+        # Each function once, in stack order, so tied totals keep the same order every run.
+        for name in dict.fromkeys(names):
             self.total_ns[name] += weight
         self.op_ns[op] += weight
         if op == WORKER_SPIN:
@@ -116,14 +122,25 @@ def operation(frames: list[str]) -> str:
     dispatcher called; inner ones are helpers such as mul_mat_one_chunk.
     Where the compiler inlined the operation's own function, a helper is the
     outermost frame and names the operation instead (mul_mat_one_chunk for
-    mul_mat). Outside any operation, the labels the module's docstring lists.
+    mul_mat). An operation on an extra buffer type is named by the type's
+    forward_<op> method under the extra-buffer dispatcher, marked "(repacked)"
+    for weights repacked at load time or "(extra buffer type)" for other
+    types. Only that method proves it: before every operation the dispatcher
+    asks each extra buffer type, the repack one included, whether it takes
+    it. Outside any operation, the labels the module's docstring lists.
     """
+    names = [short_name(f) for f in frames]
+    present = set(names)
+    if EXTRA_DISPATCH in present:
+        for name in reversed(names[: names.index(EXTRA_DISPATCH)]):
+            match = EXTRA_OP.search(name)
+            if match:
+                kind = "repacked" if "::repack::" in name else "extra buffer type"
+                return f"{match.group(1)} ({kind})"
     for name in reversed(frames):
         match = OP.search(name)
         if match:
             return match.group(1)
-    names = [short_name(f) for f in frames]
-    present = set(names)
     if present & WAITING_FOR_WORK:
         return IDLE
     if BARRIER in present:
@@ -138,32 +155,54 @@ def operation(frames: list[str]) -> str:
     return SCHEDULER
 
 
-def parse(stream: IO[bytes] | IO[str]) -> Profile:
-    """Aggregate a time-profile export, read incrementally."""
-    profile = Profile()
-    known: dict[str, Any] = {}  # id -> the value it stands for
+class ExportReader:
+    """Reads the values of an export's rows, resolving id and ref.
 
-    def value(element: ET.Element, extract: Any) -> Any:
+    Ids are shared by the whole export, so every row's values must be read,
+    including rows that are then left out: a later row may refer to them.
+    """
+
+    def __init__(self) -> None:
+        self.known: dict[str, Any] = {}  # id -> the value it stands for
+
+    def value(self, element: ET.Element, extract: Callable[[ET.Element], Any]) -> Any:
         ref = element.get("ref")
         if ref is not None:
-            return known[ref]
+            return self.known[ref]
         result = extract(element)
         if element.get("id") is not None:
-            known[element.get("id", "")] = result
+            self.known[element.get("id", "")] = result
         return result
 
-    def binary(element: ET.Element) -> tuple[str, str]:
-        return element.get("path", ""), element.get("load-addr", "")
+    def label(self, element: ET.Element) -> str:
+        """The element's formatted value, such as a thread's name."""
+        return self.value(element, lambda e: e.get("fmt", ""))
 
-    def frame(element: ET.Element) -> Frame:
+    def integer(self, element: ET.Element) -> int:
+        return self.value(element, lambda e: int(e.text or 0))
+
+    def frames(self, element: ET.Element) -> list[Frame]:
+        """A backtrace's frames, leaf first."""
+        return self.value(element, self._backtrace)
+
+    def _backtrace(self, element: ET.Element) -> list[Frame]:
+        return [self.value(f, self._frame) for f in element.findall("frame")]
+
+    def _frame(self, element: ET.Element) -> Frame:
         found = element.find("binary")
-        path, load = value(found, binary) if found is not None else ("", "")
+        path, load = self.value(found, self._binary) if found is not None else ("", "")
         addr = element.get("addr", "")
         return Frame(element.get("name") or addr or "?", addr, path, load)
 
-    def backtrace(element: ET.Element) -> list[Frame]:
-        return [value(f, frame) for f in element.findall("frame")]
+    @staticmethod
+    def _binary(element: ET.Element) -> tuple[str, str]:
+        return element.get("path", ""), element.get("load-addr", "")
 
+
+def parse(stream: IO[bytes] | IO[str]) -> Profile:
+    """Aggregate a time-profile export, read incrementally."""
+    profile = Profile()
+    reader = ExportReader()
     for _, row in ET.iterparse(stream, events=("end",)):
         if row.tag != "row":
             continue
@@ -173,9 +212,9 @@ def parse(stream: IO[bytes] | IO[str]) -> Profile:
             row.find("backtrace"),
         )
         if thread_el is not None and weight_el is not None and trace_el is not None:
-            thread = value(thread_el, lambda e: e.get("fmt", ""))
-            weight = value(weight_el, lambda e: int(e.text or 0))
-            frames = value(trace_el, backtrace)
+            thread = reader.label(thread_el)
+            weight = reader.integer(weight_el)
+            frames = reader.frames(trace_el)
             if frames:
                 profile.add(thread, weight, frames)
         row.clear()

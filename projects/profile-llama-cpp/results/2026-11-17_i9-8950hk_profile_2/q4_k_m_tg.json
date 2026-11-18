@@ -161,17 +161,17 @@
       "share": 0.9703671152178819
     },
     {
+      "name": "ggml_graph_compute_secondary_thread",
+      "ms": 70159.0,
+      "share": 0.8332719693100704
+    },
+    {
       "name": "_pthread_start",
       "ms": 70159.0,
       "share": 0.8332719693100704
     },
     {
       "name": "thread_start",
-      "ms": 70159.0,
-      "share": 0.8332719693100704
-    },
-    {
-      "name": "ggml_graph_compute_secondary_thread",
       "ms": 70159.0,
       "share": 0.8332719693100704
     },
@@ -211,7 +211,12 @@
       "share": 0.3280876990866658
     },
     {
-      "name": "llama_context::decode",
+      "name": "ggml_graph_compute",
+      "ms": 14038.0,
+      "share": 0.16672803068992956
+    },
+    {
+      "name": "ggml_backend_cpu_graph_compute",
       "ms": 14038.0,
       "share": 0.16672803068992956
     },
@@ -226,7 +231,12 @@
       "share": 0.16672803068992956
     },
     {
-      "name": "llama_bench",
+      "name": "llama_context::process_ubatch",
+      "ms": 14038.0,
+      "share": 0.16672803068992956
+    },
+    {
+      "name": "llama_context::decode",
       "ms": 14038.0,
       "share": 0.16672803068992956
     },
@@ -236,22 +246,12 @@
       "share": 0.16672803068992956
     },
     {
-      "name": "ggml_backend_cpu_graph_compute",
+      "name": "llama_bench",
       "ms": 14038.0,
       "share": 0.16672803068992956
     },
     {
       "name": "start",
-      "ms": 14038.0,
-      "share": 0.16672803068992956
-    },
-    {
-      "name": "ggml_graph_compute",
-      "ms": 14038.0,
-      "share": 0.16672803068992956
-    },
-    {
-      "name": "llama_context::process_ubatch",
       "ms": 14038.0,
       "share": 0.16672803068992956
     },
@@ -308,9 +308,9 @@
   ],
   "operations": [
     {
-      "name": "(scheduler)",
-      "ms": 51061.0,
-      "share": 0.6064467855149234
+      "name": "mul_mat (repacked)",
+      "ms": 52039.0,
+      "share": 0.6180624012732046
     },
     {
       "name": "mul_mat_one_chunk",
@@ -318,19 +318,24 @@
       "share": 0.3298573583381831
     },
     {
-      "name": "(barrier)",
-      "ms": 2241.0,
-      "share": 0.02661615021912895
-    },
-    {
       "name": "(spinning in a worker's loop: barrier or next graph)",
       "ms": 1971.0,
       "share": 0.023409385132486905
     },
     {
+      "name": "(scheduler)",
+      "ms": 780.0,
+      "share": 0.00926398802807701
+    },
+    {
       "name": "flash_attn_ext_f16",
       "ms": 763.0,
       "share": 0.009062080596695844
+    },
+    {
+      "name": "(barrier)",
+      "ms": 483.0,
+      "share": 0.005736546432770764
     },
     {
       "name": "mul_mat",

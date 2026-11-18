@@ -5,6 +5,8 @@ from time_profile import (
     IDLE,
     SCHEDULER,
     WORKER_SPIN,
+    Frame,
+    Profile,
     markdown,
     operation,
     parse,
@@ -62,6 +64,32 @@ def test_operation_is_the_outermost_forward_frame() -> None:
     assert operation(frames) == "mul_mat"
 
 
+def test_operation_names_extra_buffer_types_by_their_forward_method() -> None:
+    repack = "ggml::cpu::repack::tensor_traits<block_q4_K, 8ll, 8ll, (ggml_type)15>"
+    frames = [
+        "ggml_gemm_q4_K_8x8_q8_K",
+        "void ggml::cpu::repack::gemm<block_q4_K, 8ll, 8ll, (ggml_type)15>(int, float*)",
+        f"{repack}::forward_mul_mat(ggml_compute_params*, ggml_tensor*)",
+        f"{repack}::compute_forward(ggml_compute_params*, ggml_tensor*)",
+        "ggml_cpu_extra_compute_forward",
+        "ggml_compute_forward",
+        "ggml_graph_compute_secondary_thread(void*)",
+    ]
+    assert operation(frames) == "mul_mat (repacked)"
+    other = [
+        "k",
+        "ggml::cpu::amx::tensor_traits::forward_mul_mat(x)",
+        "ggml_cpu_extra_compute_forward",
+    ]
+    assert operation(other) == "mul_mat (extra buffer type)"
+    # Without the forward_<op> method, the stack doesn't prove an extra buffer type
+    # ran the operation: the dispatcher asks each type, repack included, before every one.
+    check = ["k", f"{repack}::compute_forward(x)", "ggml_cpu_extra_compute_forward"]
+    assert operation([*check, "ggml_compute_forward", "ggml_graph_compute"]) == SCHEDULER
+    dispatch = ["ggml_cpu_extra_compute_forward", "ggml_compute_forward", "ggml_graph_compute"]
+    assert operation(dispatch) == SCHEDULER
+
+
 def test_operation_labels_only_what_the_stack_proves() -> None:
     worker = "ggml_graph_compute_secondary_thread(void*)"
     spin = "ggml_thread_cpu_relax"
@@ -89,6 +117,18 @@ def test_parse_resolves_refs_and_separates_idle_and_loading() -> None:
     assert profile.thread_ns == {"worker A": 2_000_000, "worker B": 2_000_000}
     assert profile.total_ns["ggml_graph_compute_secondary_thread"] == 4_000_000
     assert profile.total_ns["ggml_barrier"] == 1_000_000
+
+
+def test_tied_total_times_keep_the_stack_order() -> None:
+    profile = Profile()
+    names = ["leaf", "helper", "ggml_compute_forward_add(x)", "ggml_graph_compute(x)"]
+    profile.add("t", 5, [Frame(n, "", "", "") for n in names])
+    assert [name for name, _ in profile.total_ns.most_common()] == [
+        "leaf",
+        "helper",
+        "ggml_compute_forward_add",
+        "ggml_graph_compute",
+    ]
 
 
 SPIN_EXPORT = """<?xml version="1.0"?>

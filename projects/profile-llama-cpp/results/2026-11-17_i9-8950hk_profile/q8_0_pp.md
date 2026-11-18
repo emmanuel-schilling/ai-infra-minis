@@ -59,23 +59,23 @@ CPU time in ggml's graphs: 113982 ms, the whole for the shares below. Worker thr
 |---:|---:|---|
 | 96.9% | 110457 | `ggml_compute_forward` |
 | 92.2% | 105078 | `ggml_compute_forward_mul_mat` |
-| 91.4% | 104161 | `(anonymous namespace)::tinyBLAS_Q0_AVX<block_q8_0, block_q8_0, float>::matmul` |
 | 91.4% | 104161 | `(anonymous namespace)::tinyBLAS_Q0_AVX<block_q8_0, block_q8_0, float>::mnpack` |
-| 83.3% | 94986 | `thread_start` |
-| 83.3% | 94986 | `_pthread_start` |
+| 91.4% | 104161 | `(anonymous namespace)::tinyBLAS_Q0_AVX<block_q8_0, block_q8_0, float>::matmul` |
 | 83.3% | 94986 | `ggml_graph_compute_secondary_thread` |
+| 83.3% | 94986 | `_pthread_start` |
+| 83.3% | 94986 | `thread_start` |
 | 45.8% | 52207 | `void (anonymous namespace)::tinyBLAS_Q0_AVX<block_q8_0, block_q8_0, float>::gemm4xN<2>` |
 | 23.4% | 26715 | `float vector[8] (anonymous namespace)::madd<float vector[8], float vector[8]>` |
 | 21.7% | 24767 | `(anonymous namespace)::tinyBLAS_Q0_AVX<block_q8_0, block_q8_0, float>::updot` |
-| 16.7% | 18996 | `test_prompt` |
-| 16.7% | 18996 | `ggml_backend_cpu_graph_compute` |
-| 16.7% | 18996 | `llama_context::graph_compute` |
-| 16.7% | 18996 | `ggml_backend_graph_compute_async` |
-| 16.7% | 18996 | `llama_context::process_ubatch` |
 | 16.7% | 18996 | `ggml_graph_compute` |
+| 16.7% | 18996 | `ggml_backend_cpu_graph_compute` |
+| 16.7% | 18996 | `ggml_backend_graph_compute_async` |
+| 16.7% | 18996 | `llama_context::graph_compute` |
+| 16.7% | 18996 | `llama_context::process_ubatch` |
 | 16.7% | 18996 | `llama_context::decode` |
-| 16.7% | 18996 | `start` |
+| 16.7% | 18996 | `test_prompt` |
 | 16.7% | 18996 | `llama_bench` |
+| 16.7% | 18996 | `start` |
 | 2.9% | 3274 | `ggml_thread_cpu_relax` |
 | 2.4% | 2763 | `ggml_compute_forward_flash_attn_ext_tiled` |
 | 1.3% | 1534 | `ggml_compute_forward_swiglu_f32` |

@@ -1,0 +1,554 @@
+{
+  "events": [
+    "CORE_ACTIVE_CYCLE",
+    "L2_RQSTS.MISS",
+    "LONGEST_LAT_CACHE.MISS",
+    "RESOURCE_STALLS.ANY"
+  ],
+  "compute_thread_ms": 135801.0,
+  "compute_wall_ms": 22721.001077,
+  "idle_between_graphs_ms": 323.0,
+  "outside_compute_ms": 979.0,
+  "ghz": 2.8873578698389557,
+  "totals": {
+    "CORE_ACTIVE_CYCLE": 392106086082,
+    "L2_RQSTS.MISS": 11855148508,
+    "LONGEST_LAT_CACHE.MISS": 13865348416,
+    "RESOURCE_STALLS.ANY": 284722317536
+  },
+  "per_cycle": {
+    "L2_RQSTS.MISS": 0.03023454347893179,
+    "LONGEST_LAT_CACHE.MISS": 0.03536121704854227,
+    "RESOURCE_STALLS.ANY": 0.7261359301534964
+  },
+  "gb_per_second": {
+    "L2_RQSTS.MISS": 33.39331317052074,
+    "LONGEST_LAT_CACHE.MISS": 39.055598633912254
+  },
+  "operations": [
+    {
+      "name": "mul_mat_one_chunk",
+      "cycles": 377434657119,
+      "share": 0.9625830113742947,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.03024116676016135,
+        "LONGEST_LAT_CACHE.MISS": 0.03536233448957466,
+        "RESOURCE_STALLS.ANY": 0.7263125033628505
+      }
+    },
+    {
+      "name": "(spinning in a worker's loop: barrier or next graph)",
+      "cycles": 7128502732,
+      "share": 0.018180035926576354,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.029716912928862155,
+        "LONGEST_LAT_CACHE.MISS": 0.03544648848428049,
+        "RESOURCE_STALLS.ANY": 0.7226537170105977
+      }
+    },
+    {
+      "name": "flash_attn_ext_f16",
+      "cycles": 2190057300,
+      "share": 0.005585369311360292,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.030923524238384084,
+        "LONGEST_LAT_CACHE.MISS": 0.03500941961655524,
+        "RESOURCE_STALLS.ANY": 0.7220360001539686
+      }
+    },
+    {
+      "name": "(barrier)",
+      "cycles": 1999494297,
+      "share": 0.005099370726374932,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.030445640225799552,
+        "LONGEST_LAT_CACHE.MISS": 0.03550938660166631,
+        "RESOURCE_STALLS.ANY": 0.7238095123209046
+      }
+    },
+    {
+      "name": "mul_mat",
+      "cycles": 1703429566,
+      "share": 0.004344307896419049,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.030120181088837576,
+        "LONGEST_LAT_CACHE.MISS": 0.03542057341512646,
+        "RESOURCE_STALLS.ANY": 0.7224130469272364
+      }
+    },
+    {
+      "name": "(scheduler)",
+      "cycles": 1043697268,
+      "share": 0.0026617726810334043,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.030045631967678964,
+        "LONGEST_LAT_CACHE.MISS": 0.03518021089617339,
+        "RESOURCE_STALLS.ANY": 0.7158015354697661
+      }
+    },
+    {
+      "name": "swiglu_f32",
+      "cycles": 227487690,
+      "share": 0.0005801687300319694,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.029385229591983638,
+        "LONGEST_LAT_CACHE.MISS": 0.03595994139287273,
+        "RESOURCE_STALLS.ANY": 0.7380224442034644
+      }
+    },
+    {
+      "name": "rms_norm_f32",
+      "cycles": 173548466,
+      "share": 0.00044260589712883546,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.0312864649578637,
+        "LONGEST_LAT_CACHE.MISS": 0.03533312705858201,
+        "RESOURCE_STALLS.ANY": 0.725411246216374
+      }
+    },
+    {
+      "name": "rope_flt",
+      "cycles": 119184695,
+      "share": 0.0003039603291826367,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.02720856901970509,
+        "LONGEST_LAT_CACHE.MISS": 0.03086210020506408,
+        "RESOURCE_STALLS.ANY": 0.6337592591062132
+      }
+    },
+    {
+      "name": "set_rows_impl",
+      "cycles": 40551775,
+      "share": 0.00010342041717638508,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.03082003192215384,
+        "LONGEST_LAT_CACHE.MISS": 0.034150638288952824,
+        "RESOURCE_STALLS.ANY": 0.6891044843289844
+      }
+    },
+    {
+      "name": "set_rows",
+      "cycles": 16734445,
+      "share": 4.2678360765102674e-05,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.030600297769062552,
+        "LONGEST_LAT_CACHE.MISS": 0.032335043080305326,
+        "RESOURCE_STALLS.ANY": 0.6374054233648023
+      }
+    },
+    {
+      "name": "glu",
+      "cycles": 14337244,
+      "share": 3.6564706616162275e-05,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.029594669658966535,
+        "LONGEST_LAT_CACHE.MISS": 0.03699086100508577,
+        "RESOURCE_STALLS.ANY": 0.7378863748151319
+      }
+    },
+    {
+      "name": "rope",
+      "cycles": 5949141,
+      "share": 1.5172274063493811e-05,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.03014620093892547,
+        "LONGEST_LAT_CACHE.MISS": 0.035649348368108943,
+        "RESOURCE_STALLS.ANY": 0.7384060993007225
+      }
+    },
+    {
+      "name": "flash_attn_ext",
+      "cycles": 2976137,
+      "share": 7.590132124033416e-06,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.02997543459860887,
+        "LONGEST_LAT_CACHE.MISS": 0.03522317689004236,
+        "RESOURCE_STALLS.ANY": 0.7350192548259707
+      }
+    },
+    {
+      "name": "swiglu",
+      "cycles": 2880192,
+      "share": 7.345440691266582e-06,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.030631291247250184,
+        "LONGEST_LAT_CACHE.MISS": 0.03813252727595938,
+        "RESOURCE_STALLS.ANY": 0.7410842749372264
+      }
+    },
+    {
+      "name": "add_non_quantized",
+      "cycles": 2598015,
+      "share": 6.625796161339574e-06,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.030934771354283942,
+        "LONGEST_LAT_CACHE.MISS": 0.03703981693716164,
+        "RESOURCE_STALLS.ANY": 0.7429614532633568
+      }
+    }
+  ],
+  "self": [
+    {
+      "name": "ggml_vec_dot_q8_0_q8_0",
+      "cycles": 188625332841,
+      "share": 0.4810568862263294,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.030233364204622,
+        "LONGEST_LAT_CACHE.MISS": 0.035347941146486,
+        "RESOURCE_STALLS.ANY": 0.7260688775162822
+      }
+    },
+    {
+      "name": "mul_sum_i8_pairs_float",
+      "cycles": 128339165548,
+      "share": 0.3273072520510707,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.03025423993853066,
+        "LONGEST_LAT_CACHE.MISS": 0.03539294092029248,
+        "RESOURCE_STALLS.ANY": 0.7269201540203862
+      }
+    },
+    {
+      "name": "sum_i16_pairs_float",
+      "cycles": 24061164114,
+      "share": 0.06136391392039796,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.030242299314878443,
+        "LONGEST_LAT_CACHE.MISS": 0.03536275755273709,
+        "RESOURCE_STALLS.ANY": 0.7257573759217825
+      }
+    },
+    {
+      "name": "ggml_lookup_fp16_to_fp32",
+      "cycles": 23827481770,
+      "share": 0.06076794677707968,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.03025165802067887,
+        "LONGEST_LAT_CACHE.MISS": 0.03536459631503896,
+        "RESOURCE_STALLS.ANY": 0.7265873627400115
+      }
+    },
+    {
+      "name": "ggml_thread_cpu_relax",
+      "cycles": 8449711593,
+      "share": 0.021549554809085356,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.02985427789144661,
+        "LONGEST_LAT_CACHE.MISS": 0.03546981559090002,
+        "RESOURCE_STALLS.ANY": 0.7228623395927545
+      }
+    },
+    {
+      "name": "mul_sum_us8_pairs_float",
+      "cycles": 5452557504,
+      "share": 0.013905822167880666,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.0301860781622671,
+        "LONGEST_LAT_CACHE.MISS": 0.03531515345940678,
+        "RESOURCE_STALLS.ANY": 0.7258864941995484
+      }
+    },
+    {
+      "name": "hsum_float_8",
+      "cycles": 3609098640,
+      "share": 0.009204393321365687,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.03024229894697475,
+        "LONGEST_LAT_CACHE.MISS": 0.03533796599141995,
+        "RESOURCE_STALLS.ANY": 0.7253665045297848
+      }
+    },
+    {
+      "name": "ggml_compute_forward_mul_mat_one_chunk",
+      "cycles": 2853599856,
+      "share": 0.007277621942861747,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.0302266152763641,
+        "LONGEST_LAT_CACHE.MISS": 0.035140025953239326,
+        "RESOURCE_STALLS.ANY": 0.7215404870696068
+      }
+    },
+    {
+      "name": "ggml_compute_forward_mul_mat",
+      "cycles": 994202520,
+      "share": 0.0025355447295762846,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.03035726966373008,
+        "LONGEST_LAT_CACHE.MISS": 0.03518098103392456,
+        "RESOURCE_STALLS.ANY": 0.7192878127084208
+      }
+    },
+    {
+      "name": "ggml_vec_mad_f16_f32",
+      "cycles": 701725583,
+      "share": 0.0017896319590745913,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.030831944173253835,
+        "LONGEST_LAT_CACHE.MISS": 0.03495381042705978,
+        "RESOURCE_STALLS.ANY": 0.722147255674445
+      }
+    },
+    {
+      "name": "ggml_barrier",
+      "cycles": 687213551,
+      "share": 0.0017526214853402838,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.03015582997431318,
+        "LONGEST_LAT_CACHE.MISS": 0.0353452809023552,
+        "RESOURCE_STALLS.ANY": 0.7236799875036224
+      }
+    },
+    {
+      "name": "quantize_row_q8_0",
+      "cycles": 669109548,
+      "share": 0.0017064502994224658,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.029758370747386197,
+        "LONGEST_LAT_CACHE.MISS": 0.035778305767055055,
+        "RESOURCE_STALLS.ANY": 0.7270291485961579
+      }
+    },
+    {
+      "name": "ggml_vec_dot_f16_f32",
+      "cycles": 628277332,
+      "share": 0.001602314665089412,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.031150213453825515,
+        "LONGEST_LAT_CACHE.MISS": 0.03519456913973143,
+        "RESOURCE_STALLS.ANY": 0.7228600076247856
+      }
+    },
+    {
+      "name": "expf",
+      "cycles": 394449595,
+      "share": 0.001005976721609748,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.03076780950934935,
+        "LONGEST_LAT_CACHE.MISS": 0.03485278518285714,
+        "RESOURCE_STALLS.ANY": 0.7193615143653526
+      }
+    },
+    {
+      "name": "ggml_compute_forward_flash_attn_ext_f16_one_chunk",
+      "cycles": 379776938,
+      "share": 0.0009685566010841729,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.030923194183002232,
+        "LONGEST_LAT_CACHE.MISS": 0.034912338463269195,
+        "RESOURCE_STALLS.ANY": 0.7210275996274423
+      }
+    },
+    {
+      "name": "0x10e252fd9",
+      "cycles": 307182519,
+      "share": 0.0007834168606496963,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.030130988671266155,
+        "LONGEST_LAT_CACHE.MISS": 0.0348643830217435,
+        "RESOURCE_STALLS.ANY": 0.7144071241892511
+      }
+    },
+    {
+      "name": "_platform_memmove$VARIANT$Haswell",
+      "cycles": 282213850,
+      "share": 0.000719738509595542,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.029859108615682754,
+        "LONGEST_LAT_CACHE.MISS": 0.03515340228695367,
+        "RESOURCE_STALLS.ANY": 0.7228818713185055
+      }
+    },
+    {
+      "name": "void rotate_pairs<float>",
+      "cycles": 188606660,
+      "share": 0.00048100926431567104,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.029879316032636386,
+        "LONGEST_LAT_CACHE.MISS": 0.03564367239205657,
+        "RESOURCE_STALLS.ANY": 0.7313388933349437
+      }
+    },
+    {
+      "name": "void ggml_compute_forward_rms_norm_f32<(ggml_rms_norm_fuse_op)1>",
+      "cycles": 173548466,
+      "share": 0.00044260589712883546,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.0312864649578637,
+        "LONGEST_LAT_CACHE.MISS": 0.03533312705858201,
+        "RESOURCE_STALLS.ANY": 0.725411246216374
+      }
+    },
+    {
+      "name": "0x7ff815c325e0",
+      "cycles": 146110729,
+      "share": 0.00037263060734396325,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.03017065913071996,
+        "LONGEST_LAT_CACHE.MISS": 0.03551141682415396,
+        "RESOURCE_STALLS.ANY": 0.7251154567848334
+      }
+    },
+    {
+      "name": "ggml_v_expf",
+      "cycles": 127340007,
+      "share": 0.00032475906781352475,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.02951179357167775,
+        "LONGEST_LAT_CACHE.MISS": 0.03625493753899354,
+        "RESOURCE_STALLS.ANY": 0.7430339390510635
+      }
+    },
+    {
+      "name": "ggml_graph_compute_thread",
+      "cycles": 125887092,
+      "share": 0.0003210536547848268,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.03030104945151962,
+        "LONGEST_LAT_CACHE.MISS": 0.03551558725337781,
+        "RESOURCE_STALLS.ANY": 0.7320293966278926
+      }
+    },
+    {
+      "name": "void ggml_compute_forward_rope_flt<float>",
+      "cycles": 101853751,
+      "share": 0.0002597606989928221,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.026543980692473466,
+        "LONGEST_LAT_CACHE.MISS": 0.029959279555644446,
+        "RESOURCE_STALLS.ANY": 0.616641001272501
+      }
+    },
+    {
+      "name": "ggml_vec_swiglu_f32",
+      "cycles": 85467675,
+      "share": 0.00021797079421543688,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.029154110018787805,
+        "LONGEST_LAT_CACHE.MISS": 0.03548880907313789,
+        "RESOURCE_STALLS.ANY": 0.7298547901297187
+      }
+    },
+    {
+      "name": "void vec_binary_op_contiguous<&op_add(float, float), float, float, float>",
+      "cycles": 82636991,
+      "share": 0.00021075161527260347,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.031403757186657486,
+        "LONGEST_LAT_CACHE.MISS": 0.03559616540248906,
+        "RESOURCE_STALLS.ANY": 0.729611439990597
+      }
+    },
+    {
+      "name": "ggml::cpu::repack::extra_buffer_type::get_tensor_traits",
+      "cycles": 73460724,
+      "share": 0.00018734910425398848,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.030190432100832547,
+        "LONGEST_LAT_CACHE.MISS": 0.03614914004931397,
+        "RESOURCE_STALLS.ANY": 0.7303362678538262
+      }
+    },
+    {
+      "name": "0x7ff815c411c0",
+      "cycles": 71921379,
+      "share": 0.00018342326618454806,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.029300494919598245,
+        "LONGEST_LAT_CACHE.MISS": 0.034737807238095365,
+        "RESOURCE_STALLS.ANY": 0.7013567134189682
+      }
+    },
+    {
+      "name": "ggml_row_size",
+      "cycles": 52951799,
+      "share": 0.00013504457308761677,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.030044796022888665,
+        "LONGEST_LAT_CACHE.MISS": 0.03516362116422145,
+        "RESOURCE_STALLS.ANY": 0.7269075031803924
+      }
+    },
+    {
+      "name": "ggml_is_contiguous_m_n",
+      "cycles": 50104651,
+      "share": 0.00012778340550807405,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.030088723699522424,
+        "LONGEST_LAT_CACHE.MISS": 0.03467284903351587,
+        "RESOURCE_STALLS.ANY": 0.7101131789142688
+      }
+    },
+    {
+      "name": "ggml_op_is_empty",
+      "cycles": 47107003,
+      "share": 0.00012013841323072107,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.030174324611565717,
+        "LONGEST_LAT_CACHE.MISS": 0.03628696140996276,
+        "RESOURCE_STALLS.ANY": 0.7399448655224362
+      }
+    }
+  ],
+  "threads": [
+    {
+      "name": "llama-bench 0x4e20da (llama-bench, pid: 46869)",
+      "cycles": 65526860127,
+      "share": 0.16711513147310997,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.030181433372008945,
+        "LONGEST_LAT_CACHE.MISS": 0.03535333131345111,
+        "RESOURCE_STALLS.ANY": 0.7260903244682643
+      }
+    },
+    {
+      "name": "llama-bench 0x4e20de (llama-bench, pid: 46869)",
+      "cycles": 65472001989,
+      "share": 0.16697522510606488,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.029945904668218407,
+        "LONGEST_LAT_CACHE.MISS": 0.03529819282734443,
+        "RESOURCE_STALLS.ANY": 0.7243355656203654
+      }
+    },
+    {
+      "name": "llama-bench 0x4e20dd (llama-bench, pid: 46869)",
+      "cycles": 65385209588,
+      "share": 0.16675387582310106,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.03011132706319773,
+        "LONGEST_LAT_CACHE.MISS": 0.03530405445735007,
+        "RESOURCE_STALLS.ANY": 0.7254325474656762
+      }
+    },
+    {
+      "name": "Main Thread 0x4e20c8 (llama-bench, pid: 46869)",
+      "cycles": 65328229039,
+      "share": 0.16660855660714763,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.03082835145887231,
+        "LONGEST_LAT_CACHE.MISS": 0.03554631925830552,
+        "RESOURCE_STALLS.ANY": 0.7299862512962128
+      }
+    },
+    {
+      "name": "llama-bench 0x4e20dc (llama-bench, pid: 46869)",
+      "cycles": 65236574413,
+      "share": 0.16637480704483956,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.030162877537724953,
+        "LONGEST_LAT_CACHE.MISS": 0.035330881330591424,
+        "RESOURCE_STALLS.ANY": 0.72540829286048
+      }
+    },
+    {
+      "name": "llama-bench 0x4e20db (llama-bench, pid: 46869)",
+      "cycles": 65157210926,
+      "share": 0.16617240394573693,
+      "per_cycle": {
+        "L2_RQSTS.MISS": 0.030178022448400586,
+        "LONGEST_LAT_CACHE.MISS": 0.03533462346346841,
+        "RESOURCE_STALLS.ANY": 0.7255647975892
+      }
+    }
+  ]
+}

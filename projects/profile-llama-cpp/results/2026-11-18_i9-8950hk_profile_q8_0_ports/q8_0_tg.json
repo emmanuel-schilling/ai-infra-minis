@@ -1,0 +1,571 @@
+{
+  "events": [
+    "UOPS_DISPATCHED_PORT.PORT_0",
+    "UOPS_DISPATCHED_PORT.PORT_1",
+    "UOPS_DISPATCHED_PORT.PORT_5",
+    "CORE_ACTIVE_CYCLE"
+  ],
+  "compute_thread_ms": 135853.0,
+  "compute_wall_ms": 22716.998473,
+  "idle_between_graphs_ms": 290.0,
+  "outside_compute_ms": 963.0,
+  "ghz": 2.8881876319919324,
+  "totals": {
+    "UOPS_DISPATCHED_PORT.PORT_0": 82723021110,
+    "UOPS_DISPATCHED_PORT.PORT_1": 78156929771,
+    "UOPS_DISPATCHED_PORT.PORT_5": 23686553385,
+    "CORE_ACTIVE_CYCLE": 392368954369
+  },
+  "per_cycle": {
+    "UOPS_DISPATCHED_PORT.PORT_0": 0.21082968004701985,
+    "UOPS_DISPATCHED_PORT.PORT_1": 0.1991924409429651,
+    "UOPS_DISPATCHED_PORT.PORT_5": 0.06036806205295281
+  },
+  "gb_per_second": {},
+  "operations": [
+    {
+      "name": "mul_mat_one_chunk",
+      "cycles": 377374535728,
+      "share": 0.9617849004768644,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.21085163220273995,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.19923070978003338,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.060430042877712795
+      }
+    },
+    {
+      "name": "(spinning in a worker's loop: barrier or next graph)",
+      "cycles": 7505982019,
+      "share": 0.01912990805062794,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.20990932672256912,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.19783902309398804,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.05871757591270084
+      }
+    },
+    {
+      "name": "flash_attn_ext_f16",
+      "cycles": 2175751029,
+      "share": 0.005545166111572206,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.208922573374088,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.1965857326040589,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.05784634607657584
+      }
+    },
+    {
+      "name": "(barrier)",
+      "cycles": 2006303010,
+      "share": 0.005113307226935161,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.21308332732850757,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.2010395528440143,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.05933060729445848
+      }
+    },
+    {
+      "name": "mul_mat",
+      "cycles": 1717140596,
+      "share": 0.0043763416470130045,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.21002534960742375,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.19823198973510262,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.05961737625822225
+      }
+    },
+    {
+      "name": "(scheduler)",
+      "cycles": 1100429799,
+      "share": 0.002804579176682542,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.2095008116006135,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.19741352078743551,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.058225209875473395
+      }
+    },
+    {
+      "name": "swiglu_f32",
+      "cycles": 199509724,
+      "share": 0.0005084747959247887,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.21368248196263356,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.20345771717873762,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.0633422960376608
+      }
+    },
+    {
+      "name": "rms_norm_f32",
+      "cycles": 190104582,
+      "share": 0.00048450464768733407,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.2157732421199611,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.203484437844849,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.059175133401045535
+      }
+    },
+    {
+      "name": "rope_flt",
+      "cycles": 48165002,
+      "share": 0.000122754365409613,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.20571453521376373,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.19486688695663296,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.05892203637819843
+      }
+    },
+    {
+      "name": "set_rows_impl",
+      "cycles": 17767184,
+      "share": 4.5281829263410594e-05,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.2158457412271973,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.20309419883308463,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.05853983388701327
+      }
+    },
+    {
+      "name": "rms_norm_mul_fused",
+      "cycles": 6475948,
+      "share": 1.650474108078834e-05,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.1849542337276334,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.17423364115956458,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.051635992135823205
+      }
+    },
+    {
+      "name": "glu",
+      "cycles": 5955805,
+      "share": 1.5179093385657915e-05,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.21745809340634895,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.2060388142325009,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.06283583831236919
+      }
+    },
+    {
+      "name": "flash_attn_ext",
+      "cycles": 5951355,
+      "share": 1.5167752019450293e-05,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.21228762189450973,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.1991603592795254,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.05817045025880661
+      }
+    },
+    {
+      "name": "rope",
+      "cycles": 5946051,
+      "share": 1.5154234130379458e-05,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.19642515679734332,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.1872962408159634,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.0623970430122446
+      }
+    },
+    {
+      "name": "set_rows",
+      "cycles": 2978753,
+      "share": 7.591714295516503e-06,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.21236973995494088,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.19962816655157375,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.05764526296742294
+      }
+    },
+    {
+      "name": "add",
+      "cycles": 2978248,
+      "share": 7.59042724159856e-06,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.20886977847378727,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.19628989929649915,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.0563992656085054
+      }
+    },
+    {
+      "name": "get_rows",
+      "cycles": 2953740,
+      "share": 7.527965622943197e-06,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.19388199367581438,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.18593782797402614,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.06424973084970241
+      }
+    },
+    {
+      "name": "add_non_quantized",
+      "cycles": 25796,
+      "share": 6.574424330152374e-08,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.21092417429058768,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.1968134594510777,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.0818343929291363
+      }
+    }
+  ],
+  "self": [
+    {
+      "name": "ggml_vec_dot_q8_0_q8_0",
+      "cycles": 189130132927,
+      "share": 0.48202114571259935,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.2107667945984365,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.1991594314563224,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.06040665116758357
+      }
+    },
+    {
+      "name": "mul_sum_i8_pairs_float",
+      "cycles": 128384422056,
+      "share": 0.3272033136833297,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.21103155555883746,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.19937935723101013,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.06045236456035661
+      }
+    },
+    {
+      "name": "sum_i16_pairs_float",
+      "cycles": 23694139322,
+      "share": 0.060387395735996614,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.2107748228002928,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.19920765911161126,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.06048250200290605
+      }
+    },
+    {
+      "name": "ggml_lookup_fp16_to_fp32",
+      "cycles": 23368403843,
+      "share": 0.05955721925191713,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.21089993056912612,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.19926625426729194,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.06045327667611209
+      }
+    },
+    {
+      "name": "ggml_thread_cpu_relax",
+      "cycles": 8831918332,
+      "share": 0.022509218004271813,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.21060804267862654,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.1985646625202512,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.05890728270380025
+      }
+    },
+    {
+      "name": "mul_sum_us8_pairs_float",
+      "cycles": 5753932586,
+      "share": 0.0146645969869185,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.21050531682402301,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.19890685924696025,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.0603414676502781
+      }
+    },
+    {
+      "name": "hsum_float_8",
+      "cycles": 3687271030,
+      "share": 0.009397458664714685,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.2108000110857053,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.1991334325646249,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.0605143831805605
+      }
+    },
+    {
+      "name": "ggml_compute_forward_mul_mat_one_chunk",
+      "cycles": 2702427502,
+      "share": 0.006887465157242092,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.20982732546214297,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.19836099011103092,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.06046564907997299
+      }
+    },
+    {
+      "name": "ggml_compute_forward_mul_mat",
+      "cycles": 1060801308,
+      "share": 0.002703581147764251,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.2105045000566685,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.19868329008508348,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.05993868552054991
+      }
+    },
+    {
+      "name": "ggml_barrier",
+      "cycles": 700798491,
+      "share": 0.0017860701852087414,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.21031827535713116,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.19795848989634882,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.05806625802223652
+      }
+    },
+    {
+      "name": "ggml_vec_mad_f16_f32",
+      "cycles": 665244908,
+      "share": 0.0016954575549174978,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.20933048765252632,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.1969005165237582,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.05765601440725346
+      }
+    },
+    {
+      "name": "quantize_row_q8_0",
+      "cycles": 599623829,
+      "share": 0.001528214254270711,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.20926590627538252,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.19742527443818447,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.058939704012330035
+      }
+    },
+    {
+      "name": "ggml_vec_dot_f16_f32",
+      "cycles": 570608092,
+      "share": 0.0014542641196412715,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.20889170986379912,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.19659712782341685,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.05796621790635244
+      }
+    },
+    {
+      "name": "ggml_compute_forward_flash_attn_ext_f16_one_chunk",
+      "cycles": 344108680,
+      "share": 0.0008770028213709945,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.2066440550119224,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.19471632043690382,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.057789661103579255
+      }
+    },
+    {
+      "name": "expf",
+      "cycles": 341275240,
+      "share": 0.0008697814549289,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.21015377206972297,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.1976349177865936,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.05807543787823576
+      }
+    },
+    {
+      "name": "0x10b9e3fd9",
+      "cycles": 313271472,
+      "share": 0.0007984104463713165,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.2094804917314654,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.19784863781021209,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.060127147485679766
+      }
+    },
+    {
+      "name": "_platform_memmove$VARIANT$Haswell",
+      "cycles": 309965765,
+      "share": 0.0007899854500427559,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.20757601730629832,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.19622231829376383,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.06016923836734034
+      }
+    },
+    {
+      "name": "void ggml_compute_forward_rms_norm_f32<(ggml_rms_norm_fuse_op)1>",
+      "cycles": 190104582,
+      "share": 0.00048450464768733407,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.2157732421199611,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.203484437844849,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.059175133401045535
+      }
+    },
+    {
+      "name": "ggml_graph_compute_thread",
+      "cycles": 176961285,
+      "share": 0.0004510073567991271,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.20927669574732122,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.19697638949671958,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.05830631824356384
+      }
+    },
+    {
+      "name": "void rotate_pairs<float>",
+      "cycles": 173829764,
+      "share": 0.0004430262946760138,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.20965618408134065,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.19712415303054776,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.057074495021462494
+      }
+    },
+    {
+      "name": "ggml_vec_swiglu_f32",
+      "cycles": 103138045,
+      "share": 0.0002628598512995621,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.2121321865272897,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.202299936943734,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.06325837376498653
+      }
+    },
+    {
+      "name": "ggml_threadpool_chunk_add",
+      "cycles": 99523047,
+      "share": 0.00025364658924162593,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.20960585139641072,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.1968922133181875,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.05767248062652262
+      }
+    },
+    {
+      "name": "ggml::cpu::repack::extra_buffer_type::get_tensor_traits",
+      "cycles": 99505987,
+      "share": 0.000253603109756794,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.2109285846287822,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.19838882659392143,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.05863964748171384
+      }
+    },
+    {
+      "name": "0x7ff815c325e0",
+      "cycles": 96087523,
+      "share": 0.00024489073850026197,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.2090793931694961,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.19694435249413184,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.057222538664046946
+      }
+    },
+    {
+      "name": "void vec_binary_op_contiguous<&op_add(float, float), float, float, float>",
+      "cycles": 91760776,
+      "share": 0.00023386349755313303,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.21562743758836564,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.20374837501374227,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.05937663386804837
+      }
+    },
+    {
+      "name": "ggml_op_is_empty",
+      "cycles": 79962523,
+      "share": 0.0002037942148827604,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.20847087328647695,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.1966548379170077,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.05918962812116371
+      }
+    },
+    {
+      "name": "ggml_v_expf",
+      "cycles": 75453759,
+      "share": 0.00019230308147428037,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.21569324332800968,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.2048644521474404,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.06278086158702842
+      }
+    },
+    {
+      "name": "ggml_is_contiguous_m_n",
+      "cycles": 45853545,
+      "share": 0.00011686333612642918,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.21199573555327075,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.19981172666148278,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.059967904335422706
+      }
+    },
+    {
+      "name": "ggml_row_size",
+      "cycles": 38605697,
+      "share": 9.839131401740212e-05,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.2107188998556353,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.19952008637481666,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.061021486025754176
+      }
+    },
+    {
+      "name": "void ggml_compute_forward_rope_flt<float>",
+      "cycles": 37004082,
+      "share": 9.430940340198228e-05,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.20469982203585,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.19453118712686887,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.05973776082325188
+      }
+    }
+  ],
+  "threads": [
+    {
+      "name": "llama-bench 0x4e199c (llama-bench, pid: 46790)",
+      "cycles": 65655064226,
+      "share": 0.16732991612852036,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.20972934449658245,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.1980382863725995,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.060014636090168036
+      }
+    },
+    {
+      "name": "llama-bench 0x4e199d (llama-bench, pid: 46790)",
+      "cycles": 65596266002,
+      "share": 0.16718006170363459,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.2095471212733497,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.19789702233362194,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.05999827229312113
+      }
+    },
+    {
+      "name": "llama-bench 0x4e1999 (llama-bench, pid: 46790)",
+      "cycles": 65357275357,
+      "share": 0.1665709649788839,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.2101619338164296,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.19849737522160213,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.06025232044160228
+      }
+    },
+    {
+      "name": "Main Thread 0x4e198e (llama-bench, pid: 46790)",
+      "cycles": 65348357789,
+      "share": 0.16654823747228406,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.21559240219149803,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.2041335060028925,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.06166892585139084
+      }
+    },
+    {
+      "name": "llama-bench 0x4e199a (llama-bench, pid: 46790)",
+      "cycles": 65272212677,
+      "share": 0.16635417239360714,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.21001058272428144,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.19830914226937355,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.06012023472252788
+      }
+    },
+    {
+      "name": "llama-bench 0x4e199b (llama-bench, pid: 46790)",
+      "cycles": 65139778318,
+      "share": 0.16601664732306995,
+      "per_cycle": {
+        "UOPS_DISPATCHED_PORT.PORT_0": 0.20994303235479428,
+        "UOPS_DISPATCHED_PORT.PORT_1": 0.19828581657040817,
+        "UOPS_DISPATCHED_PORT.PORT_5": 0.060156095003430346
+      }
+    }
+  ]
+}

@@ -166,17 +166,17 @@
       "share": 0.9218824024846028
     },
     {
-      "name": "(anonymous namespace)::tinyBLAS_Q0_AVX<block_q8_0, block_q8_0, float>::matmul",
-      "ms": 104161.0,
-      "share": 0.9138372725518065
-    },
-    {
       "name": "(anonymous namespace)::tinyBLAS_Q0_AVX<block_q8_0, block_q8_0, float>::mnpack",
       "ms": 104161.0,
       "share": 0.9138372725518065
     },
     {
-      "name": "thread_start",
+      "name": "(anonymous namespace)::tinyBLAS_Q0_AVX<block_q8_0, block_q8_0, float>::matmul",
+      "ms": 104161.0,
+      "share": 0.9138372725518065
+    },
+    {
+      "name": "ggml_graph_compute_secondary_thread",
       "ms": 94986.0,
       "share": 0.8333421066484181
     },
@@ -186,7 +186,7 @@
       "share": 0.8333421066484181
     },
     {
-      "name": "ggml_graph_compute_secondary_thread",
+      "name": "thread_start",
       "ms": 94986.0,
       "share": 0.8333421066484181
     },
@@ -206,7 +206,7 @@
       "share": 0.21728869470618167
     },
     {
-      "name": "test_prompt",
+      "name": "ggml_graph_compute",
       "ms": 18996.0,
       "share": 0.16665789335158182
     },
@@ -216,12 +216,12 @@
       "share": 0.16665789335158182
     },
     {
-      "name": "llama_context::graph_compute",
+      "name": "ggml_backend_graph_compute_async",
       "ms": 18996.0,
       "share": 0.16665789335158182
     },
     {
-      "name": "ggml_backend_graph_compute_async",
+      "name": "llama_context::graph_compute",
       "ms": 18996.0,
       "share": 0.16665789335158182
     },
@@ -231,22 +231,22 @@
       "share": 0.16665789335158182
     },
     {
-      "name": "ggml_graph_compute",
-      "ms": 18996.0,
-      "share": 0.16665789335158182
-    },
-    {
       "name": "llama_context::decode",
       "ms": 18996.0,
       "share": 0.16665789335158182
     },
     {
-      "name": "start",
+      "name": "test_prompt",
       "ms": 18996.0,
       "share": 0.16665789335158182
     },
     {
       "name": "llama_bench",
+      "ms": 18996.0,
+      "share": 0.16665789335158182
+    },
+    {
+      "name": "start",
       "ms": 18996.0,
       "share": 0.16665789335158182
     },

@@ -166,7 +166,7 @@
       "share": 0.9624928893846825
     },
     {
-      "name": "thread_start",
+      "name": "ggml_graph_compute_secondary_thread",
       "ms": 112798.0,
       "share": 0.833312401651879
     },
@@ -176,7 +176,7 @@
       "share": 0.833312401651879
     },
     {
-      "name": "ggml_graph_compute_secondary_thread",
+      "name": "thread_start",
       "ms": 112798.0,
       "share": 0.833312401651879
     },
@@ -191,12 +191,17 @@
       "share": 0.32643080355493825
     },
     {
+      "name": "ggml_graph_compute",
+      "ms": 22563.0,
+      "share": 0.16668759834812094
+    },
+    {
       "name": "ggml_backend_cpu_graph_compute",
       "ms": 22563.0,
       "share": 0.16668759834812094
     },
     {
-      "name": "test_gen",
+      "name": "ggml_backend_graph_compute_async",
       "ms": 22563.0,
       "share": 0.16668759834812094
     },
@@ -211,27 +216,22 @@
       "share": 0.16668759834812094
     },
     {
-      "name": "ggml_backend_graph_compute_async",
-      "ms": 22563.0,
-      "share": 0.16668759834812094
-    },
-    {
       "name": "llama_context::decode",
       "ms": 22563.0,
       "share": 0.16668759834812094
     },
     {
-      "name": "ggml_graph_compute",
-      "ms": 22563.0,
-      "share": 0.16668759834812094
-    },
-    {
-      "name": "start",
+      "name": "test_gen",
       "ms": 22563.0,
       "share": 0.16668759834812094
     },
     {
       "name": "llama_bench",
+      "ms": 22563.0,
+      "share": 0.16668759834812094
+    },
+    {
+      "name": "start",
       "ms": 22563.0,
       "share": 0.16668759834812094
     },

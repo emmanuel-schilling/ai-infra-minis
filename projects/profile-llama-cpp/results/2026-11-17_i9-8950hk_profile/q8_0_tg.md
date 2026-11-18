@@ -64,20 +64,20 @@ CPU time in ggml's graphs: 135361 ms, the whole for the shares below. Worker thr
 |---:|---:|---|
 | 97.8% | 132355 | `ggml_compute_forward` |
 | 96.2% | 130284 | `ggml_compute_forward_mul_mat_one_chunk` |
-| 83.3% | 112798 | `thread_start` |
-| 83.3% | 112798 | `_pthread_start` |
 | 83.3% | 112798 | `ggml_graph_compute_secondary_thread` |
+| 83.3% | 112798 | `_pthread_start` |
+| 83.3% | 112798 | `thread_start` |
 | 48.3% | 65417 | `ggml_vec_dot_q8_0_q8_0` |
 | 32.6% | 44186 | `mul_sum_i8_pairs_float` |
+| 16.7% | 22563 | `ggml_graph_compute` |
 | 16.7% | 22563 | `ggml_backend_cpu_graph_compute` |
-| 16.7% | 22563 | `test_gen` |
+| 16.7% | 22563 | `ggml_backend_graph_compute_async` |
 | 16.7% | 22563 | `llama_context::graph_compute` |
 | 16.7% | 22563 | `llama_context::process_ubatch` |
-| 16.7% | 22563 | `ggml_backend_graph_compute_async` |
 | 16.7% | 22563 | `llama_context::decode` |
-| 16.7% | 22563 | `ggml_graph_compute` |
-| 16.7% | 22563 | `start` |
+| 16.7% | 22563 | `test_gen` |
 | 16.7% | 22563 | `llama_bench` |
+| 16.7% | 22563 | `start` |
 | 6.1% | 8197 | `sum_i16_pairs_float` |
 | 6.0% | 8178 | `ggml_lookup_fp16_to_fp32` |
 | 2.0% | 2743 | `ggml_thread_cpu_relax` |

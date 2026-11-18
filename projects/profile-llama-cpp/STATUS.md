@@ -51,10 +51,51 @@ the write-up:
   25 minutes) if a conclusion depends on them.
 - The comparison is with Quantized matmul's 2026-11-14 run, on another day.
 
-Remaining: the counter recordings, once the two templates exist.
+Session B's counter recordings ran on 2026-11-17 (folders dated 2026-11-18,
+UTC): `results/2026-11-18_i9-8950hk_profile_<model>_ports/` and
+`..._memory/` for each model, from a clean tree (`465a29d`, which added the
+two templates in `instruments/`). Valid: no recording started under a limit
+or reached one, no screen saver. Under the counters, llama-bench ran within
+1–2.5% of the baseline's speeds (Q4_K_M prompt processing under LLM Ports
+7% below, inside its own ±13 tokens/s spread). Notes for the write-up:
+- macOS limits the counters. Instruments offers no fixed counters, so cycles
+  (`CORE_ACTIVE_CYCLE`, which is `CPU_CLK_UNHALTED.THREAD_P`) takes one of the
+  four programmable slots that hyper-threading leaves each thread, and macOS
+  doesn't multiplex: three events per template besides cycles. And macOS's
+  event database (`/usr/share/kpep/kabylake.plist`) encodes no counter
+  masks, so Intel's cycle-condition events (`CYCLE_ACTIVITY.STALLS_*`,
+  `UOPS_EXECUTED.STALL_CYCLES` and the like) count something else: a test
+  recording gave stall counts above the cycle count. LLM Memory measures
+  traffic and back-end stalls instead (see Decisions); cycles stalled on DRAM
+  can't be measured exactly here, which Linux `perf` could (future work).
+- Each 1 ms sample's counts cover the interval since its thread's previous
+  sample, while its stack shows only where the thread was at the end of it.
+  Token generation's operations last well under 1 ms, so every function in
+  it shows the phase's average ratios: use only its totals, which its
+  matrix-vector products dominate (93–96% of its cycles). Prompt processing's
+  GEMMs run long enough for per-function figures, as approximations.
+- `LONGEST_LAT_CACHE.MISS` × 64 B estimates DRAM traffic, but uncalibrated:
+  in token generation it gives 39.1 GB/s (Q8_0) and 36.3 GB/s (Q4_K_M),
+  about 40% above the weights read per token at the measured speeds (27.8
+  and 26.7 GB/s), while on `qmm_bench`'s single-thread read benchmark it gave
+  84% of the measured 17.05 GB/s. It counts the L2 prefetcher's requests,
+  which `L2_RQSTS.MISS` doesn't, so token generation shows more L3 misses
+  than L2 misses. Use both for comparing phases and operations, not as
+  bandwidths.
+- Corrected on 2026-11-18: Q4_K_M's repacked matrix multiplies run through
+  ggml's extra-buffer dispatcher (`ggml_cpu_extra_compute_forward`), which
+  the time-profile summaries had labelled "(scheduler)". They are now
+  `mul_mat (repacked)`: 72% of prompt processing's time and 62% of token
+  generation's. Session B's four time-profile summaries were regenerated from
+  their traces with the corrected parser (Q8_0's changed only in the order of
+  tied rows). As for every operation, repacked `mul_mat`'s time includes the
+  spin at its own barrier, after it quantizes the activations: about 1.8 s
+  of Q4_K_M token generation's, which the old labels counted as barrier time.
 
-The scripts for steps 3–8 are written; session A's runs took about 45 and
-12 minutes, about half the estimates below.
+Session B is complete. Remaining: the write-up (step 10).
+
+The scripts for steps 3–8 are written, and their measured durations are in
+Next step.
 - `run_baseline.py` (steps 3, 7, 8): llama-bench rounds with cooldowns, and
   the ceilings from Quantized matmul's `qmm_bench`, measured before and after
   the rounds. `qmm_bench` gained 6- and 12-thread variants of its bandwidth
@@ -66,8 +107,10 @@ The scripts for steps 3–8 are written; session A's runs took about 45 and
   a worker's loop, where ggml inlines both the barrier and the polling for
   the next graph; those spins are listed by the source line they return to,
   resolved with `atos` (at b12377, ggml-cpu.c:3281–3282 is inside a graph).
-  `--template` also records custom CPU Counters templates, for opening in
-  Instruments.
+  With a CPU Counters template (`--template`, such as the two in
+  `instruments/`), the counts per phase and their ratios to cycles, by
+  operation, leaf function and thread (`counters_profile.py`).
+  `summarize_profile.py` writes the summaries of an existing run's traces.
 - `run_kernel_compare.py` (step 6): ggml's `MUL_MAT` on GPT-2's shapes with
   Q8_0 and fp32 weights, single-threaded, against Quantized matmul's latest
   run.
@@ -92,8 +135,8 @@ the profiles:
   dimensions are at least 32, so token generation never uses it.
 
 ## Next step
-Run the scripts, then read the results together (steps 3–8). Conditions, as
-for every benchmark here: AC power with the battery already charged (charging
+The write-up (step 10), from the outline below: every run is done and
+verified. To rerun a session, the conditions, as for every benchmark here: AC power with the battery already charged (charging
 adds heat), Low Power Mode off, other apps closed (Docker Desktop too), and a
 machine that has been idle for a while; the scripts keep the machine awake
 themselves, and refuse to start while the screen saver is running. A smoke
@@ -106,29 +149,31 @@ The sessions are independent and can run in any order. Within session A,
 Accelerate follows the baseline so the two are compared under the same
 conditions.
 
-Session A (about 2 hours):
+Session A (about 1 hour):
 1. `uv run python projects/profile-llama-cpp/scripts/run_baseline.py`: both
-   models, 1, 6 and 12 threads, 3 rounds of 12 tests (about 100 minutes; the
+   models, 1, 6 and 12 threads, 3 rounds of 12 tests (about 45 minutes; the
    1-thread tests take most of it). Then `report_baseline.py` on its folder.
 2. Right after it, `run_baseline.py --build build-accelerate --threads 6
-   --skip-ceilings --label accelerate` (about 20 minutes), then
+   --skip-ceilings --label accelerate` (about 12 minutes), then
    `report_baseline.py` on its folder with `--ceilings` set to run 1's folder.
 
 Session B (about 30 minutes):
 3. `run_profile.py --model q8_0`, then `run_profile.py --model q4_k_m` (about
-   6 minutes each). Each writes summaries next to its `.trace` files, which
-   open in Instruments.
-4. `run_kernel_compare.py` (about 16 minutes).
+   2 minutes each): the Time Profiler.
+4. The counters, for each model `<m>` (q8_0, then q4_k_m), with the
+   templates in `projects/profile-llama-cpp/instruments/` (about 2 minutes
+   each, 8 in all):
+   `run_profile.py --model <m> --template ".../instruments/LLM Ports.tracetemplate"
+   --label <m>_ports`, then the same with `LLM Memory.tracetemplate` and
+   `--label <m>_memory`.
+5. `run_kernel_compare.py` (about 18 minutes).
+Each profile run writes its summaries next to its `.trace` files, which open
+in Instruments.
 
-Session C (about 2 hours):
-5. `run_baseline.py --models q8_0 --threads 1,2,3,4,6,8,10,12 --label
-   scaling` (about 120 minutes, with its own ceilings), then
+Session C (about 1 hour):
+6. `run_baseline.py --models q8_0 --threads 1,2,3,4,6,8,10,12 --label
+   scaling` (about 64 minutes, with its own ceilings), then
    `report_baseline.py` on its folder.
-
-Later, once the two counter templates exist in Instruments (not yet built as
-of 2026-11-16): `run_profile.py --model <m> --template "LLM Ports" --label
-ports` and `--template "LLM Memory" --label memory` for each model (about
-4 minutes each, 16 in all).
 
 Between runs, check each `metadata.json`. A run is valid when
 `slow_rounds`, `started_throttled_rounds` (a test or round that started
@@ -141,8 +186,8 @@ runs predate the `started_throttled_rounds` field; their per-test thermal
 records show no test started under a limit.)
 
 All the scripts are in `projects/profile-llama-cpp/scripts/` and write to
-`projects/profile-llama-cpp/results/`. The durations are estimates from the
-smoke tests' speeds, about ±30%.
+`projects/profile-llama-cpp/results/`. The durations are those of the runs
+of 2026-11-16 and 2026-11-17, cooldowns included.
 
 Plan: 1. settle the open questions; 2. setup script; 3. baseline timings;
 4. roofline; 5. `xctrace` profiles of each phase; 6. ggml's Q8_0 `MUL_MAT`
@@ -298,3 +343,30 @@ Record each as: date, decision, reason.
   write-up states that multi-threaded prompt processing was measured under a
   66–70% limit, and that its shares of the short-burst FMA peak understate
   what the machine sustains.
+- 2026-11-17: Record the counters with two CPU Counters templates, kept in
+  `instruments/` and passed to `xctrace` by path, both sampling by time every
+  1 ms: LLM Ports (`CORE_ACTIVE_CYCLE`, `UOPS_DISPATCHED_PORT.PORT_0`,
+  `PORT_1`, `PORT_5`) and LLM Memory (`CORE_ACTIVE_CYCLE`, `L2_RQSTS.MISS`,
+  `LONGEST_LAT_CACHE.MISS`, `RESOURCE_STALLS.ANY`). Reason: with
+  hyper-threading on, each thread has four programmable counters, which
+  macOS doesn't multiplex, and Instruments offers no fixed counters, so
+  cycles takes a slot; the planned `FP_ARITH_INST_RETIRED.256B_PACKED_SINGLE`
+  was dropped for it, and the planned `CYCLE_ACTIVITY` stall events and
+  `LONGEST_LAT_CACHE.MISS`'s instruction count were replaced because macOS's
+  event database has no counter masks. Sampling by time reads every counter
+  at once, which the ratios to cycles need. Committed templates record what
+  each run measured, and the runs' metadata names the commit.
+- 2026-11-18: Accept the 1 ms counter runs, using token generation's totals
+  only and prompt processing's per-function figures as approximations.
+  Reason: token generation's matrix-vector products are 93–96% of its
+  cycles, so its totals describe them; sampling every 250,000 cycles (about
+  90 µs) would separate its operations better, for about 11 times the
+  samples.
+- 2026-11-18: Label an operation that an extra buffer type runs (Q4_K_M's
+  repacked weights) by the type's `forward_<op>` method, as
+  `mul_mat (repacked)`, and only when that method is on the stack; regenerate
+  every summary with the corrected parser. Reason: the dispatcher hands
+  those operations to the buffer type instead of to
+  `ggml_compute_forward_<op>`, so they were labelled "(scheduler)", 72% of
+  Q4_K_M's prompt processing; and since it asks each extra buffer type
+  before every operation, repack frames alone don't prove one ran there.

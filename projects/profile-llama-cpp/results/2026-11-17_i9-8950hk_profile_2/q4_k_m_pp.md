@@ -6,13 +6,14 @@ CPU time in ggml's graphs: 56714 ms, the whole for the shares below. Worker thre
 
 | Share | ms | Name |
 |---:|---:|---|
-| 74.6% | 42325 | `(scheduler)` |
+| 72.2% | 40931 | `mul_mat (repacked)` |
 | 14.9% | 8448 | `mul_mat` |
 | 4.5% | 2547 | `flash_attn_ext_tiled` |
 | 2.7% | 1527 | `swiglu_f32` |
+| 2.5% | 1416 | `(scheduler)` |
 | 2.0% | 1127 | `(spinning in a worker's loop: barrier or next graph)` |
-| 0.5% | 270 | `(barrier)` |
 | 0.5% | 268 | `rms_norm_f32` |
+| 0.4% | 248 | `(barrier)` |
 | 0.3% | 158 | `mul_mat_one_chunk` |
 | 0.1% | 29 | `rope_flt` |
 | 0.0% | 12 | `set_rows_impl` |
@@ -58,25 +59,25 @@ CPU time in ggml's graphs: 56714 ms, the whole for the shares below. Worker thre
 | Share | ms | Name |
 |---:|---:|---|
 | 97.1% | 55073 | `ggml_compute_forward` |
+| 83.3% | 47266 | `ggml_graph_compute_secondary_thread` |
 | 83.3% | 47266 | `_pthread_start` |
 | 83.3% | 47266 | `thread_start` |
-| 83.3% | 47266 | `ggml_graph_compute_secondary_thread` |
 | 73.3% | 41550 | `ggml_cpu_extra_compute_forward` |
 | 73.3% | 41544 | `ggml::cpu::repack::tensor_traits<block_q4_K, 8ll, 8ll, (ggml_type)15>::compute_forward` |
 | 72.2% | 40931 | `ggml::cpu::repack::tensor_traits<block_q4_K, 8ll, 8ll, (ggml_type)15>::forward_mul_mat` |
-| 72.1% | 40895 | `void ggml::cpu::repack::gemm<block_q4_K, 8ll, 8ll, (ggml_type)15>` |
 | 72.1% | 40895 | `ggml_gemm_q4_K_8x8_q8_K` |
-| 16.7% | 9448 | `llama_context::decode` |
+| 72.1% | 40895 | `void ggml::cpu::repack::gemm<block_q4_K, 8ll, 8ll, (ggml_type)15>` |
+| 16.7% | 9448 | `ggml_graph_compute` |
+| 16.7% | 9448 | `ggml_backend_cpu_graph_compute` |
 | 16.7% | 9448 | `ggml_backend_graph_compute_async` |
 | 16.7% | 9448 | `llama_context::graph_compute` |
-| 16.7% | 9448 | `llama_bench` |
-| 16.7% | 9448 | `ggml_backend_cpu_graph_compute` |
-| 16.7% | 9448 | `test_prompt` |
-| 16.7% | 9448 | `ggml_graph_compute` |
 | 16.7% | 9448 | `llama_context::process_ubatch` |
+| 16.7% | 9448 | `llama_context::decode` |
+| 16.7% | 9448 | `test_prompt` |
+| 16.7% | 9448 | `llama_bench` |
 | 16.7% | 9448 | `start` |
-| 14.9% | 8448 | `ggml_compute_forward_mul_mat` |
 | 14.9% | 8448 | `ggml_compute_forward_mul_mat_tiled` |
+| 14.9% | 8448 | `ggml_compute_forward_mul_mat` |
 | 12.7% | 7229 | `void ggml_compute_forward_mul_mat_tiled_one_chunk<block_q6_K, 16, false, 32, true>` |
 | 11.5% | 6548 | `void tiled_run_microtile_avx2<16, false, 32, 1, true>` |
 | 4.5% | 2546 | `ggml_compute_forward_flash_attn_ext_tiled` |

@@ -6,11 +6,12 @@ CPU time in ggml's graphs: 84197 ms, the whole for the shares below. Worker thre
 
 | Share | ms | Name |
 |---:|---:|---|
-| 60.6% | 51061 | `(scheduler)` |
+| 61.8% | 52039 | `mul_mat (repacked)` |
 | 33.0% | 27773 | `mul_mat_one_chunk` |
-| 2.7% | 2241 | `(barrier)` |
 | 2.3% | 1971 | `(spinning in a worker's loop: barrier or next graph)` |
+| 0.9% | 780 | `(scheduler)` |
 | 0.9% | 763 | `flash_attn_ext_f16` |
+| 0.6% | 483 | `(barrier)` |
 | 0.3% | 226 | `mul_mat` |
 | 0.1% | 57 | `swiglu_f32` |
 | 0.1% | 57 | `rms_norm_f32` |
@@ -63,9 +64,9 @@ CPU time in ggml's graphs: 84197 ms, the whole for the shares below. Worker thre
 | Share | ms | Name |
 |---:|---:|---|
 | 97.0% | 81702 | `ggml_compute_forward` |
+| 83.3% | 70159 | `ggml_graph_compute_secondary_thread` |
 | 83.3% | 70159 | `_pthread_start` |
 | 83.3% | 70159 | `thread_start` |
-| 83.3% | 70159 | `ggml_graph_compute_secondary_thread` |
 | 61.9% | 52093 | `ggml_cpu_extra_compute_forward` |
 | 61.8% | 52067 | `ggml::cpu::repack::tensor_traits<block_q4_K, 8ll, 8ll, (ggml_type)15>::compute_forward` |
 | 61.8% | 52039 | `ggml::cpu::repack::tensor_traits<block_q4_K, 8ll, 8ll, (ggml_type)15>::forward_mul_mat` |
@@ -73,15 +74,15 @@ CPU time in ggml's graphs: 84197 ms, the whole for the shares below. Worker thre
 | 59.1% | 49752 | `ggml_gemv_q4_K_8x8_q8_K` |
 | 33.0% | 27773 | `ggml_compute_forward_mul_mat_one_chunk` |
 | 32.8% | 27624 | `ggml_vec_dot_q6_K_q8_K` |
-| 16.7% | 14038 | `llama_context::decode` |
+| 16.7% | 14038 | `ggml_graph_compute` |
+| 16.7% | 14038 | `ggml_backend_cpu_graph_compute` |
 | 16.7% | 14038 | `ggml_backend_graph_compute_async` |
 | 16.7% | 14038 | `llama_context::graph_compute` |
-| 16.7% | 14038 | `llama_bench` |
-| 16.7% | 14038 | `test_gen` |
-| 16.7% | 14038 | `ggml_backend_cpu_graph_compute` |
-| 16.7% | 14038 | `start` |
-| 16.7% | 14038 | `ggml_graph_compute` |
 | 16.7% | 14038 | `llama_context::process_ubatch` |
+| 16.7% | 14038 | `llama_context::decode` |
+| 16.7% | 14038 | `test_gen` |
+| 16.7% | 14038 | `llama_bench` |
+| 16.7% | 14038 | `start` |
 | 2.7% | 2264 | `ggml_thread_cpu_relax` |
 | 2.3% | 1962 | `ggml_barrier` |
 | 0.9% | 763 | `ggml_compute_forward_flash_attn_ext_f16` |

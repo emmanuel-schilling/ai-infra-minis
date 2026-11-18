@@ -6,12 +6,12 @@ nothing offloaded to a GPU:
 - pp: a prompt of --prompt tokens and no generation
 - tg: --gen generated tokens and no prompt
 
-With the Time Profiler template (the default), it then exports the samples
-and writes, per phase, where ggml's graph computation spent its CPU time: by
-ggml operation, by leaf function (self time, including spinning at the
-barrier between operations), by function anywhere on the stack, and by
-thread. Other templates, such as CPU Counters, are only recorded, to open in
-Instruments.
+After each recording, it writes the phase's summary (summarize_profile.py):
+with the Time Profiler template (the default), where ggml's graph
+computation spent its CPU time, by ggml operation, by leaf function (self
+time, including spinning at the barrier between operations), by function
+anywhere on the stack, and by thread; with a CPU Counters template, such as
+those in ../instruments, llama-bench's counts and their ratios to cycles.
 
 Writes a new folder results/<date>_<cpu>_profile[_<label>]/ in this project:
 - <model>_<phase>.trace: the recording, to open in Instruments (git-ignored:
@@ -37,7 +37,6 @@ import time
 from pathlib import Path
 from typing import Any
 
-import time_profile
 from benchkit import (
     cpu_model,
     cpu_slug,
@@ -61,9 +60,9 @@ from runkit import (
     split_list,
 )
 from setup_llama_cpp import executable
+from summarize_profile import summarize
 
 TIME_PROFILER = "Time Profiler"
-TIME_PROFILE_XPATH = '/trace-toc/run[@number="1"]/data/table[@schema="time-profile"]'
 
 
 def phase_tokens(phase: str, prompt: int, gen: int) -> tuple[int, int]:
@@ -106,36 +105,6 @@ def record_command(
 def phases_in(recordings: list[dict[str, Any]], numbers: list[int]) -> list[str]:
     """The phases of the recordings with these numbers."""
     return [r["phase"] for r in recordings if r["round"] in numbers]
-
-
-def export_command(trace: Path) -> list[str]:
-    return ["xcrun", "xctrace", "export", "--input", str(trace), "--xpath", TIME_PROFILE_XPATH]
-
-
-def parse_atos(output: str, addrs: list[str]) -> dict[str, str]:
-    """atos -i's output, one group of lines per address, as {address: innermost line}.
-
-    With -i, atos prints an address's inlined frames innermost first, one per
-    line, and a blank line after each address. Only the innermost is kept, as
-    'function (file:line)'; addresses atos couldn't resolve to a line are left out.
-    """
-    groups = [g.strip().splitlines() for g in output.strip().split("\n\n")]
-    resolved = {}
-    for addr, group in zip(addrs, groups, strict=False):
-        if group and "(in " in group[0] and ":" in group[0].rsplit("(", 1)[-1]:
-            function = group[0].split(" (in ", 1)[0]
-            location = group[0].rsplit("(", 1)[-1].rstrip(")")
-            resolved[addr] = f"{function} ({location})"
-    return resolved
-
-
-def atos_resolver(binary: str, load_addr: str, addrs: list[str]) -> dict[str, str]:
-    """Each return address's source line, from the binary's debug information."""
-    # PLATFORM: macos — atos ships with Xcode's command-line tools; Linux
-    # would use addr2line -i on the same addresses.
-    command = ["xcrun", "atos", "-o", binary, "-l", load_addr, "-i", *addrs]
-    result = subprocess.run(command, capture_output=True, text=True)
-    return parse_atos(result.stdout, addrs) if result.returncode == 0 else {}
 
 
 def main() -> int:
@@ -203,17 +172,7 @@ def main() -> int:
                 subprocess.run(command, check=True, stdout=log, stderr=subprocess.STDOUT)
             record["thermal_after"] = thermal_state()
             recordings.append(record)
-            if args.template != TIME_PROFILER:
-                continue
-            with subprocess.Popen(export_command(trace), stdout=subprocess.PIPE) as export:
-                assert export.stdout is not None
-                profile = time_profile.parse(export.stdout)
-            if export.returncode != 0:
-                raise subprocess.CalledProcessError(export.returncode, export.args)
-            data = time_profile.summary(profile, args.top, atos_resolver)
-            (run_dir / f"{stem}.json").write_text(json.dumps(data, indent=2) + "\n")
-            title = f"{args.model} {phase}, {args.threads} threads"
-            (run_dir / f"{stem}.md").write_text(time_profile.markdown(title, data))
+            summarize(trace, f"{args.model} {phase}, {args.threads} threads", args.top)
 
     metadata = {
         "machine": machine_details(),
